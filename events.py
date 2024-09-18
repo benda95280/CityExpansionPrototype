@@ -47,6 +47,7 @@ class Event:
 class EventManager:
     def __init__(self):
         self.events = []
+        self.debug = False  # Add debug flag
 
     def add_event(self, event):
         self.events.append(event)
@@ -60,8 +61,16 @@ class EventManager:
     def get_active_events(self):
         return [e for e in self.events if e.is_active()]
 
+    def set_debug(self, debug):
+        self.debug = debug
+
     def update_events(self, current_tick):
         for event in self.get_active_events():
             if current_tick >= event.next_tick:
+                if self.debug:
+                    print(f"Event registered: {event.name}")
+                    print(f"Next ticking occurrence: {event.next_tick}")
                 yield event
                 event.update_next_tick(current_tick)
+                if self.debug:
+                    print(f"Updated next ticking occurrence: {event.next_tick}")

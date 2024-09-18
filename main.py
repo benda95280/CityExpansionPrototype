@@ -171,12 +171,7 @@ def game_tick():
         game_state['tick'] += 1
         
         for event in event_manager.update_events(game_state['tick']):
-            if game_state['debug']:
-                print(f"Event registered: {event.name}")
-                print(f"Next ticking occurrence: {event.next_tick}")
             handle_event(event)
-            if game_state['debug']:
-                print(f"Updated next ticking occurrence: {event.next_tick}")
         
         # Calculate total population and used accommodations
         total_population = 0
@@ -198,9 +193,11 @@ def handle_console_command(data):
     command = data['command']
     if command == 'debug on':
         game_state['debug'] = True
+        event_manager.set_debug(True)  # Add this line
         return 'Debug mode enabled'
     elif command == 'debug off':
         game_state['debug'] = False
+        event_manager.set_debug(False)  # Add this line
         return 'Debug mode disabled'
     elif command == 'get tick':
         return f"Current tick: {game_state['tick']}"
