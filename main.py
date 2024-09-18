@@ -3,6 +3,7 @@ from flask_socketio import SocketIO, emit
 import json
 import time
 import random
+import math
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
@@ -21,6 +22,8 @@ game_state = {
     'grid': {},
     'money': 1000,
     'population': 0,
+    'total_accommodations': 0,
+    'used_accommodations': 0,
     'tick': 0,
     'next_citizen_tick': random.randint(config['min_ticks_for_new_citizen'], config['max_ticks_for_new_citizen']),
     'pending_citizens': [],
@@ -50,6 +53,7 @@ def handle_place_building(data):
             'population': 0
         }
         game_state['money'] -= buildings_data[building_type]['price']
+        game_state['total_accommodations'] += buildings_data[building_type]['accommodations']
         socketio.emit('game_state', game_state)
 
 @socketio.on('upgrade_building')
@@ -64,7 +68,9 @@ def handle_upgrade_building(data):
         
         if game_state['money'] >= upgrade_cost:
             building['level'] = next_level
-            building['accommodations'] += buildings_data[building_type]['accommodations']
+            new_accommodations = buildings_data[building_type]['accommodations']
+            building['accommodations'] += new_accommodations
+            game_state['total_accommodations'] += new_accommodations
             game_state['money'] -= upgrade_cost
             socketio.emit('game_state', game_state)
 
@@ -143,9 +149,15 @@ def game_tick():
                 building['population'] += random.random() * growth_rate
                 building['population'] = min(building['population'], max_population)
         
-        # Calculate total population
-        total_population = sum(building['population'] for building in game_state['grid'].values())
-        game_state['population'] = max(0, total_population)  # Ensure population is never negative
+        # Calculate total population and used accommodations
+        total_population = 0
+        used_accommodations = 0
+        for building in game_state['grid'].values():
+            total_population += building['population']
+            used_accommodations += math.ceil(building['population'] / buildings_data[building['type']]['max_people_per_accommodation'])
+        
+        game_state['population'] = max(0, total_population)
+        game_state['used_accommodations'] = used_accommodations
         
         if game_state['tick'] % 20 == 0:  # Update clients every second
             socketio.emit('game_state', game_state)
