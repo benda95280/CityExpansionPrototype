@@ -105,6 +105,15 @@ def generate_citizen():
 def generate_new_citizen(game_state):
     if DEBUG_MODE:
         print(f"Attempting to generate new citizen at tick {game_state['tick']}")
+    
+    # Check if there are any available accommodations
+    total_accommodations = sum(building['total_accommodations'] for building in game_state['grid'].values())
+    if game_state['population'] >= total_accommodations:
+        if DEBUG_MODE:
+            print("Failed to generate new citizen: No available accommodations")
+        return False
+    
+    # Rest of the function remains the same
     available_building = find_available_building(game_state)
     if not available_building:
         if DEBUG_MODE:
