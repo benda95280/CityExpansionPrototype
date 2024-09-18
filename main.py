@@ -149,6 +149,7 @@ def generate_new_citizen():
     return True
 
 def handle_event(event):
+    citizen_generated = False
     if event.name == 'new_citizen':
         citizen_generated = generate_new_citizen()
     # Add more event handlers here in the future
@@ -173,7 +174,6 @@ def game_tick():
                 if game_state['debug']:
                     print(f"Event registered: {event.name}")
                     print(f"Next ticking occurrence: {event.next_tick}")
-                    print(f"Function to be executed: {event.name}")
                 handle_event(event)
                 event.update_next_tick(game_state['tick'])
                 if game_state['debug']:
