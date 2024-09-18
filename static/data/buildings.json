@@ -4,23 +4,20 @@
     "price": 100,
     "accommodations": 1,
     "max_people_per_accommodation": 5,
-    "upgrade_cost": 50,
-    "growth_rate": 0.1
+    "upgrade_cost": 50
   },
   "apartment": {
     "name": "Apartment",
     "price": 500,
     "accommodations": 3,
     "max_people_per_accommodation": 5,
-    "upgrade_cost": 250,
-    "growth_rate": 0.2
+    "upgrade_cost": 250
   },
   "skyscraper": {
     "name": "Skyscraper",
     "price": 2000,
     "accommodations": 3,
     "max_people_per_accommodation": 5,
-    "upgrade_cost": 1000,
-    "growth_rate": 0.5
+    "upgrade_cost": 1000
   }
 }

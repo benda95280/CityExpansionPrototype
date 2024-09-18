@@ -27,7 +27,8 @@ game_state = {
     'tick': 0,
     'next_citizen_tick': random.randint(config['min_ticks_for_new_citizen'], config['max_ticks_for_new_citizen']),
     'pending_citizens': [],
-    'start_time': time.time() * 1000  # Current time in milliseconds
+    'start_time': time.time() * 1000,  # Current time in milliseconds
+    'buildings_data': buildings_data  # Add buildings_data to game_state
 }
 
 @app.route('/')

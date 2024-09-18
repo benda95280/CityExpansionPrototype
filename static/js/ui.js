@@ -21,7 +21,7 @@ function showBuildingMenu(x, y, gridX, gridY) {
     menu.style.left = `${x}px`;
     menu.style.top = `${y}px`;
 
-    for (const [type, data] of Object.entries(buildingsData)) {
+    for (const [type, data] of Object.entries(gameState.buildings_data)) {
         const option = document.createElement('div');
         option.textContent = `${data.name} ($${data.price})`;
         option.addEventListener('click', () => {
@@ -49,11 +49,12 @@ function showCellPopup(x, y, building) {
     popup.classList.add('cell-popup');
 
     if (building) {
+        const buildingData = gameState.buildings_data[building.type];
         popup.innerHTML = `
-            <h3>${buildingsData[building.type].name}</h3>
+            <h3>${buildingData.name}</h3>
             <p>Level: ${building.level}</p>
-            <p>Population: ${Math.floor(building.population)}</p>
-            <button id="upgrade-btn">Upgrade ($${buildingsData[building.type].upgrade_cost * building.level})</button>
+            <p>Population: ${building.accommodations.reduce((sum, acc) => sum + acc.length, 0)}</p>
+            <button id="upgrade-btn">Upgrade ($${buildingData.upgrade_cost * building.level})</button>
         `;
         popup.querySelector('#upgrade-btn').addEventListener('click', () => {
             upgradeBuilding(x, y);

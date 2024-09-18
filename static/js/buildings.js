@@ -1,27 +1,3 @@
-const buildingsData = {
-    house: {
-        name: "House",
-        price: 100,
-        max_people: 5,
-        upgrade_cost: 50,
-        growth_rate: 0.1
-    },
-    apartment: {
-        name: "Apartment",
-        price: 500,
-        max_people: 20,
-        upgrade_cost: 250,
-        growth_rate: 0.2
-    },
-    skyscraper: {
-        name: "Skyscraper",
-        price: 2000,
-        max_people: 100,
-        upgrade_cost: 1000,
-        growth_rate: 0.5
-    }
-};
-
 function drawBuildings() {
     for (const [coords, building] of Object.entries(gameState.grid)) {
         if (building) {
@@ -63,10 +39,4 @@ function placeBuilding(x, y, type) {
 
 function upgradeBuilding(x, y) {
     socket.emit('upgrade_building', { x, y });
-}
-
-function placeRandomBuilding(x, y) {
-    const buildingTypes = Object.keys(buildingsData);
-    const randomType = buildingTypes[Math.floor(Math.random() * buildingTypes.length)];
-    placeBuilding(x, y, randomType);
 }
