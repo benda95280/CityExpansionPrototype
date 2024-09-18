@@ -1,0 +1,131 @@
+message handler error
+Traceback (most recent call last):
+  File "/home/runner/CityExpansionPrototype/.pythonlibs/lib/python3.11/site-packages/flask_socketio/__init__.py", line 829, in _handle_event
+    ret = handler(auth)
+          ^^^^^^^^^^^^^
+TypeError: handle_connect() takes 0 positional arguments but 1 was given
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/runner/CityExpansionPrototype/.pythonlibs/lib/python3.11/site-packages/socketio/server.py", line 537, in _handle_connect
+    success = self._trigger_event(
+              ^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/CityExpansionPrototype/.pythonlibs/lib/python3.11/site-packages/socketio/server.py", line 614, in _trigger_event
+    return handler(*args)
+           ^^^^^^^^^^^^^^
+  File "/home/runner/CityExpansionPrototype/.pythonlibs/lib/python3.11/site-packages/flask_socketio/__init__.py", line 288, in _handler
+    return self._handle_event(handler, message, real_ns, sid,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/CityExpansionPrototype/.pythonlibs/lib/python3.11/site-packages/flask_socketio/__init__.py", line 831, in _handle_event
+    ret = handler()
+          ^^^^^^^^^
+  File "/home/runner/CityExpansionPrototype/main.py", line 48, in handle_connect
+    socketio.emit('game_state', serializable_game_state)
+  File "/home/runner/CityExpansionPrototype/.pythonlibs/lib/python3.11/site-packages/flask_socketio/__init__.py", line 468, in emit
+    self.server.emit(event, *args, namespace=namespace, to=to,
+  File "/home/runner/CityExpansionPrototype/.pythonlibs/lib/python3.11/site-packages/socketio/server.py", line 166, in emit
+    self.manager.emit(event, data, namespace, room=room,
+  File "/home/runner/CityExpansionPrototype/.pythonlibs/lib/python3.11/site-packages/socketio/manager.py", line 44, in emit
+    encoded_packet = pkt.encode()
+                     ^^^^^^^^^^^^
+  File "/home/runner/CityExpansionPrototype/.pythonlibs/lib/python3.11/site-packages/socketio/packet.py", line 64, in encode
+    encoded_packet += self.json.dumps(data, separators=(',', ':'))
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/nix/store/f98g7xbckgqbkagdvpzc2r6lv3h1p9ki-python3-3.11.9/lib/python3.11/json/__init__.py", line 238, in dumps
+    **kw).encode(obj)
+          ^^^^^^^^^^^
+  File "/nix/store/f98g7xbckgqbkagdvpzc2r6lv3h1p9ki-python3-3.11.9/lib/python3.11/json/encoder.py", line 200, in encode
+    chunks = self.iterencode(o, _one_shot=True)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/nix/store/f98g7xbckgqbkagdvpzc2r6lv3h1p9ki-python3-3.11.9/lib/python3.11/json/encoder.py", line 258, in iterencode
+    return _iterencode(o, 0)
+           ^^^^^^^^^^^^^^^^^
+  File "/nix/store/f98g7xbckgqbkagdvpzc2r6lv3h1p9ki-python3-3.11.9/lib/python3.11/json/encoder.py", line 180, in default
+    raise TypeError(f'Object of type {o.__class__.__name__} '
+TypeError: Object of type EventManager is not JSON serializable
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/runner/CityExpansionPrototype/.pythonlibs/lib/python3.11/site-packages/flask_socketio/__init__.py", line 829, in _handle_event
+    ret = handler(auth)
+          ^^^^^^^^^^^^^
+TypeError: handle_connect() takes 0 positional arguments but 1 was given
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/runner/CityExpansionPrototype/.pythonlibs/lib/python3.11/site-packages/engineio/server.py", line 434, in run_handler
+    return self.handlers[event](*args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/CityExpansionPrototype/.pythonlibs/lib/python3.11/site-packages/socketio/server.py", line 643, in _handle_eio_message
+    self._handle_connect(eio_sid, pkt.namespace, pkt.data)
+  File "/home/runner/CityExpansionPrototype/.pythonlibs/lib/python3.11/site-packages/socketio/server.py", line 540, in _handle_connect
+    success = self._trigger_event(
+              ^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/CityExpansionPrototype/.pythonlibs/lib/python3.11/site-packages/socketio/server.py", line 614, in _trigger_event
+    return handler(*args)
+           ^^^^^^^^^^^^^^
+  File "/home/runner/CityExpansionPrototype/.pythonlibs/lib/python3.11/site-packages/flask_socketio/__init__.py", line 288, in _handler
+    return self._handle_event(handler, message, real_ns, sid,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/CityExpansionPrototype/.pythonlibs/lib/python3.11/site-packages/flask_socketio/__init__.py", line 831, in _handle_event
+    ret = handler()
+          ^^^^^^^^^
+  File "/home/runner/CityExpansionPrototype/main.py", line 48, in handle_connect
+    socketio.emit('game_state', serializable_game_state)
+  File "/home/runner/CityExpansionPrototype/.pythonlibs/lib/python3.11/site-packages/flask_socketio/__init__.py", line 468, in emit
+    self.server.emit(event, *args, namespace=namespace, to=to,
+  File "/home/runner/CityExpansionPrototype/.pythonlibs/lib/python3.11/site-packages/socketio/server.py", line 166, in emit
+    self.manager.emit(event, data, namespace, room=room,
+  File "/home/runner/CityExpansionPrototype/.pythonlibs/lib/python3.11/site-packages/socketio/manager.py", line 44, in emit
+    encoded_packet = pkt.encode()
+                     ^^^^^^^^^^^^
+  File "/home/runner/CityExpansionPrototype/.pythonlibs/lib/python3.11/site-packages/socketio/packet.py", line 64, in encode
+    encoded_packet += self.json.dumps(data, separators=(',', ':'))
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/nix/store/f98g7xbckgqbkagdvpzc2r6lv3h1p9ki-python3-3.11.9/lib/python3.11/json/__init__.py", line 238, in dumps
+    **kw).encode(obj)
+          ^^^^^^^^^^^
+  File "/nix/store/f98g7xbckgqbkagdvpzc2r6lv3h1p9ki-python3-3.11.9/lib/python3.11/json/encoder.py", line 200, in encode
+    chunks = self.iterencode(o, _one_shot=True)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/nix/store/f98g7xbckgqbkagdvpzc2r6lv3h1p9ki-python3-3.11.9/lib/python3.11/json/encoder.py", line 258, in iterencode
+    return _iterencode(o, 0)
+           ^^^^^^^^^^^^^^^^^
+  File "/nix/store/f98g7xbckgqbkagdvpzc2r6lv3h1p9ki-python3-3.11.9/lib/python3.11/json/encoder.py", line 180, in default
+    raise TypeError(f'Object of type {o.__class__.__name__} '
+TypeError: Object of type EventManager is not JSON serializable
+172.31.196.69 - - [18/Sep/2024 19:36:42] "POST /socket.io/?EIO=4&transport=polling&t=P86emkO&sid=9Uqz2Iq_lSV4mxLtAAAA HTTP/1.1" 200 -
+172.31.196.69 - - [18/Sep/2024 19:36:42] "GET /socket.io/?EIO=4&transport=polling&t=P86emkP&sid=9Uqz2Iq_lSV4mxLtAAAA HTTP/1.1" 200 -
+Exception in thread Thread-1 (game_tick):
+Traceback (most recent call last):
+  File "/nix/store/f98g7xbckgqbkagdvpzc2r6lv3h1p9ki-python3-3.11.9/lib/python3.11/threading.py", line 1045, in _bootstrap_inner
+    self.run()
+  File "/nix/store/f98g7xbckgqbkagdvpzc2r6lv3h1p9ki-python3-3.11.9/lib/python3.11/threading.py", line 982, in run
+    self._target(*self._args, **self._kwargs)
+  File "/home/runner/CityExpansionPrototype/main.py", line 154, in game_tick
+    socketio.emit('game_state', serializable_game_state)
+  File "/home/runner/CityExpansionPrototype/.pythonlibs/lib/python3.11/site-packages/flask_socketio/__init__.py", line 468, in emit
+    self.server.emit(event, *args, namespace=namespace, to=to,
+  File "/home/runner/CityExpansionPrototype/.pythonlibs/lib/python3.11/site-packages/socketio/server.py", line 166, in emit
+    self.manager.emit(event, data, namespace, room=room,
+  File "/home/runner/CityExpansionPrototype/.pythonlibs/lib/python3.11/site-packages/socketio/manager.py", line 44, in emit
+    encoded_packet = pkt.encode()
+                     ^^^^^^^^^^^^
+  File "/home/runner/CityExpansionPrototype/.pythonlibs/lib/python3.11/site-packages/socketio/packet.py", line 64, in encode
+    encoded_packet += self.json.dumps(data, separators=(',', ':'))
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/nix/store/f98g7xbckgqbkagdvpzc2r6lv3h1p9ki-python3-3.11.9/lib/python3.11/json/__init__.py", line 238, in dumps
+    **kw).encode(obj)
+          ^^^^^^^^^^^
+  File "/nix/store/f98g7xbckgqbkagdvpzc2r6lv3h1p9ki-python3-3.11.9/lib/python3.11/json/encoder.py", line 200, in encode
+    chunks = self.iterencode(o, _one_shot=True)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/nix/store/f98g7xbckgqbkagdvpzc2r6lv3h1p9ki-python3-3.11.9/lib/python3.11/json/encoder.py", line 258, in iterencode
+    return _iterencode(o, 0)
+           ^^^^^^^^^^^^^^^^^
+  File "/nix/store/f98g7xbckgqbkagdvpzc2r6lv3h1p9ki-python3-3.11.9/lib/python3.11/json/encoder.py", line 180, in default
+    raise TypeError(f'Object of type {o.__class__.__name__} '
+TypeError: Object of type EventManager is not JSON serializable

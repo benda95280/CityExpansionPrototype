@@ -44,7 +44,10 @@ def index():
 
 @socketio.on('connect')
 def handle_connect():
-    serializable_game_state = {**game_state, 'events': [event.to_dict() for event in event_manager.get_events()]}
+    serializable_game_state = {
+        key: value for key, value in game_state.items() if key != 'event_manager'
+    }
+    serializable_game_state['events'] = [event.to_dict() for event in game_state['event_manager'].get_events()]
     socketio.emit('game_state', serializable_game_state)
     for citizen in game_state['pending_citizens']:
         socketio.emit('new_citizen', citizen)
@@ -72,7 +75,10 @@ def handle_accept_citizen(data):
                     game_state['used_accommodations'] += 1
                     socketio.emit('citizen_placed', {'citizen': accepted_citizen, 'building': available_building})
                     break
-        serializable_game_state = {**game_state, 'events': [event.to_dict() for event in event_manager.get_events()]}
+        serializable_game_state = {
+            key: value for key, value in game_state.items() if key != 'event_manager'
+        }
+        serializable_game_state['events'] = [event.to_dict() for event in game_state['event_manager'].get_events()]
         socketio.emit('game_state', serializable_game_state)
 
 @socketio.on('deny_citizen')
@@ -80,7 +86,10 @@ def handle_deny_citizen(data):
     citizen_index = data['index']
     if 0 <= citizen_index < len(game_state['pending_citizens']):
         game_state['pending_citizens'].pop(citizen_index)
-    serializable_game_state = {**game_state, 'events': [event.to_dict() for event in event_manager.get_events()]}
+    serializable_game_state = {
+        key: value for key, value in game_state.items() if key != 'event_manager'
+    }
+    serializable_game_state['events'] = [event.to_dict() for event in game_state['event_manager'].get_events()]
     socketio.emit('game_state', serializable_game_state)
 
 def generate_citizen():
@@ -150,7 +159,10 @@ def game_tick():
         game_state['used_accommodations'] = used_accommodations
         
         if game_state['tick'] % 20 == 0:  # Update clients every second
-            serializable_game_state = {**game_state, 'events': [event.to_dict() for event in event_manager.get_events()]}
+            serializable_game_state = {
+                key: value for key, value in game_state.items() if key != 'event_manager'
+            }
+            serializable_game_state['events'] = [event.to_dict() for event in game_state['event_manager'].get_events()]
             socketio.emit('game_state', serializable_game_state)
 
 @socketio.on('console_command')
