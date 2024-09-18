@@ -34,10 +34,6 @@ game_state = {
     'event_manager': event_manager,  # Add event_manager to game_state
 }
 
-# Add events to the EventManager
-new_citizen_event = Event('new_citizen', 'random', min_interval=config['min_ticks_for_new_citizen'], max_interval=config['max_ticks_for_new_citizen'])
-event_manager.add_event(new_citizen_event)
-
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -177,8 +173,12 @@ def check_debug_modes():
     if event_manager.debug:
         print("WARNING: Event manager debug mode is enabled by default.")
 
-check_debug_modes()
+def initialize_events():
+    new_citizen_event = Event('new_citizen', 'random', min_interval=config['min_ticks_for_new_citizen'], max_interval=config['max_ticks_for_new_citizen'])
+    event_manager.add_event(new_citizen_event)
 
 if __name__ == '__main__':
+    check_debug_modes()
+    initialize_events()
     socketio.start_background_task(game_tick)
     socketio.run(app, host='0.0.0.0', port=5000)
