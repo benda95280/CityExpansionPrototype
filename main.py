@@ -49,8 +49,8 @@ def handle_place_building(data):
         game_state['grid'][f"{x},{y}"] = {
             'type': building_type,
             'level': 1,
-            'accommodations': buildings_data[building_type]['accommodations'],
-            'population': 0
+            'accommodations': [[] for _ in range(buildings_data[building_type]['accommodations'])],
+            'total_accommodations': buildings_data[building_type]['accommodations']
         }
         game_state['money'] -= buildings_data[building_type]['price']
         game_state['total_accommodations'] += buildings_data[building_type]['accommodations']
@@ -69,17 +69,17 @@ def handle_upgrade_building(data):
         if game_state['money'] >= upgrade_cost:
             building['level'] = next_level
             new_accommodations = buildings_data[building_type]['accommodations']
-            building['accommodations'] += new_accommodations
+            building['accommodations'].extend([[] for _ in range(new_accommodations)])
+            building['total_accommodations'] += new_accommodations
             game_state['total_accommodations'] += new_accommodations
             game_state['money'] -= upgrade_cost
             socketio.emit('game_state', game_state)
 
 def find_available_building():
     for coords, building in game_state['grid'].items():
-        building_type = building['type']
-        max_population = building['accommodations'] * buildings_data[building_type]['max_people_per_accommodation']
-        if building['population'] < max_population:
-            return coords
+        for accommodation in building['accommodations']:
+            if len(accommodation) < buildings_data[building['type']]['max_people_per_accommodation']:
+                return coords
     return None
 
 @socketio.on('accept_citizen')
@@ -90,9 +90,11 @@ def handle_accept_citizen(data):
         available_building = find_available_building()
         if available_building:
             building = game_state['grid'][available_building]
-            building['population'] += 1
-            game_state['population'] += 1
-            socketio.emit('citizen_placed', {'citizen': accepted_citizen, 'building': available_building})
+            for accommodation in building['accommodations']:
+                if len(accommodation) < buildings_data[building['type']]['max_people_per_accommodation']:
+                    accommodation.append(accepted_citizen)
+                    socketio.emit('citizen_placed', {'citizen': accepted_citizen, 'building': available_building})
+                    break
         socketio.emit('game_state', game_state)
 
 @socketio.on('deny_citizen')
@@ -100,8 +102,6 @@ def handle_deny_citizen(data):
     citizen_index = data['index']
     if 0 <= citizen_index < len(game_state['pending_citizens']):
         game_state['pending_citizens'].pop(citizen_index)
-    total_population = sum(building['population'] for building in game_state['grid'].values())
-    game_state['population'] = max(0, total_population)  # Ensure population is never negative
     socketio.emit('game_state', game_state)
 
 def generate_citizen():
@@ -142,21 +142,22 @@ def game_tick():
         # Population growth
         for coords, building in game_state['grid'].items():
             building_type = building['type']
-            max_population = building['accommodations'] * buildings_data[building_type]['max_people_per_accommodation']
-            
-            if building['population'] < max_population:
-                growth_rate = buildings_data[building_type]['growth_rate'] / 20  # Slow down growth rate
-                building['population'] += random.random() * growth_rate
-                building['population'] = min(building['population'], max_population)
+            for accommodation in building['accommodations']:
+                if len(accommodation) < buildings_data[building_type]['max_people_per_accommodation']:
+                    growth_rate = buildings_data[building_type]['growth_rate'] / 20  # Slow down growth rate
+                    if random.random() < growth_rate:
+                        new_citizen = generate_citizen()
+                        accommodation.append(new_citizen)
         
         # Calculate total population and used accommodations
         total_population = 0
         used_accommodations = 0
         for building in game_state['grid'].values():
-            total_population += building['population']
-            used_accommodations += math.ceil(building['population'] / buildings_data[building['type']]['max_people_per_accommodation'])
+            building_population = sum(len(accommodation) for accommodation in building['accommodations'])
+            total_population += building_population
+            used_accommodations += len([acc for acc in building['accommodations'] if acc])
         
-        game_state['population'] = max(0, total_population)
+        game_state['population'] = total_population
         game_state['used_accommodations'] = used_accommodations
         
         if game_state['tick'] % 20 == 0:  # Update clients every second
