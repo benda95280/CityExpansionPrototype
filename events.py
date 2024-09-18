@@ -24,6 +24,8 @@ class Event:
         if self.next_tick <= current_tick:
             self.next_tick = current_tick + 1
 
+        return self.next_tick  # Return the new next_tick value
+
     def disable(self):
         self.active = False
 
@@ -72,6 +74,6 @@ class EventManager:
                 if self.debug:
                     print(f"Event '{event.name}' is going to be fired")
                 yield event
-                event.update_next_tick(current_tick)
+                new_next_tick = event.update_next_tick(current_tick)
                 if self.debug:
-                    print(f"Updated next ticking occurrence: {event.next_tick}")
+                    print(f"Updated next ticking occurrence: {new_next_tick}")
