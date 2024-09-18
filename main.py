@@ -4,7 +4,7 @@ import json
 import time
 import random
 import math
-from events import Event
+from events import Event, EventManager
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
@@ -18,6 +18,9 @@ with open('config.json', 'r') as f:
 with open('static/data/buildings.json', 'r') as f:
     buildings_data = json.load(f)
 
+# Initialize EventManager
+event_manager = EventManager()
+
 # Game state
 game_state = {
     'grid': {},
@@ -30,11 +33,11 @@ game_state = {
     'start_time': time.time() * 1000,  # Current time in milliseconds
     'buildings_data': buildings_data,  # Add buildings_data to game_state
     'debug': True,
-    'events': [
-        Event('new_citizen', 0, is_random=True, min_interval=config['min_ticks_for_new_citizen'], max_interval=config['max_ticks_for_new_citizen'], initial_tick=random.randint(config['min_ticks_for_new_citizen'], config['max_ticks_for_new_citizen'])),
-        # Add more events here in the future
-    ]
 }
+
+# Add events to the EventManager
+new_citizen_event = Event('new_citizen', 'random', min_interval=config['min_ticks_for_new_citizen'], max_interval=config['max_ticks_for_new_citizen'])
+event_manager.add_event(new_citizen_event)
 
 @app.route('/')
 def index():
@@ -42,7 +45,7 @@ def index():
 
 @socketio.on('connect')
 def handle_connect():
-    serializable_game_state = {**game_state, 'events': [event.to_dict() for event in game_state['events']]}
+    serializable_game_state = {**game_state, 'events': [event.to_dict() for event in event_manager.get_events()]}
     socketio.emit('game_state', serializable_game_state)
     for citizen in game_state['pending_citizens']:
         socketio.emit('new_citizen', citizen)
@@ -61,7 +64,7 @@ def handle_place_building(data):
         }
         game_state['money'] -= buildings_data[building_type]['price']
         game_state['total_accommodations'] += buildings_data[building_type]['accommodations']
-        serializable_game_state = {**game_state, 'events': [event.to_dict() for event in game_state['events']]}
+        serializable_game_state = {**game_state, 'events': [event.to_dict() for event in event_manager.get_events()]}
         socketio.emit('game_state', serializable_game_state)
 
 @socketio.on('upgrade_building')
@@ -81,7 +84,7 @@ def handle_upgrade_building(data):
             building['total_accommodations'] += new_accommodations
             game_state['total_accommodations'] += new_accommodations
             game_state['money'] -= upgrade_cost
-            serializable_game_state = {**game_state, 'events': [event.to_dict() for event in game_state['events']]}
+            serializable_game_state = {**game_state, 'events': [event.to_dict() for event in event_manager.get_events()]}
             socketio.emit('game_state', serializable_game_state)
 
 def find_available_building():
@@ -106,7 +109,7 @@ def handle_accept_citizen(data):
                     game_state['used_accommodations'] += 1
                     socketio.emit('citizen_placed', {'citizen': accepted_citizen, 'building': available_building})
                     break
-        serializable_game_state = {**game_state, 'events': [event.to_dict() for event in game_state['events']]}
+        serializable_game_state = {**game_state, 'events': [event.to_dict() for event in event_manager.get_events()]}
         socketio.emit('game_state', serializable_game_state)
 
 @socketio.on('deny_citizen')
@@ -114,7 +117,7 @@ def handle_deny_citizen(data):
     citizen_index = data['index']
     if 0 <= citizen_index < len(game_state['pending_citizens']):
         game_state['pending_citizens'].pop(citizen_index)
-    serializable_game_state = {**game_state, 'events': [event.to_dict() for event in game_state['events']]}
+    serializable_game_state = {**game_state, 'events': [event.to_dict() for event in event_manager.get_events()]}
     socketio.emit('game_state', serializable_game_state)
 
 def generate_citizen():
@@ -152,12 +155,10 @@ def handle_event(event):
     citizen_generated = False
     if event.name == 'new_citizen':
         citizen_generated = generate_new_citizen()
-    # Add more event handlers here in the future
 
     if game_state['debug']:
         print(f"Event occurred: {event.name} at tick {game_state['tick']}")
         print(f"Next occurrence: tick {event.next_tick}")
-        print(f"Function to be executed: {event.name}")
         if event.name == 'new_citizen':
             if citizen_generated:
                 print(f"New citizen generated: {game_state['pending_citizens'][-1]}")
@@ -169,15 +170,13 @@ def game_tick():
         time.sleep(0.05)  # 20 ticks per second
         game_state['tick'] += 1
         
-        for event in game_state['events']:
-            if game_state['tick'] >= event.next_tick:
-                if game_state['debug']:
-                    print(f"Event registered: {event.name}")
-                    print(f"Next ticking occurrence: {event.next_tick}")
-                handle_event(event)
-                event.update_next_tick(game_state['tick'])
-                if game_state['debug']:
-                    print(f"Updated next ticking occurrence: {event.next_tick}")
+        for event in event_manager.update_events(game_state['tick']):
+            if game_state['debug']:
+                print(f"Event registered: {event.name}")
+                print(f"Next ticking occurrence: {event.next_tick}")
+            handle_event(event)
+            if game_state['debug']:
+                print(f"Updated next ticking occurrence: {event.next_tick}")
         
         # Calculate total population and used accommodations
         total_population = 0
@@ -191,7 +190,7 @@ def game_tick():
         game_state['used_accommodations'] = used_accommodations
         
         if game_state['tick'] % 20 == 0:  # Update clients every second
-            serializable_game_state = {**game_state, 'events': [event.to_dict() for event in game_state['events']]}
+            serializable_game_state = {**game_state, 'events': [event.to_dict() for event in event_manager.get_events()]}
             socketio.emit('game_state', serializable_game_state)
 
 @socketio.on('console_command')
@@ -206,7 +205,7 @@ def handle_console_command(data):
     elif command == 'get tick':
         return f"Current tick: {game_state['tick']}"
     elif command == 'get events':
-        events_info = [f"{e.name}: interval={e.interval}, is_random={e.is_random}, min_interval={e.min_interval}, max_interval={e.max_interval}, next_tick={e.next_tick}" for e in game_state['events']]
+        events_info = [f"{e.name}: event_type={e.event_type}, interval={e.interval}, min_interval={e.min_interval}, max_interval={e.max_interval}, next_tick={e.next_tick}, active={e.active}" for e in event_manager.get_events()]
         return "Events:\n" + "\n".join(events_info)
     else:
         return 'Unknown command'
