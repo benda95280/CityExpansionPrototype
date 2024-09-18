@@ -47,10 +47,12 @@ class Event:
 class EventManager:
     def __init__(self):
         self.events = []
-        self.debug = False  # Add debug flag
+        self.debug = False
 
     def add_event(self, event):
         self.events.append(event)
+        if self.debug:
+            print(f"Event registered: {event.name}")
 
     def remove_event(self, event_name):
         self.events = [e for e in self.events if e.name != event_name]
@@ -68,8 +70,7 @@ class EventManager:
         for event in self.get_active_events():
             if current_tick >= event.next_tick:
                 if self.debug:
-                    print(f"Event registered: {event.name}")
-                    print(f"Next ticking occurrence: {event.next_tick}")
+                    print(f"Event '{event.name}' is going to be fired")
                 yield event
                 event.update_next_tick(current_tick)
                 if self.debug:
