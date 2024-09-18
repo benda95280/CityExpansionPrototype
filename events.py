@@ -47,7 +47,7 @@ class Event:
 class EventManager:
     def __init__(self):
         self.events = []
-        self.debug = False
+        self.debug = True
 
     def add_event(self, event):
         self.events.append(event)

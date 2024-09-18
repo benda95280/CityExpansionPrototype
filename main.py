@@ -194,6 +194,14 @@ def handle_console_command_socket(data):
     command = data['command']
     return handle_console_command(command, game_state, event_manager)
 
+def check_debug_modes():
+    if game_state['debug']:
+        print("WARNING: Game debug mode is enabled by default.")
+    if event_manager.debug:
+        print("WARNING: Event manager debug mode is enabled by default.")
+
+check_debug_modes()
+
 if __name__ == '__main__':
     socketio.start_background_task(game_tick)
     socketio.run(app, host='0.0.0.0', port=5000)
