@@ -1,9 +1,13 @@
 let currentCitizenPopup = null;
 
 function updateResourcesDisplay() {
-    const population = Math.floor(gameState.population) || 0;  // Use 0 if NaN
-    document.getElementById('population').textContent = `Population: ${population}`;
-    document.getElementById('money').textContent = `Money: $${gameState.money}`;
+    const population = Math.floor(gameState.population) || 0;
+    const availableAccommodations = (gameState.total_accommodations - gameState.used_accommodations) || 0;
+    const totalAccommodations = gameState.total_accommodations || 0;
+    
+    document.getElementById('population-value').textContent = `${population}`;
+    document.getElementById('accommodations-value').textContent = `${availableAccommodations} / ${totalAccommodations}`;
+    document.getElementById('money-value').textContent = `$${gameState.money}`;
 }
 
 function showBuildingMenu(x, y, gridX, gridY) {
@@ -119,8 +123,6 @@ function showNewCitizenPopup(citizen) {
 }
 
 function centerMapOnBuilding(x, y) {
-    // Implement this function to center the map on the given coordinates
-    // You may need to update the grid offset and trigger a redraw
     gridOffsetX = canvas.width / 2 - x * gridSize * gridScale;
     gridOffsetY = canvas.height / 2 - y * gridSize * gridScale;
     drawGame();

@@ -1,3 +1,5 @@
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css');
+
 body, html {
     margin: 0;
     padding: 0;
@@ -34,6 +36,10 @@ body, html {
 
 #resources span {
     margin-right: 20px;
+}
+
+#resources i {
+    margin-right: 5px;
 }
 
 #game-controls {

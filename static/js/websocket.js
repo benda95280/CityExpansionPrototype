@@ -21,5 +21,5 @@ function initWebSocket() {
 
 function updateTickingSpeedDisplay() {
     const tickingSpeed = Math.round(gameState.tick / (Date.now() - gameState.start_time) * 1000);
-    document.getElementById('ticking-speed').textContent = `Ticking Speed: ${tickingSpeed} ticks/s`;
+    document.getElementById('ticking-speed-value').textContent = `${tickingSpeed} ticks/s`;
 }
