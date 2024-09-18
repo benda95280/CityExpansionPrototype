@@ -14,6 +14,7 @@ function updateResourcesDisplay() {
 }
 
 function showBuildingMenu(x, y, gridX, gridY) {
+    console.log("showBuildingMenu called");
     const existingMenu = document.querySelector('.context-menu');
     if (existingMenu) {
         document.body.removeChild(existingMenu);
@@ -27,6 +28,7 @@ function showBuildingMenu(x, y, gridX, gridY) {
     const existingBuilding = gameState.grid[`${gridX},${gridY}`];
 
     if (existingBuilding) {
+        console.log("Existing building found:", existingBuilding);
         const buildingData = gameState.buildings_data[existingBuilding.type];
         const upgradeOption = document.createElement('div');
         upgradeOption.textContent = `Upgrade ${buildingData.name} ($${buildingData.upgrade_cost * existingBuilding.level})`;
@@ -44,6 +46,7 @@ function showBuildingMenu(x, y, gridX, gridY) {
         });
         menu.appendChild(infoOption);
     } else {
+        console.log("No existing building, showing building options");
         for (const [type, data] of Object.entries(gameState.buildings_data)) {
             const option = document.createElement('div');
             option.textContent = `${data.name} ($${data.price})`;
@@ -56,6 +59,7 @@ function showBuildingMenu(x, y, gridX, gridY) {
     }
 
     document.body.appendChild(menu);
+    console.log("Building menu appended to document body");
 
     document.addEventListener('click', removeMenu);
 }
@@ -163,7 +167,7 @@ function initDebugConsole() {
 
     document.addEventListener('keydown', function(e) {
         if (e.key === '/') {
-            e.preventDefault(); // Prevent the '/' character from being typed in the input field
+            e.preventDefault();
             debugConsole.style.display = debugConsole.style.display === 'none' ? 'block' : 'none';
         }
     });

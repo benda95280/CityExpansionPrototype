@@ -32,6 +32,7 @@ game_state = {
     'pending_citizens': [],
     'start_time': time.time() * 1000,  # Current time in milliseconds
     'event_manager': event_manager,  # Add event_manager to game_state
+    'buildings_data': buildings_data,  # Add buildings_data to game_state
 }
 
 @app.route('/')
@@ -44,6 +45,7 @@ def handle_connect():
         key: value for key, value in game_state.items() if key != 'event_manager'
     }
     serializable_game_state['events'] = [event.to_dict() for event in game_state['event_manager'].get_events()]
+    print("Sending game state to client:", serializable_game_state)  # Debug log
     socketio.emit('game_state', serializable_game_state)
     for citizen in game_state['pending_citizens']:
         socketio.emit('new_citizen', citizen)
@@ -165,4 +167,4 @@ if __name__ == '__main__':
     check_debug_modes()
     initialize_events()
     socketio.start_background_task(game_tick)
-    socketio.run(app, host='0.0.0.0', port=5000)
+    socketio.run(app, host='0.0.0.0', port=5000, debug=True)

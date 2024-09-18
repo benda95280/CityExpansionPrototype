@@ -61,7 +61,9 @@ function handleCanvasClick(event) {
 
 function handleCanvasRightClick(event) {
     event.preventDefault();
+    console.log("Right-click event triggered"); // Debug log
     const { x, y } = getGridCoordinates(event.clientX, event.clientY);
+    console.log(`Grid coordinates: (${x}, ${y})`); // Debug log
     showBuildingMenu(event.clientX, event.clientY, x, y);
 }
 
