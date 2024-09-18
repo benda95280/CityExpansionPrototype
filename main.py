@@ -6,6 +6,7 @@ import random
 import math
 from events import Event, EventManager
 from commands import Commands, handle_console_command
+from buildings import buildings_data, find_available_building, handle_place_building, handle_upgrade_building
 
 DEBUG_MODE = True
 
@@ -16,10 +17,6 @@ socketio = SocketIO(app)
 # Load config
 with open('config.json', 'r') as f:
     config = json.load(f)
-
-# Load building data
-with open('static/data/buildings.json', 'r') as f:
-    buildings_data = json.load(f)
 
 # Initialize EventManager
 event_manager = EventManager()
@@ -34,7 +31,7 @@ game_state = {
     'tick': 0,
     'pending_citizens': [],
     'start_time': time.time() * 1000,  # Current time in milliseconds
-    'buildings_data': buildings_data,  # Add buildings_data to game_state
+    'event_manager': event_manager,  # Add event_manager to game_state
 }
 
 # Add events to the EventManager
@@ -53,55 +50,19 @@ def handle_connect():
         socketio.emit('new_citizen', citizen)
 
 @socketio.on('place_building')
-def handle_place_building(data):
-    x, y = data['x'], data['y']
-    building_type = data['building_type']
-    
-    if game_state['money'] >= buildings_data[building_type]['price']:
-        game_state['grid'][f"{x},{y}"] = {
-            'type': building_type,
-            'level': 1,
-            'accommodations': [[] for _ in range(buildings_data[building_type]['accommodations'])],
-            'total_accommodations': buildings_data[building_type]['accommodations']
-        }
-        game_state['money'] -= buildings_data[building_type]['price']
-        game_state['total_accommodations'] += buildings_data[building_type]['accommodations']
-        serializable_game_state = {**game_state, 'events': [event.to_dict() for event in event_manager.get_events()]}
-        socketio.emit('game_state', serializable_game_state)
+def handle_place_building_socket(data):
+    handle_place_building(data, game_state, socketio)
 
 @socketio.on('upgrade_building')
-def handle_upgrade_building(data):
-    x, y = data['x'], data['y']
-    building = game_state['grid'].get(f"{x},{y}")
-    
-    if building:
-        building_type = building['type']
-        next_level = building['level'] + 1
-        upgrade_cost = buildings_data[building_type]['upgrade_cost'] * next_level
-        
-        if game_state['money'] >= upgrade_cost:
-            building['level'] = next_level
-            new_accommodations = buildings_data[building_type]['accommodations']
-            building['accommodations'].extend([[] for _ in range(new_accommodations)])
-            building['total_accommodations'] += new_accommodations
-            game_state['total_accommodations'] += new_accommodations
-            game_state['money'] -= upgrade_cost
-            serializable_game_state = {**game_state, 'events': [event.to_dict() for event in event_manager.get_events()]}
-            socketio.emit('game_state', serializable_game_state)
-
-def find_available_building():
-    for coords, building in game_state['grid'].items():
-        for accommodation in building['accommodations']:
-            if len(accommodation) < buildings_data[building['type']]['max_people_per_accommodation']:
-                return coords
-    return None
+def handle_upgrade_building_socket(data):
+    handle_upgrade_building(data, game_state, socketio)
 
 @socketio.on('accept_citizen')
 def handle_accept_citizen(data):
     citizen_index = data['index']
     if 0 <= citizen_index < len(game_state['pending_citizens']):
         accepted_citizen = game_state['pending_citizens'].pop(citizen_index)
-        available_building = find_available_building()
+        available_building = find_available_building(game_state)
         if available_building:
             building = game_state['grid'][available_building]
             for accommodation in building['accommodations']:
@@ -138,7 +99,7 @@ def generate_new_citizen():
     global DEBUG_MODE
     if DEBUG_MODE:
         print(f"Attempting to generate new citizen at tick {game_state['tick']}")
-    available_building = find_available_building()
+    available_building = find_available_building(game_state)
     if not available_building:
         if DEBUG_MODE:
             print("Failed to generate new citizen: No available buildings")
