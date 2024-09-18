@@ -133,12 +133,20 @@ def generate_new_citizen():
     if game_state['debug']:
         print(f"Attempting to generate new citizen at tick {game_state['tick']}")
     available_building = find_available_building()
-    if available_building and len(game_state['pending_citizens']) < 5:
-        new_citizen = generate_citizen()
-        game_state['pending_citizens'].append(new_citizen)
-        socketio.emit('new_citizen', new_citizen)
-        return True
-    return False
+    if not available_building:
+        if game_state['debug']:
+            print("Failed to generate new citizen: No available buildings")
+        return False
+    if len(game_state['pending_citizens']) >= 5:
+        if game_state['debug']:
+            print("Failed to generate new citizen: Maximum pending citizens reached (5)")
+        return False
+    new_citizen = generate_citizen()
+    game_state['pending_citizens'].append(new_citizen)
+    socketio.emit('new_citizen', new_citizen)
+    if game_state['debug']:
+        print(f"New citizen generated successfully: {new_citizen}")
+    return True
 
 def handle_event(event):
     if event.name == 'new_citizen':
@@ -148,6 +156,7 @@ def handle_event(event):
     if game_state['debug']:
         print(f"Event occurred: {event.name} at tick {game_state['tick']}")
         print(f"Next occurrence: tick {event.next_tick}")
+        print(f"Function to be executed: generate_new_citizen")
         if event.name == 'new_citizen':
             if citizen_generated:
                 print(f"New citizen generated: {game_state['pending_citizens'][-1]}")
