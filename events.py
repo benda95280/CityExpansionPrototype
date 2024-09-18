@@ -1,13 +1,13 @@
 import random
 
 class Event:
-    def __init__(self, name, interval, is_random=False, min_interval=None, max_interval=None):
+    def __init__(self, name, interval, is_random=False, min_interval=None, max_interval=None, initial_tick=0):
         self.name = name
         self.interval = interval
         self.is_random = is_random
         self.min_interval = min_interval
         self.max_interval = max_interval
-        self.next_tick = 0
+        self.next_tick = initial_tick
 
     def update_next_tick(self, current_tick):
         if self.is_random:

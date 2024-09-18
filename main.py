@@ -29,9 +29,9 @@ game_state = {
     'pending_citizens': [],
     'start_time': time.time() * 1000,  # Current time in milliseconds
     'buildings_data': buildings_data,  # Add buildings_data to game_state
-    'debug': False,
+    'debug': True,
     'events': [
-        Event('new_citizen', 0, is_random=True, min_interval=config['min_ticks_for_new_citizen'], max_interval=config['max_ticks_for_new_citizen']),
+        Event('new_citizen', 0, is_random=True, min_interval=config['min_ticks_for_new_citizen'], max_interval=config['max_ticks_for_new_citizen'], initial_tick=random.randint(config['min_ticks_for_new_citizen'], config['max_ticks_for_new_citizen'])),
         # Add more events here in the future
     ]
 }
@@ -130,6 +130,8 @@ def generate_citizen():
     }
 
 def generate_new_citizen():
+    if game_state['debug']:
+        print(f"Attempting to generate new citizen at tick {game_state['tick']}")
     available_building = find_available_building()
     if available_building and len(game_state['pending_citizens']) < 5:
         new_citizen = generate_citizen()
@@ -144,6 +146,8 @@ def handle_event(event):
     if game_state['debug']:
         print(f"Event occurred: {event.name} at tick {game_state['tick']}")
         print(f"Next occurrence: tick {event.next_tick}")
+        if event.name == 'new_citizen':
+            print(f"New citizen generated: {game_state['pending_citizens'][-1]}")
 
 def game_tick():
     while True:
