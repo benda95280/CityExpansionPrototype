@@ -1,9 +1,10 @@
 import random
 
 class Event:
-    def __init__(self, name, event_type, interval=None, min_interval=None, max_interval=None):
+    def __init__(self, name, event_type, callback, interval=None, min_interval=None, max_interval=None):
         self.name = name
         self.event_type = event_type
+        self.callback = callback
         self.interval = interval
         self.min_interval = min_interval
         self.max_interval = max_interval
@@ -34,6 +35,11 @@ class Event:
 
     def is_active(self):
         return self.active
+
+    def execute(self, game_state):
+        if callable(self.callback):
+            return self.callback(game_state)
+        return None
 
     def to_dict(self):
         return {

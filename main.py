@@ -100,8 +100,7 @@ def generate_citizen():
         'age': random.randint(18, 80)
     }
 
-def generate_new_citizen():
-    global DEBUG_MODE
+def generate_new_citizen(game_state):
     if DEBUG_MODE:
         print(f"Attempting to generate new citizen at tick {game_state['tick']}")
     available_building = find_available_building(game_state)
@@ -120,28 +119,13 @@ def generate_new_citizen():
         print(f"New citizen generated successfully: {new_citizen}")
     return True
 
-def handle_event(event):
-    global DEBUG_MODE
-    citizen_generated = False
-    if event.name == 'new_citizen':
-        citizen_generated = generate_new_citizen()
-
-    if DEBUG_MODE:
-        print(f"Event occurred: {event.name} at tick {game_state['tick']}")
-        print(f"Next occurrence: tick {event.next_tick}")
-        if event.name == 'new_citizen':
-            if citizen_generated:
-                print(f"New citizen generated: {game_state['pending_citizens'][-1]}")
-            else:
-                print("Attempted to generate new citizen, but none were added.")
-
 def game_tick():
     while True:
         time.sleep(0.05)  # 20 ticks per second
         game_state['tick'] += 1
         
         for event in event_manager.update_events(game_state['tick']):
-            handle_event(event)
+            event.execute(game_state)
         
         # Calculate total population and used accommodations
         total_population = 0
@@ -174,7 +158,7 @@ def check_debug_modes():
         print("WARNING: Event manager debug mode is enabled by default.")
 
 def initialize_events():
-    new_citizen_event = Event('new_citizen', 'random', min_interval=config['min_ticks_for_new_citizen'], max_interval=config['max_ticks_for_new_citizen'])
+    new_citizen_event = Event('new_citizen', 'random', generate_new_citizen, min_interval=config['min_ticks_for_new_citizen'], max_interval=config['max_ticks_for_new_citizen'])
     event_manager.add_event(new_citizen_event)
 
 if __name__ == '__main__':
