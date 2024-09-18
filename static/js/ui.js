@@ -71,10 +71,16 @@ function showCellPopup(x, y, building) {
 
     if (building) {
         const buildingData = gameState.buildings_data[building.type];
+        const occupiedAccommodations = building.accommodations.filter(acc => acc.length > 0).length;
+        const totalAccommodations = building.total_accommodations;
+        const population = building.accommodations.reduce((sum, acc) => sum + acc.length, 0);
+        
         popup.innerHTML = `
             <h3>${buildingData.name}</h3>
             <p>Level: ${building.level}</p>
-            <p>Population: ${building.accommodations.reduce((sum, acc) => sum + acc.length, 0)}</p>
+            <p>Accommodations: ${occupiedAccommodations} / ${totalAccommodations}</p>
+            <p>Population: ${population}</p>
+            <p>Max People per Accommodation: ${buildingData.max_people_per_accommodation}</p>
             <button id="upgrade-btn">Upgrade ($${buildingData.upgrade_cost * building.level})</button>
         `;
         popup.querySelector('#upgrade-btn').addEventListener('click', () => {
@@ -116,7 +122,6 @@ function showNewCitizenPopup(citizen) {
         <p>Age: ${citizen.age}</p>
         <button id="accept-citizen">Accept</button>
         <button id="deny-citizen">Deny</button>
-        <button id="show-building" style="display:none;">Show Building</button>
     `;
 
     document.body.appendChild(popup);
@@ -124,23 +129,14 @@ function showNewCitizenPopup(citizen) {
 
     popup.querySelector('#accept-citizen').addEventListener('click', () => {
         socket.emit('accept_citizen', { index: gameState.pending_citizens.length - 1 });
+        document.body.removeChild(popup);
+        currentCitizenPopup = null;
     });
 
     popup.querySelector('#deny-citizen').addEventListener('click', () => {
         socket.emit('deny_citizen', { index: gameState.pending_citizens.length - 1 });
         document.body.removeChild(popup);
         currentCitizenPopup = null;
-    });
-
-    socket.on('citizen_placed', (data) => {
-        const showBuildingBtn = popup.querySelector('#show-building');
-        showBuildingBtn.style.display = 'inline-block';
-        showBuildingBtn.addEventListener('click', () => {
-            const [x, y] = data.building.split(',').map(Number);
-            centerMapOnBuilding(x, y);
-            document.body.removeChild(popup);
-            currentCitizenPopup = null;
-        });
     });
 }
 

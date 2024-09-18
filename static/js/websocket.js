@@ -17,6 +17,11 @@ function initWebSocket() {
     socket.on('new_citizen', (citizen) => {
         showNewCitizenPopup(citizen);
     });
+
+    socket.on('citizen_placed', (data) => {
+        const [x, y] = data.building.split(',').map(Number);
+        centerMapOnBuilding(x, y);
+    });
 }
 
 function updateTickingSpeedDisplay() {
