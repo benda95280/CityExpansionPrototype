@@ -24,6 +24,12 @@
         </div>
     </div>
 
+    <div id="debug-console" style="display: none;">
+        <input type="text" id="console-input" placeholder="Enter debug command">
+        <button id="console-submit">Submit</button>
+        <div id="console-output"></div>
+    </div>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
     <script src="{{ url_for('static', filename='js/buildings.js') }}"></script>
     <script src="{{ url_for('static', filename='js/grid.js') }}"></script>

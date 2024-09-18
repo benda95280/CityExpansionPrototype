@@ -1,4 +1,7 @@
 let currentCitizenPopup = null;
+let debugConsole;
+let consoleInput;
+let consoleOutput;
 
 function updateResourcesDisplay() {
     const population = Math.floor(gameState.population) || 0;
@@ -144,4 +147,38 @@ function centerMapOnBuilding(x, y) {
     gridOffsetX = canvas.width / 2 - x * gridSize * gridScale;
     gridOffsetY = canvas.height / 2 - y * gridSize * gridScale;
     drawGame();
+}
+
+function initDebugConsole() {
+    debugConsole = document.getElementById('debug-console');
+    consoleInput = document.getElementById('console-input');
+    consoleOutput = document.getElementById('console-output');
+    
+    document.getElementById('console-submit').addEventListener('click', handleConsoleSubmit);
+    consoleInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            handleConsoleSubmit();
+        }
+    });
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === '`') {
+            debugConsole.style.display = debugConsole.style.display === 'none' ? 'block' : 'none';
+        }
+    });
+}
+
+function handleConsoleSubmit() {
+    const command = consoleInput.value.trim();
+    if (command) {
+        socket.emit('console_command', { command: command }, function(response) {
+            appendToConsole(`> ${command}\n${response}`);
+        });
+        consoleInput.value = '';
+    }
+}
+
+function appendToConsole(message) {
+    consoleOutput.innerHTML += message + '\n';
+    consoleOutput.scrollTop = consoleOutput.scrollHeight;
 }

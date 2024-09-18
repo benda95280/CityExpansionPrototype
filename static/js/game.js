@@ -48,6 +48,8 @@ function initGame() {
     initWebSocket();
     
     drawGame();
+    
+    initDebugConsole();
 }
 
 function handleCanvasClick(event) {
@@ -67,7 +69,6 @@ function handleCanvasMouseMove(event) {
     const { x, y } = getGridCoordinates(event.clientX, event.clientY);
     hoveredCell = { x, y };
     
-    // Check if near edge of current map
     const edgeThreshold = 3;
     if (Math.abs(x) > Math.abs(hoveredCell.x) - edgeThreshold || 
         Math.abs(y) > Math.abs(hoveredCell.y) - edgeThreshold) {
