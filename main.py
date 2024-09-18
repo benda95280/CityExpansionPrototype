@@ -5,7 +5,7 @@ import time
 import random
 import math
 from events import Event, EventManager
-from commands import commands, get_help_message, handle_console_command
+from commands import Commands, handle_console_command
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
@@ -190,7 +190,7 @@ def game_tick():
             socketio.emit('game_state', serializable_game_state)
 
 @socketio.on('console_command')
-def handle_console_command(data):
+def handle_console_command_socket(data):
     command = data['command']
     return handle_console_command(command, game_state, event_manager)
 
