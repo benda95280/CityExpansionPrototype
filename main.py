@@ -93,6 +93,8 @@ def handle_accept_citizen(data):
             for accommodation in building['accommodations']:
                 if len(accommodation) < buildings_data[building['type']]['max_people_per_accommodation']:
                     accommodation.append(accepted_citizen)
+                    game_state['population'] += 1
+                    game_state['used_accommodations'] += 1
                     socketio.emit('citizen_placed', {'citizen': accepted_citizen, 'building': available_building})
                     break
         socketio.emit('game_state', game_state)
@@ -124,7 +126,7 @@ def game_tick():
         # Check for new citizen
         if game_state['tick'] >= game_state['next_citizen_tick']:
             available_building = find_available_building()
-            if available_building:
+            if available_building and len(game_state['pending_citizens']) < 5:  # Limit pending citizens to 5
                 new_citizen = generate_citizen()
                 game_state['pending_citizens'].append(new_citizen)
                 game_state['next_citizen_tick'] = game_state['tick'] + random.randint(
@@ -133,21 +135,11 @@ def game_tick():
                 )
                 socketio.emit('new_citizen', new_citizen)
             else:
-                # If no available building, postpone the next citizen check
+                # If no available building or too many pending citizens, postpone the next citizen check
                 game_state['next_citizen_tick'] = game_state['tick'] + random.randint(
                     config['min_ticks_for_new_citizen'],
                     config['max_ticks_for_new_citizen']
                 )
-        
-        # Population growth
-        for coords, building in game_state['grid'].items():
-            building_type = building['type']
-            for accommodation in building['accommodations']:
-                if len(accommodation) < buildings_data[building_type]['max_people_per_accommodation']:
-                    growth_rate = buildings_data[building_type]['growth_rate'] / 20  # Slow down growth rate
-                    if random.random() < growth_rate:
-                        new_citizen = generate_citizen()
-                        accommodation.append(new_citizen)
         
         # Calculate total population and used accommodations
         total_population = 0
