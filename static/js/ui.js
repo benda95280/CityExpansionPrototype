@@ -162,7 +162,8 @@ function initDebugConsole() {
     });
 
     document.addEventListener('keydown', function(e) {
-        if (e.key === '`') {
+        if (e.key === '/') {
+            e.preventDefault(); // Prevent the '/' character from being typed in the input field
             debugConsole.style.display = debugConsole.style.display === 'none' ? 'block' : 'none';
         }
     });
@@ -172,13 +173,13 @@ function handleConsoleSubmit() {
     const command = consoleInput.value.trim();
     if (command) {
         socket.emit('console_command', { command: command }, function(response) {
-            appendToConsole(`> ${command}\n${response}`);
+            appendToConsole(`> ${command}<br>${response.replace(/\n/g, '<br>')}`);
         });
         consoleInput.value = '';
     }
 }
 
 function appendToConsole(message) {
-    consoleOutput.innerHTML += message + '\n';
+    consoleOutput.innerHTML += message + '<br>';
     consoleOutput.scrollTop = consoleOutput.scrollHeight;
 }
