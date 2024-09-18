@@ -17,6 +17,21 @@ with open('config.json', 'r') as f:
 with open('static/data/buildings.json', 'r') as f:
     buildings_data = json.load(f)
 
+class Event:
+    def __init__(self, name, interval, is_random=False, min_interval=None, max_interval=None):
+        self.name = name
+        self.interval = interval
+        self.is_random = is_random
+        self.min_interval = min_interval
+        self.max_interval = max_interval
+        self.next_tick = 0
+
+    def update_next_tick(self, current_tick):
+        if self.is_random:
+            self.next_tick = current_tick + random.randint(self.min_interval, self.max_interval)
+        else:
+            self.next_tick = current_tick + self.interval
+
 # Game state
 game_state = {
     'grid': {},
@@ -25,10 +40,14 @@ game_state = {
     'total_accommodations': 0,
     'used_accommodations': 0,
     'tick': 0,
-    'next_citizen_tick': random.randint(config['min_ticks_for_new_citizen'], config['max_ticks_for_new_citizen']),
     'pending_citizens': [],
     'start_time': time.time() * 1000,  # Current time in milliseconds
-    'buildings_data': buildings_data  # Add buildings_data to game_state
+    'buildings_data': buildings_data,  # Add buildings_data to game_state
+    'debug': False,
+    'events': [
+        Event('new_citizen', 0, is_random=True, min_interval=config['min_ticks_for_new_citizen'], max_interval=config['max_ticks_for_new_citizen']),
+        # Add more events here in the future
+    ]
 }
 
 @app.route('/')
@@ -119,28 +138,30 @@ def generate_citizen():
         'age': random.randint(18, 80)
     }
 
+def generate_new_citizen():
+    available_building = find_available_building()
+    if available_building and len(game_state['pending_citizens']) < 5:
+        new_citizen = generate_citizen()
+        game_state['pending_citizens'].append(new_citizen)
+        socketio.emit('new_citizen', new_citizen)
+
+def handle_event(event):
+    if event.name == 'new_citizen':
+        generate_new_citizen()
+    # Add more event handlers here in the future
+
+    if game_state['debug']:
+        print(f"Event occurred: {event.name} at tick {game_state['tick']}")
+
 def game_tick():
     while True:
         time.sleep(0.05)  # 20 ticks per second
         game_state['tick'] += 1
         
-        # Check for new citizen
-        if game_state['tick'] >= game_state['next_citizen_tick']:
-            available_building = find_available_building()
-            if available_building and len(game_state['pending_citizens']) < 5:  # Limit pending citizens to 5
-                new_citizen = generate_citizen()
-                game_state['pending_citizens'].append(new_citizen)
-                game_state['next_citizen_tick'] = game_state['tick'] + random.randint(
-                    config['min_ticks_for_new_citizen'],
-                    config['max_ticks_for_new_citizen']
-                )
-                socketio.emit('new_citizen', new_citizen)
-            else:
-                # If no available building or too many pending citizens, postpone the next citizen check
-                game_state['next_citizen_tick'] = game_state['tick'] + random.randint(
-                    config['min_ticks_for_new_citizen'],
-                    config['max_ticks_for_new_citizen']
-                )
+        for event in game_state['events']:
+            if game_state['tick'] >= event.next_tick:
+                handle_event(event)
+                event.update_next_tick(game_state['tick'])
         
         # Calculate total population and used accommodations
         total_population = 0
@@ -155,6 +176,23 @@ def game_tick():
         
         if game_state['tick'] % 20 == 0:  # Update clients every second
             socketio.emit('game_state', game_state)
+
+@socketio.on('console_command')
+def handle_console_command(data):
+    command = data['command']
+    if command == 'debug on':
+        game_state['debug'] = True
+        return 'Debug mode enabled'
+    elif command == 'debug off':
+        game_state['debug'] = False
+        return 'Debug mode disabled'
+    elif command == 'get tick':
+        return f"Current tick: {game_state['tick']}"
+    elif command == 'get events':
+        events_info = [f"{e.name}: next tick {e.next_tick}" for e in game_state['events']]
+        return "Events:\n" + "\n".join(events_info)
+    else:
+        return 'Unknown command'
 
 if __name__ == '__main__':
     socketio.start_background_task(game_tick)
