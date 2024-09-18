@@ -1,5 +1,7 @@
 from events import EventManager
 
+DEBUG_MODE = True
+
 class Commands:
     def __init__(self):
         self.commands = {}
@@ -29,12 +31,14 @@ class Commands:
 commands = Commands()
 
 def debug_on(game_state, event_manager):
-    game_state['debug'] = True
+    global DEBUG_MODE
+    DEBUG_MODE = True
     event_manager.set_debug(True)
     return 'Debug mode enabled'
 
 def debug_off(game_state, event_manager):
-    game_state['debug'] = False
+    global DEBUG_MODE
+    DEBUG_MODE = False
     event_manager.set_debug(False)
     return 'Debug mode disabled'
 

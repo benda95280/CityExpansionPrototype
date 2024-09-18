@@ -7,6 +7,8 @@ import math
 from events import Event, EventManager
 from commands import Commands, handle_console_command
 
+DEBUG_MODE = True
+
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
 socketio = SocketIO(app)
@@ -33,7 +35,6 @@ game_state = {
     'pending_citizens': [],
     'start_time': time.time() * 1000,  # Current time in milliseconds
     'buildings_data': buildings_data,  # Add buildings_data to game_state
-    'debug': True,
 }
 
 # Add events to the EventManager
@@ -134,30 +135,32 @@ def generate_citizen():
     }
 
 def generate_new_citizen():
-    if game_state['debug']:
+    global DEBUG_MODE
+    if DEBUG_MODE:
         print(f"Attempting to generate new citizen at tick {game_state['tick']}")
     available_building = find_available_building()
     if not available_building:
-        if game_state['debug']:
+        if DEBUG_MODE:
             print("Failed to generate new citizen: No available buildings")
         return False
     if len(game_state['pending_citizens']) >= 5:
-        if game_state['debug']:
+        if DEBUG_MODE:
             print("Failed to generate new citizen: Maximum pending citizens reached (5)")
         return False
     new_citizen = generate_citizen()
     game_state['pending_citizens'].append(new_citizen)
     socketio.emit('new_citizen', new_citizen)
-    if game_state['debug']:
+    if DEBUG_MODE:
         print(f"New citizen generated successfully: {new_citizen}")
     return True
 
 def handle_event(event):
+    global DEBUG_MODE
     citizen_generated = False
     if event.name == 'new_citizen':
         citizen_generated = generate_new_citizen()
 
-    if game_state['debug']:
+    if DEBUG_MODE:
         print(f"Event occurred: {event.name} at tick {game_state['tick']}")
         print(f"Next occurrence: tick {event.next_tick}")
         if event.name == 'new_citizen':
@@ -195,7 +198,8 @@ def handle_console_command_socket(data):
     return handle_console_command(command, game_state, event_manager)
 
 def check_debug_modes():
-    if game_state['debug']:
+    global DEBUG_MODE
+    if DEBUG_MODE:
         print("WARNING: Game debug mode is enabled by default.")
     if event_manager.debug:
         print("WARNING: Event manager debug mode is enabled by default.")
