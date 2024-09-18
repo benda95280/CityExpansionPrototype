@@ -1,0 +1,43 @@
+Exception in thread Thread-34 (_handle_event_internal):
+Traceback (most recent call last):
+  File "/nix/store/f98g7xbckgqbkagdvpzc2r6lv3h1p9ki-python3-3.11.9/lib/python3.11/threading.py", line 1045, in _bootstrap_inner
+    self.run()
+  File "/nix/store/f98g7xbckgqbkagdvpzc2r6lv3h1p9ki-python3-3.11.9/lib/python3.11/threading.py", line 982, in run
+    self._target(*self._args, **self._kwargs)
+  File "/home/runner/CityExpansionPrototype/.pythonlibs/lib/python3.11/site-packages/socketio/server.py", line 589, in _handle_event_internal
+    r = server._trigger_event(data[0], namespace, sid, *data[1:])
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/CityExpansionPrototype/.pythonlibs/lib/python3.11/site-packages/socketio/server.py", line 614, in _trigger_event
+    return handler(*args)
+           ^^^^^^^^^^^^^^
+  File "/home/runner/CityExpansionPrototype/.pythonlibs/lib/python3.11/site-packages/flask_socketio/__init__.py", line 288, in _handler
+    return self._handle_event(handler, message, real_ns, sid,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/CityExpansionPrototype/.pythonlibs/lib/python3.11/site-packages/flask_socketio/__init__.py", line 833, in _handle_event
+    ret = handler(*args)
+          ^^^^^^^^^^^^^^
+  File "/home/runner/CityExpansionPrototype/main.py", line 64, in handle_place_building
+    socketio.emit('game_state', game_state)
+  File "/home/runner/CityExpansionPrototype/.pythonlibs/lib/python3.11/site-packages/flask_socketio/__init__.py", line 468, in emit
+    self.server.emit(event, *args, namespace=namespace, to=to,
+  File "/home/runner/CityExpansionPrototype/.pythonlibs/lib/python3.11/site-packages/socketio/server.py", line 166, in emit
+    self.manager.emit(event, data, namespace, room=room,
+  File "/home/runner/CityExpansionPrototype/.pythonlibs/lib/python3.11/site-packages/socketio/manager.py", line 44, in emit
+    encoded_packet = pkt.encode()
+                     ^^^^^^^^^^^^
+  File "/home/runner/CityExpansionPrototype/.pythonlibs/lib/python3.11/site-packages/socketio/packet.py", line 64, in encode
+    encoded_packet += self.json.dumps(data, separators=(',', ':'))
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/nix/store/f98g7xbckgqbkagdvpzc2r6lv3h1p9ki-python3-3.11.9/lib/python3.11/json/__init__.py", line 238, in dumps
+    **kw).encode(obj)
+          ^^^^^^^^^^^
+  File "/nix/store/f98g7xbckgqbkagdvpzc2r6lv3h1p9ki-python3-3.11.9/lib/python3.11/json/encoder.py", line 200, in encode
+    chunks = self.iterencode(o, _one_shot=True)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/nix/store/f98g7xbckgqbkagdvpzc2r6lv3h1p9ki-python3-3.11.9/lib/python3.11/json/encoder.py", line 258, in iterencode
+    return _iterencode(o, 0)
+           ^^^^^^^^^^^^^^^^^
+  File "/nix/store/f98g7xbckgqbkagdvpzc2r6lv3h1p9ki-python3-3.11.9/lib/python3.11/json/encoder.py", line 180, in default
+    raise TypeError(f'Object of type {o.__class__.__name__} '
+TypeError: Object of type Event is not JSON serializable
+^C

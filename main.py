@@ -61,7 +61,8 @@ def handle_place_building(data):
         }
         game_state['money'] -= buildings_data[building_type]['price']
         game_state['total_accommodations'] += buildings_data[building_type]['accommodations']
-        socketio.emit('game_state', game_state)
+        serializable_game_state = {**game_state, 'events': [event.to_dict() for event in game_state['events']]}
+        socketio.emit('game_state', serializable_game_state)
 
 @socketio.on('upgrade_building')
 def handle_upgrade_building(data):
@@ -80,7 +81,8 @@ def handle_upgrade_building(data):
             building['total_accommodations'] += new_accommodations
             game_state['total_accommodations'] += new_accommodations
             game_state['money'] -= upgrade_cost
-            socketio.emit('game_state', game_state)
+            serializable_game_state = {**game_state, 'events': [event.to_dict() for event in game_state['events']]}
+            socketio.emit('game_state', serializable_game_state)
 
 def find_available_building():
     for coords, building in game_state['grid'].items():
@@ -104,14 +106,16 @@ def handle_accept_citizen(data):
                     game_state['used_accommodations'] += 1
                     socketio.emit('citizen_placed', {'citizen': accepted_citizen, 'building': available_building})
                     break
-        socketio.emit('game_state', game_state)
+        serializable_game_state = {**game_state, 'events': [event.to_dict() for event in game_state['events']]}
+        socketio.emit('game_state', serializable_game_state)
 
 @socketio.on('deny_citizen')
 def handle_deny_citizen(data):
     citizen_index = data['index']
     if 0 <= citizen_index < len(game_state['pending_citizens']):
         game_state['pending_citizens'].pop(citizen_index)
-    socketio.emit('game_state', game_state)
+    serializable_game_state = {**game_state, 'events': [event.to_dict() for event in game_state['events']]}
+    socketio.emit('game_state', serializable_game_state)
 
 def generate_citizen():
     first_names = ['John', 'Jane', 'Mike', 'Emily', 'David', 'Sarah']
@@ -139,6 +143,7 @@ def handle_event(event):
 
     if game_state['debug']:
         print(f"Event occurred: {event.name} at tick {game_state['tick']}")
+        print(f"Next occurrence: tick {event.next_tick}")
 
 def game_tick():
     while True:
@@ -177,11 +182,11 @@ def handle_console_command(data):
     elif command == 'get tick':
         return f"Current tick: {game_state['tick']}"
     elif command == 'get events':
-        events_info = [f"{e.name}: next tick {e.next_tick}" for e in game_state['events']]
+        events_info = [f"{e.name}: interval={e.interval}, is_random={e.is_random}, min_interval={e.min_interval}, max_interval={e.max_interval}, next_tick={e.next_tick}" for e in game_state['events']]
         return "Events:\n" + "\n".join(events_info)
     else:
         return 'Unknown command'
 
 if __name__ == '__main__':
     socketio.start_background_task(game_tick)
-    socketio.run(app, host='0.0.0.0', port=5000, debug=True)
+    socketio.run(app, host='0.0.0.0', port=5000)
