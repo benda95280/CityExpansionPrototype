@@ -4,6 +4,7 @@ import json
 import time
 import random
 import math
+from events import Event
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
@@ -16,21 +17,6 @@ with open('config.json', 'r') as f:
 # Load building data
 with open('static/data/buildings.json', 'r') as f:
     buildings_data = json.load(f)
-
-class Event:
-    def __init__(self, name, interval, is_random=False, min_interval=None, max_interval=None):
-        self.name = name
-        self.interval = interval
-        self.is_random = is_random
-        self.min_interval = min_interval
-        self.max_interval = max_interval
-        self.next_tick = 0
-
-    def update_next_tick(self, current_tick):
-        if self.is_random:
-            self.next_tick = current_tick + random.randint(self.min_interval, self.max_interval)
-        else:
-            self.next_tick = current_tick + self.interval
 
 # Game state
 game_state = {
@@ -56,7 +42,8 @@ def index():
 
 @socketio.on('connect')
 def handle_connect():
-    socketio.emit('game_state', game_state)
+    serializable_game_state = {**game_state, 'events': [event.to_dict() for event in game_state['events']]}
+    socketio.emit('game_state', serializable_game_state)
     for citizen in game_state['pending_citizens']:
         socketio.emit('new_citizen', citizen)
 
@@ -175,7 +162,8 @@ def game_tick():
         game_state['used_accommodations'] = used_accommodations
         
         if game_state['tick'] % 20 == 0:  # Update clients every second
-            socketio.emit('game_state', game_state)
+            serializable_game_state = {**game_state, 'events': [event.to_dict() for event in game_state['events']]}
+            socketio.emit('game_state', serializable_game_state)
 
 @socketio.on('console_command')
 def handle_console_command(data):
