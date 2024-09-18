@@ -7,14 +7,22 @@ class Event:
         self.interval = interval
         self.min_interval = min_interval
         self.max_interval = max_interval
-        self.next_tick = 0
         self.active = True
+
+        if event_type == 'recurring':
+            self.next_tick = interval
+        elif event_type == 'random':
+            self.next_tick = random.randint(min_interval, max_interval)
 
     def update_next_tick(self, current_tick):
         if self.event_type == 'recurring':
             self.next_tick = current_tick + self.interval
         elif self.event_type == 'random':
             self.next_tick = current_tick + random.randint(self.min_interval, self.max_interval)
+    
+        # Ensure next_tick is always greater than current_tick
+        if self.next_tick <= current_tick:
+            self.next_tick = current_tick + 1
 
     def disable(self):
         self.active = False
