@@ -21,14 +21,35 @@ function showBuildingMenu(x, y, gridX, gridY) {
     menu.style.left = `${x}px`;
     menu.style.top = `${y}px`;
 
-    for (const [type, data] of Object.entries(gameState.buildings_data)) {
-        const option = document.createElement('div');
-        option.textContent = `${data.name} ($${data.price})`;
-        option.addEventListener('click', () => {
-            placeBuilding(gridX, gridY, type);
+    const existingBuilding = gameState.grid[`${gridX},${gridY}`];
+
+    if (existingBuilding) {
+        const buildingData = gameState.buildings_data[existingBuilding.type];
+        const upgradeOption = document.createElement('div');
+        upgradeOption.textContent = `Upgrade ${buildingData.name} ($${buildingData.upgrade_cost * existingBuilding.level})`;
+        upgradeOption.addEventListener('click', () => {
+            upgradeBuilding(gridX, gridY);
             document.body.removeChild(menu);
         });
-        menu.appendChild(option);
+        menu.appendChild(upgradeOption);
+
+        const infoOption = document.createElement('div');
+        infoOption.textContent = 'Show Info';
+        infoOption.addEventListener('click', () => {
+            showCellPopup(gridX, gridY, existingBuilding);
+            document.body.removeChild(menu);
+        });
+        menu.appendChild(infoOption);
+    } else {
+        for (const [type, data] of Object.entries(gameState.buildings_data)) {
+            const option = document.createElement('div');
+            option.textContent = `${data.name} ($${data.price})`;
+            option.addEventListener('click', () => {
+                placeBuilding(gridX, gridY, type);
+                document.body.removeChild(menu);
+            });
+            menu.appendChild(option);
+        }
     }
 
     document.body.appendChild(menu);
