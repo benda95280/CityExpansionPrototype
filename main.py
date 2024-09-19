@@ -153,11 +153,11 @@ def emit_game_state():
     
     # Serialize datetime objects in the grid
     for building in serializable_game_state['grid'].values():
-        if 'construction_start' in building:
+        if 'construction_start' in building and isinstance(building['construction_start'], datetime):
             building['construction_start'] = building['construction_start'].isoformat()
-        if 'construction_end' in building:
+        if 'construction_end' in building and isinstance(building['construction_end'], datetime):
             building['construction_end'] = building['construction_end'].isoformat()
-        if 'last_maintenance' in building:
+        if 'last_maintenance' in building and isinstance(building['last_maintenance'], datetime):
             building['last_maintenance'] = building['last_maintenance'].isoformat()
     
     socketio.emit('game_state', serializable_game_state)
