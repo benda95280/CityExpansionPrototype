@@ -5,6 +5,11 @@ from datetime import datetime
 
 fake = Faker()
 
+MUSIC_GENRES = [
+    "Rock", "Pop", "Hip Hop", "Jazz", "Classical", "Electronic", "Country",
+    "R&B", "Blues", "Reggae", "Folk", "Metal", "Punk", "Soul", "Funk"
+]
+
 class Citizen:
     def __init__(self, first_name, last_name, gender, birthday, previous_job, favorite_music):
         self.id = str(uuid.uuid4())
@@ -53,5 +58,5 @@ class Citizen:
             gender=gender,
             birthday=fake.date_of_birth(minimum_age=18, maximum_age=120),
             previous_job=fake.job(),
-            favorite_music=fake.music_genre()
+            favorite_music=random.choice(MUSIC_GENRES)
         )
