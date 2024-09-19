@@ -125,12 +125,25 @@ body, html {
 }
 
 .popup-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     background-color: #f0f0f0;
     padding: 10px;
-    text-align: center;
 }
 
 .popup-header h3 {
+    margin: 0;
+    flex-grow: 1;
+    text-align: center;
+}
+
+#move-to-accommodation {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 0;
     margin: 0;
 }
 

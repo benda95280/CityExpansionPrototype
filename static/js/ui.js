@@ -132,10 +132,11 @@ function showNewCitizenPopup(citizen) {
 
     popup.innerHTML = `
         <div class="popup-header">
+            <button id="move-to-accommodation" title="Move to accommodation">🏠</button>
             <h3>New Citizen!</h3>
+            <div style="text-align: right; font-size: 24px; color: ${genderColor};">${genderIcon}</div>
         </div>
         <div class="popup-content">
-            <div style="text-align: right; font-size: 24px; color: ${genderColor};">${genderIcon}</div>
             <p>Name: ${citizen.first_name} ${citizen.last_name}</p>
             <p>Age: ${age}</p>
             <p>Previous Job: ${citizen.previous_job}</p>
@@ -150,6 +151,19 @@ function showNewCitizenPopup(citizen) {
     document.body.appendChild(popup);
     currentCitizenPopup = popup;
 
+    const moveToAccommodationBtn = popup.querySelector('#move-to-accommodation');
+    moveToAccommodationBtn.addEventListener('click', () => {
+        moveViewToAccommodation(citizen);
+    });
+
+    moveToAccommodationBtn.addEventListener('mouseenter', () => {
+        popup.style.opacity = '0.5';
+    });
+
+    moveToAccommodationBtn.addEventListener('mouseleave', () => {
+        popup.style.opacity = '1';
+    });
+
     popup.querySelector('#accept-citizen').addEventListener('click', () => {
         socket.emit('accept_citizen', { index: gameState.pending_citizens.length - 1 });
         document.body.removeChild(popup);
@@ -161,6 +175,10 @@ function showNewCitizenPopup(citizen) {
         document.body.removeChild(popup);
         currentCitizenPopup = null;
     });
+}
+
+function moveViewToAccommodation(citizen) {
+    console.log(`Moving view to accommodation for ${citizen.first_name} ${citizen.last_name}`);
 }
 
 function centerMapOnBuilding(x, y) {
