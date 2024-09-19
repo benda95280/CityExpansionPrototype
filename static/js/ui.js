@@ -127,13 +127,15 @@ function showNewCitizenPopup(citizen) {
     const gameDate = new Date(gameState.current_date);
     const age = gameDate.getFullYear() - birthDate.getFullYear();
     
+    const genderIcon = citizen.gender === 'Male' ? '♂️' : '♀️';
+    
     popup.innerHTML = `
+        <div style="text-align: right; font-size: 24px;">${genderIcon}</div>
         <h3>New Citizen!</h3>
         <p>Name: ${citizen.first_name} ${citizen.last_name}</p>
-        <p>Gender: ${citizen.gender}</p>
         <p>Age: ${age}</p>
         <p>Previous Job: ${citizen.previous_job}</p>
-        <p>Favorite Music Genre: ${citizen.favorite_music}</p>
+        <p>🎵: ${citizen.favorite_music}</p>
         <button id="accept-citizen">Accept</button>
         <button id="deny-citizen">Deny</button>
     `;
