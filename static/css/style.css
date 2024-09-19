@@ -43,13 +43,18 @@ body, html {
 }
 
 #time-resources {
-    position: absolute;
+    position: fixed;
     top: 10px;
     right: 10px;
     background-color: rgba(0, 0, 0, 0.7);
     color: white;
     padding: 10px;
     border-radius: 5px;
+    font-size: 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    z-index: 1000;
 }
 
 #time-resources span {
