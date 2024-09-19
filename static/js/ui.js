@@ -179,8 +179,11 @@ function showNewCitizenPopup(citizen) {
 }
 
 function moveViewToAccommodation(citizen) {
+    console.log('Moving view to accommodation for citizen:', citizen);
     if (lastPlacedCitizen && lastPlacedCitizen.citizen.id === citizen.id) {
-        const [x, y] = lastPlacedCitizen.building.split(',').map(Number);
+        console.log('Last placed citizen found:', lastPlacedCitizen);
+        const { x, y } = lastPlacedCitizen.building;
+        console.log(`Centering map on building at (${x}, ${y})`);
         centerMapOnBuilding(x, y);
     } else {
         console.log('Cannot move to accommodation: citizen not placed yet or building information not available');
@@ -188,6 +191,7 @@ function moveViewToAccommodation(citizen) {
 }
 
 function centerMapOnBuilding(x, y) {
+    console.log(`Centering map on (${x}, ${y})`);
     gridOffsetX = canvas.width / 2 - x * gridSize * gridScale;
     gridOffsetY = canvas.height / 2 - y * gridSize * gridScale;
     drawGame();
