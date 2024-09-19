@@ -118,7 +118,7 @@ def game_loop():
             event.execute(game_state)
         
         # Update buildings and city finances
-        update_buildings(game_state)
+        update_buildings(game_state, socketio)
         update_city_finances(game_state)
         
         # Update population and accommodations

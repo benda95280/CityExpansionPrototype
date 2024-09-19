@@ -31,7 +31,7 @@ function updateTickingSpeedDisplay() {
     const currentTime = Date.now();
     const elapsedTime = (currentTime - lastTickTime) / 1000; // Convert to seconds
 
-    if (elapsedTime >= 5) { // Calculate speed every 5 seconds
+    if (elapsedTime >= 1) { // Calculate speed every second
         const ticksDelta = gameState.tick - lastTickCount;
         const tickingSpeed = Math.round(ticksDelta / elapsedTime);
         
