@@ -7,6 +7,7 @@ import math
 from events import Event, EventManager
 from commands import Commands, handle_console_command
 from buildings import buildings_data, find_available_building, handle_place_building, handle_upgrade_building
+from citizen import Citizen
 
 DEBUG_MODE = True
 
@@ -45,10 +46,11 @@ def handle_connect():
         key: value for key, value in game_state.items() if key != 'event_manager'
     }
     serializable_game_state['events'] = [event.to_dict() for event in game_state['event_manager'].get_events()]
+    serializable_game_state['pending_citizens'] = [citizen.to_dict() for citizen in game_state['pending_citizens']]
     print("Sending game state to client:", serializable_game_state)  # Debug log
     socketio.emit('game_state', serializable_game_state)
     for citizen in game_state['pending_citizens']:
-        socketio.emit('new_citizen', citizen)
+        socketio.emit('new_citizen', citizen.to_dict())
 
 @socketio.on('place_building')
 def handle_place_building_socket(data):
@@ -68,15 +70,16 @@ def handle_accept_citizen(data):
             building = game_state['grid'][available_building]
             for accommodation in building['accommodations']:
                 if len(accommodation) < buildings_data[building['type']]['max_people_per_accommodation']:
-                    accommodation.append(accepted_citizen)
+                    accommodation.append(accepted_citizen.to_dict())
                     game_state['population'] += 1
                     game_state['used_accommodations'] += 1
-                    socketio.emit('citizen_placed', {'citizen': accepted_citizen, 'building': available_building})
+                    socketio.emit('citizen_placed', {'citizen': accepted_citizen.to_dict(), 'building': available_building})
                     break
         serializable_game_state = {
             key: value for key, value in game_state.items() if key != 'event_manager'
         }
         serializable_game_state['events'] = [event.to_dict() for event in game_state['event_manager'].get_events()]
+        serializable_game_state['pending_citizens'] = [citizen.to_dict() for citizen in game_state['pending_citizens']]
         socketio.emit('game_state', serializable_game_state)
 
 @socketio.on('deny_citizen')
@@ -88,6 +91,7 @@ def handle_deny_citizen(data):
         key: value for key, value in game_state.items() if key != 'event_manager'
     }
     serializable_game_state['events'] = [event.to_dict() for event in game_state['event_manager'].get_events()]
+    serializable_game_state['pending_citizens'] = [citizen.to_dict() for citizen in game_state['pending_citizens']]
     socketio.emit('game_state', serializable_game_state)
 
 def generate_citizen():
@@ -95,12 +99,12 @@ def generate_citizen():
     last_names = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia']
     genders = ['Male', 'Female']
     
-    return {
-        'first_name': random.choice(first_names),
-        'last_name': random.choice(last_names),
-        'gender': random.choice(genders),
-        'age': random.randint(18, 80)
-    }
+    return Citizen(
+        first_name=random.choice(first_names),
+        last_name=random.choice(last_names),
+        gender=random.choice(genders),
+        age=random.randint(18, 80)
+    )
 
 def generate_new_citizen(game_state):
     if DEBUG_MODE:
@@ -125,9 +129,9 @@ def generate_new_citizen(game_state):
         return False
     new_citizen = generate_citizen()
     game_state['pending_citizens'].append(new_citizen)
-    socketio.emit('new_citizen', new_citizen)
+    socketio.emit('new_citizen', new_citizen.to_dict())
     if DEBUG_MODE:
-        print(f"New citizen generated successfully: {new_citizen}")
+        print(f"New citizen generated successfully: {new_citizen.to_dict()}")
     return True
 
 def game_tick():
@@ -154,6 +158,7 @@ def game_tick():
                 key: value for key, value in game_state.items() if key != 'event_manager'
             }
             serializable_game_state['events'] = [event.to_dict() for event in game_state['event_manager'].get_events()]
+            serializable_game_state['pending_citizens'] = [citizen.to_dict() for citizen in game_state['pending_citizens']]
             socketio.emit('game_state', serializable_game_state)
 
 @socketio.on('console_command')
