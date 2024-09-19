@@ -1,5 +1,6 @@
 import json
 from flask_socketio import emit
+from datetime import datetime
 
 # Load building data
 with open('static/data/buildings.json', 'r') as f:
@@ -25,8 +26,14 @@ def handle_place_building(data, game_state, socketio):
         }
         game_state['money'] -= buildings_data[building_type]['price']
         game_state['total_accommodations'] += buildings_data[building_type]['accommodations']
+        
         serializable_game_state = {key: value for key, value in game_state.items() if key != 'event_manager'}
         serializable_game_state['events'] = [event.to_dict() for event in game_state['event_manager'].get_events()]
+        
+        # Convert datetime objects to ISO format strings
+        if 'current_date' in serializable_game_state:
+            serializable_game_state['current_date'] = serializable_game_state['current_date'].isoformat()
+        
         socketio.emit('game_state', serializable_game_state)
 
 def handle_upgrade_building(data, game_state, socketio):
@@ -47,4 +54,9 @@ def handle_upgrade_building(data, game_state, socketio):
             game_state['money'] -= upgrade_cost
             serializable_game_state = {key: value for key, value in game_state.items() if key != 'event_manager'}
             serializable_game_state['events'] = [event.to_dict() for event in game_state['event_manager'].get_events()]
+            
+            # Convert datetime objects to ISO format strings
+            if 'current_date' in serializable_game_state:
+                serializable_game_state['current_date'] = serializable_game_state['current_date'].isoformat()
+            
             socketio.emit('game_state', serializable_game_state)
