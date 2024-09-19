@@ -1,5 +1,8 @@
 import uuid
 import random
+from faker import Faker
+
+fake = Faker()
 
 class Citizen:
     def __init__(self, first_name, last_name, gender, age):
@@ -26,13 +29,15 @@ class Citizen:
 
     @classmethod
     def generate_random_citizen(cls):
-        first_names = ['John', 'Jane', 'Mike', 'Emily', 'David', 'Sarah']
-        last_names = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia']
-        genders = ['Male', 'Female']
+        gender = random.choice(['Male', 'Female'])
+        if gender == 'Male':
+            first_name = fake.first_name_male()
+        else:
+            first_name = fake.first_name_female()
         
         return cls(
-            first_name=random.choice(first_names),
-            last_name=random.choice(last_names),
-            gender=random.choice(genders),
+            first_name=first_name,
+            last_name=fake.last_name(),
+            gender=gender,
             age=random.randint(18, 80)
         )
