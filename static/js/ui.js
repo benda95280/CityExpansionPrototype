@@ -131,14 +131,20 @@ function showNewCitizenPopup(citizen) {
     const genderColor = citizen.gender === 'Male' ? 'blue' : 'pink';
 
     popup.innerHTML = `
-        <div style="text-align: right; font-size: 24px; color: ${genderColor};">${genderIcon}</div>
-        <h3>New Citizen!</h3>
-        <p>Name: ${citizen.first_name} ${citizen.last_name}</p>
-        <p>Age: ${age}</p>
-        <p>Previous Job: ${citizen.previous_job}</p>
-        <p>🎵: ${citizen.favorite_music}</p>
-        <button id="accept-citizen">Accept</button>
-        <button id="deny-citizen">Deny</button>
+        <div class="popup-header">
+            <h3>New Citizen!</h3>
+        </div>
+        <div class="popup-content">
+            <div style="text-align: right; font-size: 24px; color: ${genderColor};">${genderIcon}</div>
+            <p>Name: ${citizen.first_name} ${citizen.last_name}</p>
+            <p>Age: ${age}</p>
+            <p>Previous Job: ${citizen.previous_job}</p>
+            <p>🎵: ${citizen.favorite_music}</p>
+        </div>
+        <div class="popup-footer">
+            <button id="accept-citizen">Accept</button>
+            <button id="deny-citizen">Deny</button>
+        </div>
     `;
 
     document.body.appendChild(popup);
