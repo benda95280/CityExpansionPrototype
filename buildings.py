@@ -31,7 +31,7 @@ def handle_place_building(data, game_state, socketio):
             'last_maintenance': game_state['current_date'].isoformat()
         }
         game_state['money'] -= buildings_data[building_type]['price']
-        game_state['total_accommodations'] += buildings_data[building_type]['accommodations']
+        # Removed: game_state['total_accommodations'] += buildings_data[building_type]['accommodations']
         
         socketio.emit('building_placed', {'x': x, 'y': y, 'type': building_type})
 
@@ -50,7 +50,6 @@ def handle_upgrade_building(data, game_state, socketio):
             new_accommodations = buildings_data[building_type]['accommodations']
             building['accommodations'].extend([[] for _ in range(new_accommodations)])
             building['total_accommodations'] += new_accommodations
-            game_state['total_accommodations'] += new_accommodations
             game_state['money'] -= upgrade_cost
             
             building['construction_start'] = game_state['current_date'].isoformat()

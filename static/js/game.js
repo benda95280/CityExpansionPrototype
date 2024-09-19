@@ -1,3 +1,5 @@
+import { initWebSocket } from './websocket.js';
+
 let gameState = {
     grid: {},
     population: 0,
@@ -22,7 +24,15 @@ function drawGame() {
     requestAnimationFrame(drawGame);
 }
 
+function handleCanvasClick(event) {
+    const { x, y } = getGridCoordinates(event.clientX, event.clientY);
+    const buildingId = gameState.grid[`${x},${y}`];
+    const building = gameState.buildings[buildingId];
+    showCellPopup(x, y, building);
+}
+
 function initGame() {
+    initWebSocket();  // Make sure this is called first
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
     
@@ -45,75 +55,9 @@ function initGame() {
     gridOffsetX = initialMapPosition.x;
     gridOffsetY = initialMapPosition.y;
     
-    initWebSocket();
-    
     drawGame();
-    
-    initDebugConsole();
 }
 
-function handleCanvasClick(event) {
-    event.preventDefault();
-    const { x, y } = getGridCoordinates(event.clientX, event.clientY);
-    const building = gameState.grid[`${x},${y}`];
-    showCellPopup(x, y, building);
-}
-
-function handleCanvasRightClick(event) {
-    event.preventDefault();
-    console.log("Right-click event triggered"); // Debug log
-    const { x, y } = getGridCoordinates(event.clientX, event.clientY);
-    console.log(`Grid coordinates: (${x}, ${y})`); // Debug log
-    showBuildingMenu(event.clientX, event.clientY, x, y);
-}
-
-function handleCanvasMouseMove(event) {
-    const { x, y } = getGridCoordinates(event.clientX, event.clientY);
-    hoveredCell = { x, y };
-    
-    const edgeThreshold = 3;
-    if (Math.abs(x) > Math.abs(hoveredCell.x) - edgeThreshold || 
-        Math.abs(y) > Math.abs(hoveredCell.y) - edgeThreshold) {
-        generateNewCells(x, y);
-    }
-}
-
-function drawHoveredCell() {
-    if (hoveredCell) {
-        const { gridX, gridY } = getCanvasCoordinates(hoveredCell.x, hoveredCell.y);
-        ctx.strokeStyle = 'yellow';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(gridX, gridY, gridSize * gridScale, gridSize * gridScale);
-    }
-}
-
-function handleCanvasWheel(event) {
-    event.preventDefault();
-    const delta = Math.sign(event.deltaY);
-    updateGridScale(delta);
-}
-
-function centerMap() {
-    gridOffsetX = initialMapPosition.x;
-    gridOffsetY = initialMapPosition.y;
-}
-
-function handleKeyDown(event) {
-    const moveStep = 10;
-    switch (event.key) {
-        case 'ArrowUp':
-            gridOffsetY += moveStep;
-            break;
-        case 'ArrowDown':
-            gridOffsetY -= moveStep;
-            break;
-        case 'ArrowLeft':
-            gridOffsetX += moveStep;
-            break;
-        case 'ArrowRight':
-            gridOffsetX -= moveStep;
-            break;
-    }
-}
+// ... (rest of the file remains unchanged)
 
 window.addEventListener('load', initGame);

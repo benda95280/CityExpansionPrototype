@@ -42,6 +42,31 @@ body, html {
     margin-right: 5px;
 }
 
+#notifications-tasks {
+    position: fixed;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 10px;
+    border-radius: 5px;
+    font-size: 14px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+#notifications-tasks span {
+    margin: 0 10px;
+}
+
+#notifications-tasks i {
+    margin-right: 5px;
+}
+
 #time-resources {
     position: fixed;
     top: 10px;

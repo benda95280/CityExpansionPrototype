@@ -40,15 +40,9 @@ function getBuildingColor(type) {
 }
 
 function placeBuilding(x, y, type) {
-    socket.emit('place_building', { x, y, building_type: type });
+    window.socket.emit('place_building', { x, y, building_type: type });
 }
 
 function upgradeBuilding(x, y) {
-    socket.emit('upgrade_building', { x, y });
+    window.socket.emit('upgrade_building', { x, y });
 }
-
-// Add event listener for building completion
-socket.on('building_completed', (data) => {
-    console.log(`Building completed at (${data.x}, ${data.y})`);
-    // You can add additional logic here, such as updating UI elements or playing a sound
-});

@@ -1,15 +1,15 @@
-let socket;
 let lastTickCount = 0;
 let lastTickTime = Date.now();
+let tickingSpeedBuffer = [];
 
 function initWebSocket() {
-    socket = io();
+    window.socket = io();
     
-    socket.on('connect', () => {
+    window.socket.on('connect', () => {
         console.log('Connected to server');
     });
     
-    socket.on('game_state', (newState) => {
+    window.socket.on('game_state', (newState) => {
         console.log('Received game state update:', newState);
         gameState = newState;
         updateResourcesDisplay();
@@ -17,13 +17,18 @@ function initWebSocket() {
         updateTimeDisplay();
     });
 
-    socket.on('new_citizen', (citizen) => {
+    window.socket.on('new_citizen', (citizen) => {
         showNewCitizenPopup(citizen);
     });
 
-    socket.on('citizen_placed', (data) => {
+    window.socket.on('citizen_placed', (data) => {
         lastPlacedCitizen = data;
         console.log('Citizen placed:', data);
+    });
+
+    window.socket.on('building_completed', (data) => {
+        console.log(`Building completed at (${data.x}, ${data.y})`);
+        // You can add additional logic here, such as updating UI elements or playing a sound
     });
 }
 
@@ -35,9 +40,25 @@ function updateTickingSpeedDisplay() {
         const ticksDelta = gameState.tick - lastTickCount;
         const tickingSpeed = Math.round(ticksDelta / elapsedTime);
         
-        document.getElementById('ticking-speed-value').textContent = `${tickingSpeed} ticks/s`;
+        // Add the current ticking speed to the buffer
+        tickingSpeedBuffer.push(tickingSpeed);
+        
+        // Keep only the last 5 measurements
+        if (tickingSpeedBuffer.length > 5) {
+            tickingSpeedBuffer.shift();
+        }
+        
+        // Calculate the average ticking speed
+        const averageTickingSpeed = Math.round(tickingSpeedBuffer.reduce((a, b) => a + b, 0) / tickingSpeedBuffer.length);
+        
+        // Update the display with a more precise representation
+        const displaySpeed = averageTickingSpeed.toFixed(1);
+        document.getElementById('ticking-speed-value').textContent = `${displaySpeed} ticks/s`;
         
         lastTickCount = gameState.tick;
         lastTickTime = currentTime;
     }
 }
+
+// Export the initWebSocket function to make it available in other modules
+export { initWebSocket };

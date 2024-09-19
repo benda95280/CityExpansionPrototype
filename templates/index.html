@@ -16,6 +16,12 @@
                 <span id="money"><i class="fas fa-coins"></i> <span id="money-value">$1000</span></span>
                 <span id="ticking-speed"><i class="fas fa-clock"></i> <span id="ticking-speed-value">0 ticks/s</span></span>
             </div>
+
+            <div id="notifications-tasks">
+                <span id="notifications">📣 <span id="notifications-count">0</span></span>
+                <span id="tasks">✅ <span id="tasks-count">0</span></span>
+            </div>
+
             <div id="time-resources">
                 <span id="game-date"><i class="fas fa-calendar"></i> <span id="date-value"></span></span>
                 <span id="game-time"><i class="fas fa-clock"></i> <span id="time-value"></span></span>
@@ -35,10 +41,10 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
-    <script src="{{ url_for('static', filename='js/buildings.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/grid.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/ui.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/websocket.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/game.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/buildings.js') }}" type="module"></script>
+    <script src="{{ url_for('static', filename='js/grid.js') }}" type="module"></script>
+    <script src="{{ url_for('static', filename='js/ui.js') }}" type="module"></script>
+    <script src="{{ url_for('static', filename='js/websocket.js') }}" type="module"></script>
+    <script src="{{ url_for('static', filename='js/game.js') }}" type="module"></script>
 </body>
 </html>

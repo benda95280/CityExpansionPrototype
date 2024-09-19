@@ -34,6 +34,8 @@ game_state = {
     'event_manager': event_manager,
     'buildings_data': buildings_data,
     'current_date': datetime(2024, 1, 1),
+    'notifications': 0,
+    'tasks': 0,
 }
 
 @app.route('/')
@@ -82,7 +84,7 @@ def generate_new_citizen(game_state):
     if DEBUG_MODE:
         print(f"Attempting to generate new citizen at {datetime.now()}")
     
-    total_accommodations = sum(building['total_accommodations'] for building in game_state['grid'].values())
+    total_accommodations = sum(building['total_accommodations'] for building in game_state['grid'].values() if building['construction_progress'] == 1)
     if game_state['population'] >= total_accommodations:
         if DEBUG_MODE:
             print("Failed to generate new citizen: No available accommodations")
@@ -134,13 +136,17 @@ def game_loop():
 def update_population_and_accommodations():
     total_population = 0
     used_accommodations = 0
+    total_accommodations = 0
     for building in game_state['grid'].values():
-        building_population = sum(len(accommodation) for accommodation in building['accommodations'])
-        total_population += building_population
-        used_accommodations += len([acc for acc in building['accommodations'] if acc])
+        if building['construction_progress'] == 1:  # Only consider completed buildings
+            building_population = sum(len(accommodation) for accommodation in building['accommodations'])
+            total_population += building_population
+            used_accommodations += len([acc for acc in building['accommodations'] if acc])
+            total_accommodations += building['total_accommodations']
     
     game_state['population'] = total_population
     game_state['used_accommodations'] = used_accommodations
+    game_state['total_accommodations'] = total_accommodations
 
 def emit_game_state():
     serializable_game_state = {
@@ -150,6 +156,8 @@ def emit_game_state():
     serializable_game_state['pending_citizens'] = [citizen.to_dict() for citizen in game_state['pending_citizens']]
     serializable_game_state['current_date'] = game_state['current_date'].isoformat()
     serializable_game_state['start_time'] = game_state['start_time'].isoformat()
+    serializable_game_state['notifications'] = game_state['notifications']
+    serializable_game_state['tasks'] = game_state['tasks']
     
     # Serialize datetime objects in the grid
     for building in serializable_game_state['grid'].values():
