@@ -36,6 +36,7 @@ game_state = {
     'event_manager': event_manager,  # Add event_manager to game_state
     'buildings_data': buildings_data,  # Add buildings_data to game_state
     'current_date': datetime(2024, 1, 1),  # Start the game on January 1, 2024
+    'citizen_popup_active': False  # New variable to track if a citizen popup is active
 }
 
 @app.route('/')
@@ -65,6 +66,7 @@ def handle_upgrade_building_socket(data):
 
 @socketio.on('accept_citizen')
 def handle_accept_citizen(data):
+    game_state['citizen_popup_active'] = False  # Set popup to inactive when citizen is accepted
     citizen_index = data['index']
     if 0 <= citizen_index < len(game_state['pending_citizens']):
         accepted_citizen = game_state['pending_citizens'].pop(citizen_index)
@@ -88,6 +90,7 @@ def handle_accept_citizen(data):
 
 @socketio.on('deny_citizen')
 def handle_deny_citizen(data):
+    game_state['citizen_popup_active'] = False  # Set popup to inactive when citizen is denied
     citizen_index = data['index']
     if 0 <= citizen_index < len(game_state['pending_citizens']):
         game_state['pending_citizens'].pop(citizen_index)
@@ -99,7 +102,14 @@ def handle_deny_citizen(data):
     serializable_game_state['current_date'] = game_state['current_date'].isoformat()
     socketio.emit('game_state', serializable_game_state)
 
+@socketio.on('citizen_popup_displayed')
+def handle_citizen_popup_displayed():
+    game_state['citizen_popup_active'] = True
+
 def generate_new_citizen(game_state):
+    if game_state['citizen_popup_active']:
+        return False  # Don't generate a new citizen if a popup is active
+
     if DEBUG_MODE:
         print(f"Attempting to generate new citizen at tick {game_state['tick']}")
     

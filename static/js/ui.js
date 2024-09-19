@@ -118,7 +118,7 @@ function showCellPopup(x, y, building) {
 
 function showNewCitizenPopup(citizen) {
     if (currentCitizenPopup) {
-        document.body.removeChild(currentCitizenPopup);
+        return;  // Don't show a new popup if one is already active
     }
 
     const popup = document.createElement('div');
@@ -151,6 +151,7 @@ function showNewCitizenPopup(citizen) {
 
     document.body.appendChild(popup);
     currentCitizenPopup = popup;
+    socket.emit('citizen_popup_displayed');  // Inform the server that a popup is being displayed
 
     const moveToAccommodationBtn = popup.querySelector('#move-to-accommodation');
     moveToAccommodationBtn.addEventListener('click', () => {
@@ -190,19 +191,19 @@ function moveViewToAccommodation(citizen) {
         return;
     }
     console.log('Last placed citizen:', lastPlacedCitizen);
-    if (lastPlacedCitizen.citizen.id === citizen.id) {
-        console.log('Matching citizen found');
-        const buildingCoords = lastPlacedCitizen.building;
-        console.log('Building coordinates:', buildingCoords);
-        if (typeof buildingCoords === 'string') {
-            const [x, y] = buildingCoords.split(',').map(Number);
-            console.log(`Centering map on building at (${x}, ${y})`);
-            centerMapOnBuilding(x, y);
-        } else {
-            console.error('Error: Invalid building coordinates format');
-        }
+    
+    // Use the citizen's ID to find the correct building
+    const buildingEntry = Object.entries(gameState.grid).find(([coords, building]) => 
+        building.accommodations.some(acc => acc.some(c => c.id === citizen.id))
+    );
+
+    if (buildingEntry) {
+        const [coords, building] = buildingEntry;
+        const [x, y] = coords.split(',').map(Number);
+        console.log(`Centering map on building at (${x}, ${y})`);
+        centerMapOnBuilding(x, y);
     } else {
-        console.log('Citizen not found in lastPlacedCitizen');
+        console.error('Error: Building not found for citizen');
     }
 }
 
