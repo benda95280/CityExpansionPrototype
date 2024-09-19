@@ -2,6 +2,7 @@ let currentCitizenPopup = null;
 let debugConsole;
 let consoleInput;
 let consoleOutput;
+let lastPlacedCitizen = null;
 
 function updateResourcesDisplay() {
     const population = Math.floor(gameState.population) || 0;
@@ -178,7 +179,12 @@ function showNewCitizenPopup(citizen) {
 }
 
 function moveViewToAccommodation(citizen) {
-    console.log(`Moving view to accommodation for ${citizen.first_name} ${citizen.last_name}`);
+    if (lastPlacedCitizen && lastPlacedCitizen.citizen.id === citizen.id) {
+        const [x, y] = lastPlacedCitizen.building.split(',').map(Number);
+        centerMapOnBuilding(x, y);
+    } else {
+        console.log('Cannot move to accommodation: citizen not placed yet or building information not available');
+    }
 }
 
 function centerMapOnBuilding(x, y) {

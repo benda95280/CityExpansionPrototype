@@ -19,8 +19,8 @@ function initWebSocket() {
     });
 
     socket.on('citizen_placed', (data) => {
-        const [x, y] = data.building.split(',').map(Number);
-        centerMapOnBuilding(x, y);
+        lastPlacedCitizen = data;
+        console.log('Citizen placed:', data);
     });
 }
 
