@@ -133,7 +133,7 @@ function showNewCitizenPopup(citizen) {
         <p>Gender: ${citizen.gender}</p>
         <p>Age: ${age}</p>
         <p>Previous Job: ${citizen.previous_job}</p>
-        <p>Favorite Music: ${citizen.favorite_music}</p>
+        <p>Favorite Music Genre: ${citizen.favorite_music}</p>
         <button id="accept-citizen">Accept</button>
         <button id="deny-citizen">Deny</button>
     `;

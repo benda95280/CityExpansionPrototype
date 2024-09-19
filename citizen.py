@@ -53,7 +53,7 @@ class Citizen:
             first_name=first_name,
             last_name=fake.last_name(),
             gender=gender,
-            birthday=fake.date_of_birth(minimum_age=18, maximum_age=80),
+            birthday=fake.date_of_birth(minimum_age=18, maximum_age=120),
             previous_job=fake.job(),
             favorite_music=fake.music_genre()
         )
