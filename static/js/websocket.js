@@ -1,4 +1,6 @@
 let socket;
+let lastTickCount = 0;
+let lastTickTime = Date.now();
 
 function initWebSocket() {
     socket = io();
@@ -12,7 +14,7 @@ function initWebSocket() {
         gameState = newState;
         updateResourcesDisplay();
         updateTickingSpeedDisplay();
-        updateTimeDisplay();  // Add this line
+        updateTimeDisplay();
     });
 
     socket.on('new_citizen', (citizen) => {
@@ -26,6 +28,16 @@ function initWebSocket() {
 }
 
 function updateTickingSpeedDisplay() {
-    const tickingSpeed = Math.round(gameState.tick / (Date.now() - gameState.start_time) * 1000);
-    document.getElementById('ticking-speed-value').textContent = `${tickingSpeed} ticks/s`;
+    const currentTime = Date.now();
+    const elapsedTime = (currentTime - lastTickTime) / 1000; // Convert to seconds
+
+    if (elapsedTime >= 5) { // Calculate speed every 5 seconds
+        const ticksDelta = gameState.tick - lastTickCount;
+        const tickingSpeed = Math.round(ticksDelta / elapsedTime);
+        
+        document.getElementById('ticking-speed-value').textContent = `${tickingSpeed} ticks/s`;
+        
+        lastTickCount = gameState.tick;
+        lastTickTime = currentTime;
+    }
 }
