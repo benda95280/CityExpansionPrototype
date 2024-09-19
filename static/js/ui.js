@@ -154,6 +154,7 @@ function showNewCitizenPopup(citizen) {
 
     const moveToAccommodationBtn = popup.querySelector('#move-to-accommodation');
     moveToAccommodationBtn.addEventListener('click', () => {
+        console.log('Move to accommodation button clicked');
         moveViewToAccommodation(citizen);
     });
 
@@ -179,14 +180,29 @@ function showNewCitizenPopup(citizen) {
 }
 
 function moveViewToAccommodation(citizen) {
-    console.log('Moving view to accommodation for citizen:', citizen);
-    if (lastPlacedCitizen && lastPlacedCitizen.citizen.id === citizen.id) {
-        console.log('Last placed citizen found:', lastPlacedCitizen);
-        const { x, y } = lastPlacedCitizen.building;
-        console.log(`Centering map on building at (${x}, ${y})`);
-        centerMapOnBuilding(x, y);
+    console.log('moveViewToAccommodation called for citizen:', citizen);
+    if (!citizen) {
+        console.error('Error: Citizen object is undefined or null');
+        return;
+    }
+    if (!lastPlacedCitizen) {
+        console.error('Error: No last placed citizen information available');
+        return;
+    }
+    console.log('Last placed citizen:', lastPlacedCitizen);
+    if (lastPlacedCitizen.citizen.id === citizen.id) {
+        console.log('Matching citizen found');
+        const buildingCoords = lastPlacedCitizen.building;
+        console.log('Building coordinates:', buildingCoords);
+        if (typeof buildingCoords === 'string') {
+            const [x, y] = buildingCoords.split(',').map(Number);
+            console.log(`Centering map on building at (${x}, ${y})`);
+            centerMapOnBuilding(x, y);
+        } else {
+            console.error('Error: Invalid building coordinates format');
+        }
     } else {
-        console.log('Cannot move to accommodation: citizen not placed yet or building information not available');
+        console.log('Citizen not found in lastPlacedCitizen');
     }
 }
 
