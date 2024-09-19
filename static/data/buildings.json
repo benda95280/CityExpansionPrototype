@@ -4,20 +4,32 @@
     "price": 100,
     "accommodations": 1,
     "max_people_per_accommodation": 5,
-    "upgrade_cost": 50
+    "upgrade_cost": 50,
+    "construction_time": 30,
+    "upgrade_time": 15,
+    "income_per_citizen": 1,
+    "maintenance_cost": 2
   },
   "apartment": {
     "name": "Apartment",
     "price": 500,
     "accommodations": 3,
     "max_people_per_accommodation": 5,
-    "upgrade_cost": 250
+    "upgrade_cost": 250,
+    "construction_time": 60,
+    "upgrade_time": 30,
+    "income_per_citizen": 2,
+    "maintenance_cost": 5
   },
   "skyscraper": {
     "name": "Skyscraper",
     "price": 2000,
     "accommodations": 3,
     "max_people_per_accommodation": 5,
-    "upgrade_cost": 1000
+    "upgrade_cost": 1000,
+    "construction_time": 120,
+    "upgrade_time": 60,
+    "income_per_citizen": 3,
+    "maintenance_cost": 10
   }
 }

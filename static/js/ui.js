@@ -17,8 +17,11 @@ function updateResourcesDisplay() {
 function updateTimeDisplay() {
     const gameDate = new Date(gameState.current_date);
     const dateString = gameDate.toDateString();
-    const hours = Math.floor(gameState.tick / 240) % 24;
-    const minutes = Math.floor((gameState.tick % 240) / 4) * 5;
+    
+    const totalMinutes = Math.floor(gameState.tick / 4);
+    const hours = Math.floor(totalMinutes / 60) % 24;
+    const minutes = totalMinutes % 60;
+    
     const timeString = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
     
     document.getElementById('date-value').textContent = dateString;
@@ -129,7 +132,7 @@ function showCellPopup(x, y, building) {
 
 function showNewCitizenPopup(citizen) {
     if (currentCitizenPopup) {
-        return;  // Don't show a new popup if one is already active
+        return;
     }
 
     const popup = document.createElement('div');
@@ -162,7 +165,7 @@ function showNewCitizenPopup(citizen) {
 
     document.body.appendChild(popup);
     currentCitizenPopup = popup;
-    socket.emit('citizen_popup_displayed');  // Inform the server that a popup is being displayed
+    socket.emit('citizen_popup_displayed');
 
     const moveToAccommodationBtn = popup.querySelector('#move-to-accommodation');
     moveToAccommodationBtn.addEventListener('click', () => {
@@ -203,7 +206,6 @@ function moveViewToAccommodation(citizen) {
     }
     console.log('Last placed citizen:', lastPlacedCitizen);
     
-    // Use the citizen's ID to find the correct building
     const buildingEntry = Object.entries(gameState.grid).find(([coords, building]) => 
         building.accommodations.some(acc => acc.some(c => c.id === citizen.id))
     );

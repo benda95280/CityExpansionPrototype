@@ -108,7 +108,10 @@ def game_loop():
         
         # Update game state
         game_state['tick'] += 1
-        game_state['current_date'] += timedelta(hours=1)  # Each tick represents 1 hour
+        
+        # Update game time (5 minutes every 20 ticks)
+        if game_state['tick'] % 20 == 0:
+            game_state['current_date'] += timedelta(minutes=5)
         
         # Process events
         for event in event_manager.update_events(game_state):
@@ -146,6 +149,17 @@ def emit_game_state():
     serializable_game_state['events'] = game_state['event_manager'].to_dict()
     serializable_game_state['pending_citizens'] = [citizen.to_dict() for citizen in game_state['pending_citizens']]
     serializable_game_state['current_date'] = game_state['current_date'].isoformat()
+    serializable_game_state['start_time'] = game_state['start_time'].isoformat()
+    
+    # Serialize datetime objects in the grid
+    for building in serializable_game_state['grid'].values():
+        if 'construction_start' in building:
+            building['construction_start'] = building['construction_start'].isoformat()
+        if 'construction_end' in building:
+            building['construction_end'] = building['construction_end'].isoformat()
+        if 'last_maintenance' in building:
+            building['last_maintenance'] = building['last_maintenance'].isoformat()
+    
     socketio.emit('game_state', serializable_game_state)
 
 @socketio.on('console_command')
@@ -160,4 +174,4 @@ def initialize_events():
 if __name__ == '__main__':
     initialize_events()
     socketio.start_background_task(game_loop)
-    socketio.run(app, host='0.0.0.0', port=5000, debug=True)
+    socketio.run(app, host='0.0.0.0', port=5000, debug=True, use_reloader=False)
