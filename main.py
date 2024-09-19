@@ -94,18 +94,6 @@ def handle_deny_citizen(data):
     serializable_game_state['pending_citizens'] = [citizen.to_dict() for citizen in game_state['pending_citizens']]
     socketio.emit('game_state', serializable_game_state)
 
-def generate_citizen():
-    first_names = ['John', 'Jane', 'Mike', 'Emily', 'David', 'Sarah']
-    last_names = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia']
-    genders = ['Male', 'Female']
-    
-    return Citizen(
-        first_name=random.choice(first_names),
-        last_name=random.choice(last_names),
-        gender=random.choice(genders),
-        age=random.randint(18, 80)
-    )
-
 def generate_new_citizen(game_state):
     if DEBUG_MODE:
         print(f"Attempting to generate new citizen at tick {game_state['tick']}")
@@ -127,7 +115,7 @@ def generate_new_citizen(game_state):
         if DEBUG_MODE:
             print("Failed to generate new citizen: Maximum pending citizens reached (5)")
         return False
-    new_citizen = generate_citizen()
+    new_citizen = Citizen.generate_random_citizen()
     game_state['pending_citizens'].append(new_citizen)
     socketio.emit('new_citizen', new_citizen.to_dict())
     if DEBUG_MODE:
