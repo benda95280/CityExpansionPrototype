@@ -8,6 +8,7 @@ from events import Event, EventManager
 from commands import Commands, handle_console_command
 from buildings import buildings_data, find_available_building, handle_place_building, handle_upgrade_building
 from citizen import Citizen
+from datetime import datetime, timedelta
 
 DEBUG_MODE = True
 
@@ -34,6 +35,7 @@ game_state = {
     'start_time': time.time() * 1000,  # Current time in milliseconds
     'event_manager': event_manager,  # Add event_manager to game_state
     'buildings_data': buildings_data,  # Add buildings_data to game_state
+    'current_date': datetime(2024, 1, 1),  # Start the game on January 1, 2024
 }
 
 @app.route('/')
@@ -47,6 +49,7 @@ def handle_connect():
     }
     serializable_game_state['events'] = [event.to_dict() for event in game_state['event_manager'].get_events()]
     serializable_game_state['pending_citizens'] = [citizen.to_dict() for citizen in game_state['pending_citizens']]
+    serializable_game_state['current_date'] = game_state['current_date'].isoformat()
     print("Sending game state to client:", serializable_game_state)  # Debug log
     socketio.emit('game_state', serializable_game_state)
     for citizen in game_state['pending_citizens']:
@@ -80,6 +83,7 @@ def handle_accept_citizen(data):
         }
         serializable_game_state['events'] = [event.to_dict() for event in game_state['event_manager'].get_events()]
         serializable_game_state['pending_citizens'] = [citizen.to_dict() for citizen in game_state['pending_citizens']]
+        serializable_game_state['current_date'] = game_state['current_date'].isoformat()
         socketio.emit('game_state', serializable_game_state)
 
 @socketio.on('deny_citizen')
@@ -92,6 +96,7 @@ def handle_deny_citizen(data):
     }
     serializable_game_state['events'] = [event.to_dict() for event in game_state['event_manager'].get_events()]
     serializable_game_state['pending_citizens'] = [citizen.to_dict() for citizen in game_state['pending_citizens']]
+    serializable_game_state['current_date'] = game_state['current_date'].isoformat()
     socketio.emit('game_state', serializable_game_state)
 
 def generate_new_citizen(game_state):
@@ -127,6 +132,10 @@ def game_tick():
         time.sleep(0.05)  # 20 ticks per second
         game_state['tick'] += 1
         
+        # Increment the game date (1 day per second)
+        if game_state['tick'] % 20 == 0:
+            game_state['current_date'] += timedelta(days=1)
+        
         for event in event_manager.update_events(game_state['tick']):
             event.execute(game_state)
         
@@ -147,6 +156,7 @@ def game_tick():
             }
             serializable_game_state['events'] = [event.to_dict() for event in game_state['event_manager'].get_events()]
             serializable_game_state['pending_citizens'] = [citizen.to_dict() for citizen in game_state['pending_citizens']]
+            serializable_game_state['current_date'] = game_state['current_date'].isoformat()
             socketio.emit('game_state', serializable_game_state)
 
 @socketio.on('console_command')

@@ -122,11 +122,18 @@ function showNewCitizenPopup(citizen) {
 
     const popup = document.createElement('div');
     popup.classList.add('new-citizen-popup');
+    
+    const birthDate = new Date(citizen.birthday);
+    const gameDate = new Date(gameState.current_date);
+    const age = gameDate.getFullYear() - birthDate.getFullYear();
+    
     popup.innerHTML = `
         <h3>New Citizen!</h3>
         <p>Name: ${citizen.first_name} ${citizen.last_name}</p>
         <p>Gender: ${citizen.gender}</p>
-        <p>Age: ${citizen.age}</p>
+        <p>Age: ${age}</p>
+        <p>Previous Job: ${citizen.previous_job}</p>
+        <p>Favorite Music: ${citizen.favorite_music}</p>
         <button id="accept-citizen">Accept</button>
         <button id="deny-citizen">Deny</button>
     `;

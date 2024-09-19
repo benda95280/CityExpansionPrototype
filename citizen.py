@@ -1,16 +1,21 @@
 import uuid
 import random
 from faker import Faker
+from faker.providers import job
+from datetime import datetime
 
 fake = Faker()
+fake.add_provider(job)
 
 class Citizen:
-    def __init__(self, first_name, last_name, gender, age):
+    def __init__(self, first_name, last_name, gender, birthday, previous_job, favorite_music):
         self.id = str(uuid.uuid4())
         self.first_name = first_name
         self.last_name = last_name
         self.gender = gender
-        self.age = age
+        self.birthday = birthday
+        self.previous_job = previous_job
+        self.favorite_music = favorite_music
 
     def to_dict(self):
         return {
@@ -18,12 +23,21 @@ class Citizen:
             'first_name': self.first_name,
             'last_name': self.last_name,
             'gender': self.gender,
-            'age': self.age
+            'birthday': self.birthday.isoformat(),
+            'previous_job': self.previous_job,
+            'favorite_music': self.favorite_music
         }
 
     @classmethod
     def from_dict(cls, data):
-        citizen = cls(data['first_name'], data['last_name'], data['gender'], data['age'])
+        citizen = cls(
+            data['first_name'],
+            data['last_name'],
+            data['gender'],
+            datetime.fromisoformat(data['birthday']),
+            data['previous_job'],
+            data['favorite_music']
+        )
         citizen.id = data['id']
         return citizen
 
@@ -39,5 +53,7 @@ class Citizen:
             first_name=first_name,
             last_name=fake.last_name(),
             gender=gender,
-            age=random.randint(18, 80)
+            birthday=fake.date_of_birth(minimum_age=18, maximum_age=80),
+            previous_job=fake.job(),
+            favorite_music=fake.music_genre()
         )
