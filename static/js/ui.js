@@ -128,9 +128,10 @@ function showNewCitizenPopup(citizen) {
     const age = gameDate.getFullYear() - birthDate.getFullYear();
     
     const genderIcon = citizen.gender === 'Male' ? '♂️' : '♀️';
-    
+    const genderColor = citizen.gender === 'Male' ? 'blue' : 'pink';
+
     popup.innerHTML = `
-        <div style="text-align: right; font-size: 24px;">${genderIcon}</div>
+        <div style="text-align: right; font-size: 24px; color: ${genderColor};">${genderIcon}</div>
         <h3>New Citizen!</h3>
         <p>Name: ${citizen.first_name} ${citizen.last_name}</p>
         <p>Age: ${age}</p>
