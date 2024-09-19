@@ -1,9 +1,11 @@
 import uuid
 import random
 from faker import Faker
+from faker_music import MusicProvider
 from datetime import datetime
 
 fake = Faker()
+fake.add_provider(MusicProvider)
 
 class Citizen:
     def __init__(self, first_name, last_name, gender, birthday, previous_job, favorite_music):
