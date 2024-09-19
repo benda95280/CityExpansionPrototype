@@ -12,6 +12,7 @@ function initWebSocket() {
         gameState = newState;
         updateResourcesDisplay();
         updateTickingSpeedDisplay();
+        updateTimeDisplay();  // Add this line
     });
 
     socket.on('new_citizen', (citizen) => {

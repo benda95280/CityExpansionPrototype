@@ -14,6 +14,17 @@ function updateResourcesDisplay() {
     document.getElementById('money-value').textContent = `$${gameState.money}`;
 }
 
+function updateTimeDisplay() {
+    const gameDate = new Date(gameState.current_date);
+    const dateString = gameDate.toDateString();
+    const hours = Math.floor(gameState.tick / 240) % 24;
+    const minutes = Math.floor((gameState.tick % 240) / 4) * 5;
+    const timeString = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+    
+    document.getElementById('date-value').textContent = dateString;
+    document.getElementById('time-value').textContent = timeString;
+}
+
 function showBuildingMenu(x, y, gridX, gridY) {
     console.log("showBuildingMenu called");
     const existingMenu = document.querySelector('.context-menu');
