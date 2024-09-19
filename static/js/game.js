@@ -61,9 +61,9 @@ function handleCanvasClick(event) {
 
 function handleCanvasRightClick(event) {
     event.preventDefault();
-    console.log("Right-click event triggered"); // Debug log
+    console.log("Right-click event triggered");
     const { x, y } = getGridCoordinates(event.clientX, event.clientY);
-    console.log(`Grid coordinates: (${x}, ${y})`); // Debug log
+    console.log(`Grid coordinates: (${x}, ${y})`);
     showBuildingMenu(event.clientX, event.clientY, x, y);
 }
 
@@ -81,8 +81,8 @@ function handleCanvasMouseMove(event) {
 function drawHoveredCell() {
     if (hoveredCell) {
         const { gridX, gridY } = getCanvasCoordinates(hoveredCell.x, hoveredCell.y);
-        ctx.strokeStyle = 'yellow';
-        ctx.lineWidth = 2;
+        ctx.strokeStyle = 'rgba(255, 255, 0, 0.8)';
+        ctx.lineWidth = 3;
         ctx.strokeRect(gridX, gridY, gridSize * gridScale, gridSize * gridScale);
     }
 }

@@ -15,8 +15,8 @@ function drawGrid() {
     const endX = startX + Math.ceil(canvas.width / (gridSize * gridScale)) + 2;
     const endY = startY + Math.ceil(canvas.height / (gridSize * gridScale)) + 2;
 
-    ctx.strokeStyle = '#ccc';
-    ctx.lineWidth = 1;
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+    ctx.lineWidth = 2;
 
     for (let x = startX; x < endX; x++) {
         const canvasX = x * gridSize * gridScale + gridOffsetX;
