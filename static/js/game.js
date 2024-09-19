@@ -6,52 +6,33 @@ let gameState = {
 };
 
 let selectedBuilding = null;
+let hoveredCell = null;
 let initialMapPosition = { x: 0, y: 0 };
 
 function resizeCanvas() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
-    console.log(`Canvas resized to ${canvas.width}x${canvas.height}`);
 }
 
 function drawGame() {
-    console.log('drawGame function called');
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    try {
-        drawGrid();
-        console.log('drawGrid called successfully from drawGame');
-    } catch (error) {
-        console.error('Error in drawGrid:', error);
-    }
-    try {
-        drawBuildings();
-        console.log('drawBuildings called successfully from drawGame');
-    } catch (error) {
-        console.error('Error in drawBuildings:', error);
-    }
-    try {
-        drawHoveredCell();
-        console.log('drawHoveredCell called successfully from drawGame');
-    } catch (error) {
-        console.error('Error in drawHoveredCell:', error);
-    }
+    drawGrid();
+    drawBuildings();
+    drawHoveredCell();
     requestAnimationFrame(drawGame);
 }
 
 function initGame() {
-    console.log('initGame function called');
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
     
     canvas.addEventListener('mousedown', startDrag);
-    canvas.addEventListener('mousemove', (event) => {
-        drag(event);
-        handleCanvasMouseMove(event);
-    });
+    canvas.addEventListener('mousemove', drag);
     canvas.addEventListener('mouseup', endDrag);
     canvas.addEventListener('mouseleave', endDrag);
     canvas.addEventListener('click', handleCanvasClick);
     canvas.addEventListener('contextmenu', handleCanvasRightClick);
+    canvas.addEventListener('mousemove', handleCanvasMouseMove);
     canvas.addEventListener('wheel', handleCanvasWheel);
     
     document.addEventListener('keydown', handleKeyDown);
@@ -66,21 +47,73 @@ function initGame() {
     
     initWebSocket();
     
-    console.log('Starting drawGame');
     drawGame();
     
     initDebugConsole();
 }
 
-window.addEventListener('load', initGame);
+function handleCanvasClick(event) {
+    event.preventDefault();
+    const { x, y } = getGridCoordinates(event.clientX, event.clientY);
+    const building = gameState.grid[`${x},${y}`];
+    showCellPopup(x, y, building);
+}
 
-// Ensure all necessary functions are defined
-if (typeof drawGrid === 'undefined') {
-    console.error('drawGrid function is not defined');
+function handleCanvasRightClick(event) {
+    event.preventDefault();
+    console.log("Right-click event triggered"); // Debug log
+    const { x, y } = getGridCoordinates(event.clientX, event.clientY);
+    console.log(`Grid coordinates: (${x}, ${y})`); // Debug log
+    showBuildingMenu(event.clientX, event.clientY, x, y);
 }
-if (typeof drawBuildings === 'undefined') {
-    console.error('drawBuildings function is not defined');
+
+function handleCanvasMouseMove(event) {
+    const { x, y } = getGridCoordinates(event.clientX, event.clientY);
+    hoveredCell = { x, y };
+    
+    const edgeThreshold = 3;
+    if (Math.abs(x) > Math.abs(hoveredCell.x) - edgeThreshold || 
+        Math.abs(y) > Math.abs(hoveredCell.y) - edgeThreshold) {
+        generateNewCells(x, y);
+    }
 }
-if (typeof drawHoveredCell === 'undefined') {
-    console.error('drawHoveredCell function is not defined');
+
+function drawHoveredCell() {
+    if (hoveredCell) {
+        const { gridX, gridY } = getCanvasCoordinates(hoveredCell.x, hoveredCell.y);
+        ctx.strokeStyle = 'yellow';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(gridX, gridY, gridSize * gridScale, gridSize * gridScale);
+    }
 }
+
+function handleCanvasWheel(event) {
+    event.preventDefault();
+    const delta = Math.sign(event.deltaY);
+    updateGridScale(delta);
+}
+
+function centerMap() {
+    gridOffsetX = initialMapPosition.x;
+    gridOffsetY = initialMapPosition.y;
+}
+
+function handleKeyDown(event) {
+    const moveStep = 10;
+    switch (event.key) {
+        case 'ArrowUp':
+            gridOffsetY += moveStep;
+            break;
+        case 'ArrowDown':
+            gridOffsetY -= moveStep;
+            break;
+        case 'ArrowLeft':
+            gridOffsetX += moveStep;
+            break;
+        case 'ArrowRight':
+            gridOffsetX -= moveStep;
+            break;
+    }
+}
+
+window.addEventListener('load', initGame);

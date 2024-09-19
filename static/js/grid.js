@@ -8,18 +8,14 @@ let gridScale = 1;
 let isDragging = false;
 
 let lastMouseX, lastMouseY;
-let hoveredCell = null;
 
 function drawGrid() {
-    console.log('drawGrid function called');
     const startX = Math.floor(-gridOffsetX / (gridSize * gridScale)) - 1;
     const startY = Math.floor(-gridOffsetY / (gridSize * gridScale)) - 1;
     const endX = startX + Math.ceil(canvas.width / (gridSize * gridScale)) + 2;
     const endY = startY + Math.ceil(canvas.height / (gridSize * gridScale)) + 2;
 
-    console.log(`Drawing grid from (${startX}, ${startY}) to (${endX}, ${endY})`);
-
-    ctx.strokeStyle = 'rgba(0, 0, 0, 0.2)';
+    ctx.strokeStyle = '#ccc';
     ctx.lineWidth = 1;
 
     for (let x = startX; x < endX; x++) {
@@ -37,48 +33,62 @@ function drawGrid() {
         ctx.lineTo(canvas.width, canvasY);
         ctx.stroke();
     }
-
-    console.log('Grid drawing completed');
 }
 
-function drawHoveredCell() {
-    if (hoveredCell) {
-        console.log('Drawing hovered cell:', hoveredCell);
-        const { x, y } = hoveredCell;
-        const canvasX = x * gridSize * gridScale + gridOffsetX;
-        const canvasY = y * gridSize * gridScale + gridOffsetY;
-        
-        ctx.fillStyle = 'rgba(255, 255, 0, 0.3)';
-        ctx.fillRect(canvasX, canvasY, gridSize * gridScale, gridSize * gridScale);
+function generateNewCells(x, y) {
+    const key = `${x},${y}`;
+    if (!gameState.grid[key]) {
+        gameState.grid[key] = null; // Empty cell
     }
 }
 
-function handleCanvasMouseMove(event) {
-    const rect = canvas.getBoundingClientRect();
-    const mouseX = event.clientX - rect.left;
-    const mouseY = event.clientY - rect.top;
-    
-    const gridX = Math.floor((mouseX - gridOffsetX) / (gridSize * gridScale));
-    const gridY = Math.floor((mouseY - gridOffsetY) / (gridSize * gridScale));
-    
-    hoveredCell = { x: gridX, y: gridY };
+function getGridCoordinates(canvasX, canvasY) {
+    const x = Math.floor((canvasX - gridOffsetX) / (gridSize * gridScale));
+    const y = Math.floor((canvasY - gridOffsetY) / (gridSize * gridScale));
+    return { x, y };
 }
 
-function resizeCanvas() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    console.log(`Canvas resized to ${canvas.width}x${canvas.height}`);
+function getCanvasCoordinates(gridX, gridY) {
+    const x = gridX * gridSize * gridScale + gridOffsetX;
+    const y = gridY * gridSize * gridScale + gridOffsetY;
+    return { gridX: x, gridY: y };
 }
 
-// Add event listener for window resize
-window.addEventListener('resize', resizeCanvas);
+function updateGridScale(delta) {
+    const oldScale = gridScale;
+    gridScale = Math.max(0.5, Math.min(2, gridScale - delta * 0.1));
+    
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+    
+    gridOffsetX += (centerX - gridOffsetX) * (1 - gridScale / oldScale);
+    gridOffsetY += (centerY - gridOffsetY) * (1 - gridScale / oldScale);
+}
 
-// Initialize canvas size
-resizeCanvas();
+canvas.addEventListener('mousedown', startDrag);
+canvas.addEventListener('mousemove', drag);
+canvas.addEventListener('mouseup', endDrag);
+canvas.addEventListener('mouseleave', endDrag);
 
-// Export functions
-window.drawGrid = drawGrid;
-window.drawHoveredCell = drawHoveredCell;
-window.handleCanvasMouseMove = handleCanvasMouseMove;
+function startDrag(e) {
+    isDragging = true;
+    lastMouseX = e.clientX;
+    lastMouseY = e.clientY;
+}
 
-console.log('grid.js loaded and functions exported');
+function drag(e) {
+    if (!isDragging) return;
+    
+    const dx = e.clientX - lastMouseX;
+    const dy = e.clientY - lastMouseY;
+    
+    gridOffsetX += dx;
+    gridOffsetY += dy;
+    
+    lastMouseX = e.clientX;
+    lastMouseY = e.clientY;
+}
+
+function endDrag() {
+    isDragging = false;
+}
