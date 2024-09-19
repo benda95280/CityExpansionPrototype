@@ -22,25 +22,20 @@ def handle_place_building(data, game_state, socketio):
             'type': building_type,
             'level': 1,
             'accommodations': [[] for _ in range(buildings_data[building_type]['accommodations'])],
-            'total_accommodations': buildings_data[building_type]['accommodations']
+            'total_accommodations': buildings_data[building_type]['accommodations'],
+            'construction_start': game_state['current_date'],
+            'construction_end': game_state['current_date'] + buildings_data[building_type]['construction_time']
         }
         game_state['money'] -= buildings_data[building_type]['price']
         game_state['total_accommodations'] += buildings_data[building_type]['accommodations']
         
-        serializable_game_state = {key: value for key, value in game_state.items() if key != 'event_manager'}
-        serializable_game_state['events'] = [event.to_dict() for event in game_state['event_manager'].get_events()]
-        
-        # Convert datetime objects to ISO format strings
-        if 'current_date' in serializable_game_state:
-            serializable_game_state['current_date'] = serializable_game_state['current_date'].isoformat()
-        
-        socketio.emit('game_state', serializable_game_state)
+        socketio.emit('building_placed', {'x': x, 'y': y, 'type': building_type})
 
 def handle_upgrade_building(data, game_state, socketio):
     x, y = data['x'], data['y']
     building = game_state['grid'].get(f"{x},{y}")
     
-    if building:
+    if building and building['construction_end'] <= game_state['current_date']:
         building_type = building['type']
         next_level = building['level'] + 1
         upgrade_cost = buildings_data[building_type]['upgrade_cost'] * next_level
@@ -52,11 +47,34 @@ def handle_upgrade_building(data, game_state, socketio):
             building['total_accommodations'] += new_accommodations
             game_state['total_accommodations'] += new_accommodations
             game_state['money'] -= upgrade_cost
-            serializable_game_state = {key: value for key, value in game_state.items() if key != 'event_manager'}
-            serializable_game_state['events'] = [event.to_dict() for event in game_state['event_manager'].get_events()]
             
-            # Convert datetime objects to ISO format strings
-            if 'current_date' in serializable_game_state:
-                serializable_game_state['current_date'] = serializable_game_state['current_date'].isoformat()
+            building['construction_start'] = game_state['current_date']
+            building['construction_end'] = game_state['current_date'] + buildings_data[building_type]['upgrade_time']
             
-            socketio.emit('game_state', serializable_game_state)
+            socketio.emit('building_upgraded', {'x': x, 'y': y, 'level': next_level})
+
+def update_buildings(game_state):
+    for coords, building in game_state['grid'].items():
+        if building['construction_end'] > game_state['current_date']:
+            # Building is still under construction
+            progress = (game_state['current_date'] - building['construction_start']).total_seconds() / (building['construction_end'] - building['construction_start']).total_seconds()
+            building['construction_progress'] = min(1, max(0, progress))
+        else:
+            # Building construction is complete
+            building['construction_progress'] = 1
+
+def calculate_city_income(game_state):
+    total_income = 0
+    for building in game_state['grid'].values():
+        if building['construction_end'] <= game_state['current_date']:
+            building_type = building['type']
+            building_level = building['level']
+            income_per_citizen = buildings_data[building_type]['income_per_citizen']
+            total_citizens = sum(len(acc) for acc in building['accommodations'])
+            building_income = total_citizens * income_per_citizen * building_level
+            total_income += building_income
+    return total_income
+
+def update_city_finances(game_state):
+    hourly_income = calculate_city_income(game_state)
+    game_state['money'] += hourly_income
