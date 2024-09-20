@@ -1,5 +1,5 @@
 import { initWebSocket } from './websocket.js';
-import { startDrag, drag, endDrag, getGridCoordinates, generateNewCells } from './grid.js';
+import { startDrag, drag, endDrag, getGridCoordinates, generateNewCells, updateGridScale } from './grid.js';
 import { showBuildingMenu, updateResourcesDisplay, updateTickingSpeedDisplay, updateTimeDisplay } from './ui.js';
 
 const canvas = document.getElementById('game-canvas');
@@ -54,6 +54,12 @@ function handleCanvasMouseMove(event) {
         Math.abs(y) > Math.abs(hoveredCell.y) - edgeThreshold) {
         generateNewCells(x, y);
     }
+}
+
+function handleCanvasWheel(event) {
+    event.preventDefault();
+    const delta = event.deltaY > 0 ? 1 : -1;
+    updateGridScale(delta);
 }
 
 function initGame() {
