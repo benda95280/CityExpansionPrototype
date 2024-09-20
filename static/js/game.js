@@ -51,7 +51,7 @@ function handleCanvasRightClick(event) {
 }
 
 function handleCanvasMouseMove(event) {
-    const { x, y } = getGridCoordinates(event.clientX, event.clientY);
+    let { x, y } = getGridCoordinates(event.clientX, event.clientY);
     hoveredCell = { x, y };
     
     // Check if near edge of current map
