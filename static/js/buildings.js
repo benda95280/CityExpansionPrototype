@@ -1,13 +1,15 @@
-function drawBuildings() {
+import { getCanvasCoordinates, gridSize, gridScale } from './grid.js';
+
+function drawBuildings(ctx) {
     for (const [coords, building] of Object.entries(gameState.grid)) {
         if (building) {
             const [x, y] = coords.split(',').map(Number);
-            drawBuilding(x, y, building.type, building.level, building.construction_progress);
+            drawBuilding(ctx, x, y, building.type, building.level, building.construction_progress);
         }
     }
 }
 
-function drawBuilding(x, y, type, level, constructionProgress) {
+function drawBuilding(ctx, x, y, type, level, constructionProgress) {
     const { gridX, gridY } = getCanvasCoordinates(x, y);
     
     ctx.fillStyle = getBuildingColor(type);

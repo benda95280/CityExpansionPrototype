@@ -6,7 +6,7 @@ let gridOffsetX = 0;
 let gridOffsetY = 0;
 let gridScale = 1;
 let isDragging = false;
-let hoveredCell = null;
+let hoveredCell = { x: null, y: null };
 
 let lastMouseX, lastMouseY;
 

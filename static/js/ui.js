@@ -3,6 +3,8 @@ let lastTickTime = Date.now();
 let tickingSpeedBuffer = [];
 const BUFFER_SIZE = 10;
 const UPDATE_INTERVAL = 500; // Update every 500ms
+import { getCanvasCoordinates, gridSize } from './grid.js';
+import { placeBuilding, upgradeBuilding } from './buildings.js';
 
 function updateResourcesDisplay() {
     const population = Math.floor(window.gameState.population) || 0;

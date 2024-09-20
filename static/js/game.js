@@ -26,7 +26,7 @@ function resizeCanvas() {
 function drawGame() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     drawGrid();
-    drawBuildings();
+    drawBuildings(ctx);
     drawHoveredCell();
     updateResourcesDisplay();
     updateTimeDisplay();
@@ -52,7 +52,8 @@ function handleCanvasRightClick(event) {
 
 function handleCanvasMouseMove(event) {
     const coords = getGridCoordinates(event.clientX, event.clientY);
-    hoveredCell = { x: coords.x, y: coords.y };
+    hoveredCell.x = coords.x; 
+    hoveredCell.y = coords.y;
     
     // Check if near edge of current map
     const edgeThreshold = 3;
