@@ -51,14 +51,14 @@ function handleCanvasRightClick(event) {
 }
 
 function handleCanvasMouseMove(event) {
-    let { x, y } = getGridCoordinates(event.clientX, event.clientY);
-    hoveredCell = { x, y };
+    const coords = getGridCoordinates(event.clientX, event.clientY);
+    hoveredCell = { x: coords.x, y: coords.y };
     
     // Check if near edge of current map
     const edgeThreshold = 3;
-    if (Math.abs(x) > Math.abs(hoveredCell.x) - edgeThreshold || 
-        Math.abs(y) > Math.abs(hoveredCell.y) - edgeThreshold) {
-        generateNewCells(x, y);
+    if (Math.abs(coords.x) > Math.abs(hoveredCell.x) - edgeThreshold || 
+        Math.abs(coords.y) > Math.abs(hoveredCell.y) - edgeThreshold) {
+        generateNewCells(coords.x, coords.y);
     }
 }
 
