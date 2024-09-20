@@ -88,4 +88,4 @@ function endDrag() {
     isDragging = false;
 }
 
-export { startDrag, drag, endDrag, getGridCoordinates, generateNewCells, updateGridScale, drawGrid };
+export { startDrag, drag, endDrag, getGridCoordinates, generateNewCells, updateGridScale, drawGrid, getCanvasCoordinates };
