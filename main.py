@@ -34,6 +34,7 @@ game_state = {
     'event_manager': event_manager,
     'buildings_data': buildings_data,
     'current_date': datetime(2024, 1, 1),
+    'ticking_speed': 0,  # Add this line
 }
 
 @app.route('/')
@@ -102,12 +103,15 @@ def generate_new_citizen(game_state):
 
 def game_loop():
     last_update = datetime.now()
+    last_ticking_speed_update = datetime.now()
+    ticks_since_last_update = 0
     while True:
         current_time = datetime.now()
         delta_time = (current_time - last_update).total_seconds()
         
         # Update game state
         game_state['tick'] += 1
+        ticks_since_last_update += 1
         
         # Update game time (5 minutes every 20 ticks)
         if game_state['tick'] % 20 == 0:
@@ -123,6 +127,12 @@ def game_loop():
         
         # Update population and accommodations
         update_population_and_accommodations()
+        
+        # Update ticking speed every second
+        if (current_time - last_ticking_speed_update).total_seconds() >= 1:
+            game_state['ticking_speed'] = ticks_since_last_update
+            ticks_since_last_update = 0
+            last_ticking_speed_update = current_time
         
         # Emit game state every second
         if (current_time - last_update).total_seconds() >= 1:

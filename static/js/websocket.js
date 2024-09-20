@@ -12,7 +12,7 @@ function initWebSocket() {
         gameState = newState;
         updateResourcesDisplay();
         updateTickingSpeedDisplay();
-        updateTimeDisplay();  // Add this line
+        updateTimeDisplay();
     });
 
     socket.on('new_citizen', (citizen) => {
@@ -26,6 +26,5 @@ function initWebSocket() {
 }
 
 function updateTickingSpeedDisplay() {
-    const tickingSpeed = Math.round(gameState.tick / (Date.now() - gameState.start_time) * 1000);
-    document.getElementById('ticking-speed-value').textContent = `${tickingSpeed} ticks/s`;
+    document.getElementById('ticking-speed-value').textContent = `${gameState.ticking_speed} ticks/s`;
 }
