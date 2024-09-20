@@ -15,6 +15,8 @@ window.gameState = {
 let selectedBuilding = null;
 let hoveredCell = null;
 let initialMapPosition = { x: 0, y: 0 };
+let gridOffsetX = 0;
+let gridOffsetY = 0;
 
 function resizeCanvas() {
     canvas.width = window.innerWidth;
@@ -60,6 +62,24 @@ function handleCanvasWheel(event) {
     event.preventDefault();
     const delta = event.deltaY > 0 ? 1 : -1;
     updateGridScale(delta);
+}
+
+function handleKeyDown(event) {
+    const moveStep = 10;
+    switch (event.key) {
+        case 'ArrowUp':
+            gridOffsetY += moveStep;
+            break;
+        case 'ArrowDown':
+            gridOffsetY -= moveStep;
+            break;
+        case 'ArrowLeft':
+            gridOffsetX += moveStep;
+            break;
+        case 'ArrowRight':
+            gridOffsetX -= moveStep;
+            break;
+    }
 }
 
 function initGame() {
