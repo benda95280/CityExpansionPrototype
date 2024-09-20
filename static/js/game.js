@@ -1,6 +1,6 @@
 import { initWebSocket } from './websocket.js';
-import { startDrag, drag, endDrag, getGridCoordinates, generateNewCells, updateGridScale, drawGrid, getCanvasCoordinates, gridSize, gridScale, drawHoveredCell } from './grid.js';
-import { showBuildingMenu, updateResourcesDisplay, updateTickingSpeedDisplay, updateTimeDisplay } from './ui.js';
+import { startDrag, drag, endDrag, getGridCoordinates, generateNewCells, updateGridScale, drawGrid, getCanvasCoordinates, gridSize, gridScale, drawHoveredCell, hoveredCell } from './grid.js';
+import { showBuildingMenu, updateResourcesDisplay, updateTickingSpeedDisplay, updateTimeDisplay, showCellPopup } from './ui.js';
 import { drawBuildings, placeBuilding, upgradeBuilding } from './buildings.js';
 
 const canvas = document.getElementById('game-canvas');
@@ -14,7 +14,6 @@ window.gameState = {
 };
 
 let selectedBuilding = null;
-let hoveredCell = null;
 let initialMapPosition = { x: 0, y: 0 };
 let gridOffsetX = 0;
 let gridOffsetY = 0;

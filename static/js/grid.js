@@ -6,6 +6,7 @@ let gridOffsetX = 0;
 let gridOffsetY = 0;
 let gridScale = 1;
 let isDragging = false;
+let hoveredCell = null;
 
 let lastMouseX, lastMouseY;
 
@@ -97,4 +98,4 @@ function drawHoveredCell() {
     }
 }
 
-export { startDrag, drag, endDrag, getGridCoordinates, generateNewCells, updateGridScale, drawGrid, getCanvasCoordinates, gridSize, gridScale, drawHoveredCell };
+export { startDrag, drag, endDrag, getGridCoordinates, generateNewCells, updateGridScale, drawGrid, getCanvasCoordinates, gridSize, gridScale, drawHoveredCell, hoveredCell };

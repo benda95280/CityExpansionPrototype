@@ -50,7 +50,7 @@ function showBuildingMenu(x, y, gridX, gridY) {
         const option = document.createElement('div');
         option.textContent = `${data.name} ($${data.price})`;
         option.addEventListener('click', () => {
-            placeBuilding(gridX, gridY, type); // Change PlaceBuilding to placeBuilding
+            placeBuilding(gridX, gridY, type);
             document.body.removeChild(menu);
         });
         menu.appendChild(option);
@@ -97,7 +97,43 @@ function updateTickingSpeedDisplay() {
     }
 }
 
+function showCellPopup(x, y, building) {
+    const popup = document.createElement('div');
+    popup.classList.add('cell-popup');
+
+    if (building) {
+        const buildingData = window.gameState.buildings_data[building.type];
+        popup.innerHTML = `
+            <h3>${buildingData.name}</h3>
+            <p>Level: ${building.level}</p>
+            <p>Construction Progress: ${(building.construction_progress * 100).toFixed(2)}%</p>
+            <button id="upgrade-btn">Upgrade ($${buildingData.upgrade_cost * building.level})</button>
+        `;
+        popup.querySelector('#upgrade-btn').addEventListener('click', () => {
+            upgradeBuilding(x, y);
+            document.body.removeChild(popup);
+        });
+    } else {
+        popup.innerHTML = `<p>Empty cell (${x}, ${y})</p>`;
+    }
+
+    const { gridX, gridY } = getCanvasCoordinates(x, y);
+    popup.style.left = `${gridX + gridSize / 2}px`;
+    popup.style.top = `${gridY + gridSize / 2}px`;
+
+    document.body.appendChild(popup);
+
+    document.addEventListener('click', removePopup);
+
+    function removePopup(e) {
+        if (!popup.contains(e.target)) {
+            document.body.removeChild(popup);
+            document.removeEventListener('click', removePopup);
+        }
+    }
+}
+
 // Set up an interval to update the ticking speed display
 setInterval(updateTickingSpeedDisplay, UPDATE_INTERVAL);
 
-export { showBuildingMenu, updateResourcesDisplay, updateTickingSpeedDisplay, updateTimeDisplay };
+export { showBuildingMenu, updateResourcesDisplay, updateTickingSpeedDisplay, updateTimeDisplay, showCellPopup };
