@@ -11,7 +11,7 @@ function initWebSocket() {
     
     window.socket.on('game_state', (newState) => {
         console.log('Received game state update:', newState);
-        gameState = newState;
+        Object.assign(window.gameState, newState);
         updateResourcesDisplay();
         updateTickingSpeedDisplay();
         updateTimeDisplay();
@@ -28,7 +28,6 @@ function initWebSocket() {
 
     window.socket.on('building_completed', (data) => {
         console.log(`Building completed at (${data.x}, ${data.y})`);
-        // You can add additional logic here, such as updating UI elements or playing a sound
     });
 }
 
@@ -37,7 +36,7 @@ function updateTickingSpeedDisplay() {
     const elapsedTime = (currentTime - lastTickTime) / 1000; // Convert to seconds
 
     if (elapsedTime >= 1) { // Calculate speed every second
-        const ticksDelta = gameState.tick - lastTickCount;
+        const ticksDelta = window.gameState.tick - lastTickCount;
         const tickingSpeed = ticksDelta / elapsedTime;
         
         // Add the current ticking speed to the buffer
@@ -55,7 +54,7 @@ function updateTickingSpeedDisplay() {
         const displaySpeed = averageTickingSpeed.toFixed(2);
         document.getElementById('ticking-speed-value').textContent = `${displaySpeed} ticks/s`;
         
-        lastTickCount = gameState.tick;
+        lastTickCount = window.gameState.tick;
         lastTickTime = currentTime;
     }
 }

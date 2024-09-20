@@ -1,5 +1,6 @@
 import { initWebSocket } from './websocket.js';
 import { startDrag, drag, endDrag } from './grid.js';
+import { showBuildingMenu, updateResourcesDisplay, updateTickingSpeedDisplay, updateTimeDisplay } from './ui.js';
 
 const canvas = document.getElementById('game-canvas');
 const ctx = canvas.getContext('2d');
@@ -35,6 +36,12 @@ function handleCanvasClick(event) {
     showCellPopup(x, y, building);
 }
 
+function handleCanvasRightClick(event) {
+    event.preventDefault();
+    const { x, y } = getGridCoordinates(event.clientX, event.clientY);
+    showBuildingMenu(event.clientX, event.clientY, x, y);
+}
+
 function initGame() {
     initWebSocket();
     if (!canvas) {
@@ -67,3 +74,6 @@ function initGame() {
 }
 
 window.addEventListener('load', initGame);
+
+// Expose gameState to the global scope for other modules to access
+window.gameState = gameState;
