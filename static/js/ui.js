@@ -35,4 +35,38 @@ function updateTimeDisplay() {
     document.getElementById('time-value').textContent = timeString;
 }
 
-// ... (rest of the file remains unchanged)
+function showBuildingMenu(x, y, gridX, gridY) {
+    const existingMenu = document.querySelector('.context-menu');
+    if (existingMenu) {
+        document.body.removeChild(existingMenu);
+    }
+
+    const menu = document.createElement('div');
+    menu.classList.add('context-menu');
+    menu.style.left = `${x}px`;
+    menu.style.top = `${y}px`;
+
+    for (const [type, data] of Object.entries(gameState.buildings_data)) {
+        const option = document.createElement('div');
+        option.textContent = `${data.name} ($${data.price})`;
+        option.addEventListener('click', () => {
+            placeBuilding(gridX, gridY, type);
+            document.body.removeChild(menu);
+        });
+        menu.appendChild(option);
+    }
+
+    document.body.appendChild(menu);
+
+    document.addEventListener('click', removeMenu);
+}
+
+function removeMenu(e) {
+    const menu = document.querySelector('.context-menu');
+    if (menu && !menu.contains(e.target) && document.body.contains(menu)) {
+        document.body.removeChild(menu);
+        document.removeEventListener('click', removeMenu);
+    }
+}
+
+export { showBuildingMenu, updateResourcesDisplay, updateTickingSpeedDisplay, updateTimeDisplay };
