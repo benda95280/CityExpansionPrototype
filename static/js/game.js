@@ -26,6 +26,8 @@ function drawGame() {
     drawGrid();
     drawBuildings();
     drawHoveredCell();
+    updateResourcesDisplay();
+    updateTimeDisplay();
     requestAnimationFrame(drawGame);
 }
 

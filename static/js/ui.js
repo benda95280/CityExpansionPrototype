@@ -1,12 +1,8 @@
-let currentCitizenPopup = null;
-let debugConsole;
-let consoleInput;
-let consoleOutput;
-let lastPlacedCitizen = null;
-
 let lastTickCount = 0;
 let lastTickTime = Date.now();
 let tickingSpeedBuffer = [];
+const BUFFER_SIZE = 10;
+const UPDATE_INTERVAL = 500; // Update every 500ms
 
 function updateResourcesDisplay() {
     const population = Math.floor(gameState.population) || 0;
@@ -77,15 +73,15 @@ function updateTickingSpeedDisplay() {
     const currentTime = Date.now();
     const elapsedTime = (currentTime - lastTickTime) / 1000; // Convert to seconds
 
-    if (elapsedTime >= 1) { // Calculate speed every second
+    if (elapsedTime >= UPDATE_INTERVAL / 1000) {
         const ticksDelta = window.gameState.tick - lastTickCount;
         const tickingSpeed = ticksDelta / elapsedTime;
         
         // Add the current ticking speed to the buffer
         tickingSpeedBuffer.push(tickingSpeed);
         
-        // Keep only the last 5 measurements
-        if (tickingSpeedBuffer.length > 5) {
+        // Keep only the last BUFFER_SIZE measurements
+        if (tickingSpeedBuffer.length > BUFFER_SIZE) {
             tickingSpeedBuffer.shift();
         }
         
@@ -100,5 +96,8 @@ function updateTickingSpeedDisplay() {
         lastTickTime = currentTime;
     }
 }
+
+// Set up an interval to update the ticking speed display
+setInterval(updateTickingSpeedDisplay, UPDATE_INTERVAL);
 
 export { showBuildingMenu, updateResourcesDisplay, updateTickingSpeedDisplay, updateTimeDisplay };
