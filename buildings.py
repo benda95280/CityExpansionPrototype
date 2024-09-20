@@ -1,5 +1,5 @@
-from flask_socketio import SocketIO
 import json
+from flask_socketio import emit
 from datetime import datetime, timedelta
 
 # Load building data
@@ -25,13 +25,13 @@ def handle_place_building(data, game_state, socketio):
             'level': 1,
             'accommodations': [[] for _ in range(buildings_data[building_type]['accommodations'])],
             'total_accommodations': buildings_data[building_type]['accommodations'],
-            'construction_start': game_state['current_date'].isoformat(),
-            'construction_end': (game_state['current_date'] + construction_time).isoformat(),
+            'construction_start': game_state['current_date'],
+            'construction_end': game_state['current_date'] + construction_time,
             'construction_progress': 0,
-            'last_maintenance': game_state['current_date'].isoformat()
+            'last_maintenance': game_state['current_date']
         }
         game_state['money'] -= buildings_data[building_type]['price']
-        # Removed: game_state['total_accommodations'] += buildings_data[building_type]['accommodations']
+        game_state['total_accommodations'] += buildings_data[building_type]['accommodations']
         
         socketio.emit('building_placed', {'x': x, 'y': y, 'type': building_type})
 
@@ -50,22 +50,21 @@ def handle_upgrade_building(data, game_state, socketio):
             new_accommodations = buildings_data[building_type]['accommodations']
             building['accommodations'].extend([[] for _ in range(new_accommodations)])
             building['total_accommodations'] += new_accommodations
+            game_state['total_accommodations'] += new_accommodations
             game_state['money'] -= upgrade_cost
             
-            building['construction_start'] = game_state['current_date'].isoformat()
-            building['construction_end'] = (game_state['current_date'] + upgrade_time).isoformat()
+            building['construction_start'] = game_state['current_date']
+            building['construction_end'] = game_state['current_date'] + upgrade_time
             building['construction_progress'] = 0
             
             socketio.emit('building_upgraded', {'x': x, 'y': y, 'level': next_level})
 
-def update_buildings(game_state, socketio):
+def update_buildings(game_state):
     current_date = game_state['current_date']
     for coords, building in game_state['grid'].items():
         if building['construction_progress'] < 1:
-            construction_start = datetime.fromisoformat(building['construction_start'])
-            construction_end = datetime.fromisoformat(building['construction_end'])
-            total_construction_time = (construction_end - construction_start).total_seconds()
-            elapsed_time = (current_date - construction_start).total_seconds()
+            total_construction_time = (building['construction_end'] - building['construction_start']).total_seconds()
+            elapsed_time = (current_date - building['construction_start']).total_seconds()
             building['construction_progress'] = min(1, elapsed_time / total_construction_time)
             
             if building['construction_progress'] == 1:
@@ -73,12 +72,11 @@ def update_buildings(game_state, socketio):
         
         # Apply maintenance cost
         if building['construction_progress'] == 1:
-            last_maintenance = datetime.fromisoformat(building['last_maintenance'])
-            days_since_maintenance = (current_date - last_maintenance).days
+            days_since_maintenance = (current_date - building['last_maintenance']).days
             if days_since_maintenance >= 1:
                 maintenance_cost = buildings_data[building['type']]['maintenance_cost'] * building['level'] * days_since_maintenance
                 game_state['money'] -= maintenance_cost
-                building['last_maintenance'] = current_date.isoformat()
+                building['last_maintenance'] = current_date
 
 def calculate_city_income(game_state):
     total_income = 0

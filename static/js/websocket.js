@@ -1,33 +1,31 @@
-import { updateResourcesDisplay, updateTickingSpeedDisplay, updateTimeDisplay, showNewCitizenPopup } from './ui.js';
+let socket;
 
 function initWebSocket() {
-    window.socket = io();
+    socket = io();
     
-    window.socket.on('connect', () => {
+    socket.on('connect', () => {
         console.log('Connected to server');
     });
     
-    window.socket.on('game_state', (newState) => {
+    socket.on('game_state', (newState) => {
         console.log('Received game state update:', newState);
-        Object.assign(window.gameState, newState);
+        gameState = newState;
         updateResourcesDisplay();
         updateTickingSpeedDisplay();
-        updateTimeDisplay();
+        updateTimeDisplay();  // Add this line
     });
 
-    window.socket.on('new_citizen', (citizen) => {
+    socket.on('new_citizen', (citizen) => {
         showNewCitizenPopup(citizen);
     });
 
-    window.socket.on('citizen_placed', (data) => {
+    socket.on('citizen_placed', (data) => {
         lastPlacedCitizen = data;
         console.log('Citizen placed:', data);
     });
-
-    window.socket.on('building_completed', (data) => {
-        console.log(`Building completed at (${data.x}, ${data.y})`);
-    });
 }
 
-// Export the initWebSocket function to make it available in other modules
-export { initWebSocket };
+function updateTickingSpeedDisplay() {
+    const tickingSpeed = Math.round(gameState.tick / (Date.now() - gameState.start_time) * 1000);
+    document.getElementById('ticking-speed-value').textContent = `${tickingSpeed} ticks/s`;
+}

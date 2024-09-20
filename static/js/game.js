@@ -1,12 +1,4 @@
-import { initWebSocket } from './websocket.js';
-import { startDrag, drag, endDrag, getGridCoordinates, generateNewCells, updateGridScale, drawGrid, getCanvasCoordinates, gridSize, gridScale, drawHoveredCell, hoveredCell } from './grid.js';
-import { showBuildingMenu, updateResourcesDisplay, updateTickingSpeedDisplay, updateTimeDisplay, showCellPopup } from './ui.js';
-import { drawBuildings, placeBuilding, upgradeBuilding } from './buildings.js';
-
-const canvas = document.getElementById('game-canvas');
-const ctx = canvas.getContext('2d');
-
-window.gameState = {
+let gameState = {
     grid: {},
     population: 0,
     money: 1000,
@@ -14,9 +6,8 @@ window.gameState = {
 };
 
 let selectedBuilding = null;
+let hoveredCell = null;
 let initialMapPosition = { x: 0, y: 0 };
-let gridOffsetX = 0;
-let gridOffsetY = 0;
 
 function resizeCanvas() {
     canvas.width = window.innerWidth;
@@ -26,47 +17,85 @@ function resizeCanvas() {
 function drawGame() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     drawGrid();
-    drawBuildings(ctx);
+    drawBuildings();
     drawHoveredCell();
-    updateResourcesDisplay();
-    updateTimeDisplay();
     requestAnimationFrame(drawGame);
 }
 
+function initGame() {
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+    
+    canvas.addEventListener('mousedown', startDrag);
+    canvas.addEventListener('mousemove', drag);
+    canvas.addEventListener('mouseup', endDrag);
+    canvas.addEventListener('mouseleave', endDrag);
+    canvas.addEventListener('click', handleCanvasClick);
+    canvas.addEventListener('contextmenu', handleCanvasRightClick);
+    canvas.addEventListener('mousemove', handleCanvasMouseMove);
+    canvas.addEventListener('wheel', handleCanvasWheel);
+    
+    document.addEventListener('keydown', handleKeyDown);
+    
+    document.getElementById('zoom-in').addEventListener('click', () => updateGridScale(-1));
+    document.getElementById('zoom-out').addEventListener('click', () => updateGridScale(1));
+    document.getElementById('center-map').addEventListener('click', centerMap);
+    
+    initialMapPosition = { x: canvas.width / 2, y: canvas.height / 2 };
+    gridOffsetX = initialMapPosition.x;
+    gridOffsetY = initialMapPosition.y;
+    
+    initWebSocket();
+    
+    drawGame();
+    
+    initDebugConsole();
+}
+
 function handleCanvasClick(event) {
+    event.preventDefault();
     const { x, y } = getGridCoordinates(event.clientX, event.clientY);
-    const buildingId = window.gameState.grid[`${x},${y}`];
-    if (buildingId) {
-        const building = window.gameState.buildings[buildingId];
-        showCellPopup(x, y, building);
-    } else {
-        showCellPopup(x, y, null); // Pass null for empty cells
-    }
+    const building = gameState.grid[`${x},${y}`];
+    showCellPopup(x, y, building);
 }
 
 function handleCanvasRightClick(event) {
     event.preventDefault();
+    console.log("Right-click event triggered"); // Debug log
     const { x, y } = getGridCoordinates(event.clientX, event.clientY);
+    console.log(`Grid coordinates: (${x}, ${y})`); // Debug log
     showBuildingMenu(event.clientX, event.clientY, x, y);
 }
 
 function handleCanvasMouseMove(event) {
-    const coords = getGridCoordinates(event.clientX, event.clientY);
-    hoveredCell.x = coords.x; 
-    hoveredCell.y = coords.y;
+    const { x, y } = getGridCoordinates(event.clientX, event.clientY);
+    hoveredCell = { x, y };
     
-    // Check if near edge of current map
     const edgeThreshold = 3;
-    if (Math.abs(coords.x) > Math.abs(hoveredCell.x) - edgeThreshold || 
-        Math.abs(coords.y) > Math.abs(hoveredCell.y) - edgeThreshold) {
-        generateNewCells(coords.x, coords.y);
+    if (Math.abs(x) > Math.abs(hoveredCell.x) - edgeThreshold || 
+        Math.abs(y) > Math.abs(hoveredCell.y) - edgeThreshold) {
+        generateNewCells(x, y);
+    }
+}
+
+function drawHoveredCell() {
+    if (hoveredCell) {
+        const { gridX, gridY } = getCanvasCoordinates(hoveredCell.x, hoveredCell.y);
+        ctx.strokeStyle = 'yellow';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(gridX, gridY, gridSize * gridScale, gridSize * gridScale);
     }
 }
 
 function handleCanvasWheel(event) {
     event.preventDefault();
-    const delta = event.deltaY > 0 ? 1 : -1;
+    const delta = Math.sign(event.deltaY);
     updateGridScale(delta);
+}
+
+function centerMap() {
+    gridOffsetX = initialMapPosition.x;
+    gridOffsetY = initialMapPosition.y;
 }
 
 function handleKeyDown(event) {
@@ -85,42 +114,6 @@ function handleKeyDown(event) {
             gridOffsetX -= moveStep;
             break;
     }
-}
-
-function centerMap() {
-    gridOffsetX = initialMapPosition.x;
-    gridOffsetY = initialMapPosition.y;
-}
-
-function initGame() {
-    initWebSocket();
-    if (!canvas) {
-        console.error('Canvas element not found');
-        return;
-    }
-    resizeCanvas();
-    window.addEventListener('resize', resizeCanvas);
-    
-    canvas.addEventListener('mousedown', (e) => startDrag(e));
-    canvas.addEventListener('mousemove', (e) => drag(e));
-    canvas.addEventListener('mouseup', () => endDrag());
-    canvas.addEventListener('mouseleave', () => endDrag());
-    canvas.addEventListener('click', handleCanvasClick);
-    canvas.addEventListener('contextmenu', handleCanvasRightClick);
-    canvas.addEventListener('mousemove', handleCanvasMouseMove);
-    canvas.addEventListener('wheel', handleCanvasWheel);
-    
-    document.addEventListener('keydown', handleKeyDown);
-    
-    document.getElementById('zoom-in').addEventListener('click', () => updateGridScale(-1));
-    document.getElementById('zoom-out').addEventListener('click', () => updateGridScale(1));
-    document.getElementById('center-map').addEventListener('click', centerMap);
-    
-    initialMapPosition = { x: canvas.width / 2, y: canvas.height / 2 };
-    gridOffsetX = initialMapPosition.x;
-    gridOffsetY = initialMapPosition.y;
-    
-    drawGame();
 }
 
 window.addEventListener('load', initGame);

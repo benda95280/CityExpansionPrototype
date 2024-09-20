@@ -48,7 +48,6 @@ class EventManager:
         self.events.append(event)
         if self.debug:
             print(f"Event registered: {event.name}")
-            print(f"Next occurrence: {event.next_execution}")
 
     def remove_event(self, event_name):
         self.events = [e for e in self.events if e.name != event_name]
@@ -67,7 +66,7 @@ class EventManager:
         for event in self.get_active_events():
             if now >= event.next_execution:
                 if self.debug:
-                    print(f"Event '{event.name}' is going to be fired at {now}")
+                    print(f"Event '{event.name}' is going to be fired")
                 yield event
 
     def to_dict(self):

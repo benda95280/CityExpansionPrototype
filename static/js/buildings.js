@@ -1,15 +1,13 @@
-import { getCanvasCoordinates, gridSize, gridScale } from './grid.js';
-
-function drawBuildings(ctx) {
+function drawBuildings() {
     for (const [coords, building] of Object.entries(gameState.grid)) {
         if (building) {
             const [x, y] = coords.split(',').map(Number);
-            drawBuilding(ctx, x, y, building.type, building.level, building.construction_progress);
+            drawBuilding(x, y, building.type, building.level, building.construction_progress);
         }
     }
 }
 
-function drawBuilding(ctx, x, y, type, level, constructionProgress) {
+function drawBuilding(x, y, type, level, constructionProgress) {
     const { gridX, gridY } = getCanvasCoordinates(x, y);
     
     ctx.fillStyle = getBuildingColor(type);
@@ -42,11 +40,15 @@ function getBuildingColor(type) {
 }
 
 function placeBuilding(x, y, type) {
-    window.socket.emit('place_building', { x, y, building_type: type });
+    socket.emit('place_building', { x, y, building_type: type });
 }
 
 function upgradeBuilding(x, y) {
-    window.socket.emit('upgrade_building', { x, y });
+    socket.emit('upgrade_building', { x, y });
 }
 
-export { drawBuildings, placeBuilding, upgradeBuilding };
+// Add event listener for building completion
+socket.on('building_completed', (data) => {
+    console.log(`Building completed at (${data.x}, ${data.y})`);
+    // You can add additional logic here, such as updating UI elements or playing a sound
+});

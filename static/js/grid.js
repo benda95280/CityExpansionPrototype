@@ -6,7 +6,6 @@ let gridOffsetX = 0;
 let gridOffsetY = 0;
 let gridScale = 1;
 let isDragging = false;
-let hoveredCell = { x: null, y: null };
 
 let lastMouseX, lastMouseY;
 
@@ -66,6 +65,11 @@ function updateGridScale(delta) {
     gridOffsetY += (centerY - gridOffsetY) * (1 - gridScale / oldScale);
 }
 
+canvas.addEventListener('mousedown', startDrag);
+canvas.addEventListener('mousemove', drag);
+canvas.addEventListener('mouseup', endDrag);
+canvas.addEventListener('mouseleave', endDrag);
+
 function startDrag(e) {
     isDragging = true;
     lastMouseX = e.clientX;
@@ -88,14 +92,3 @@ function drag(e) {
 function endDrag() {
     isDragging = false;
 }
-
-function drawHoveredCell() {
-    if (hoveredCell) {
-        const { gridX, gridY } = getCanvasCoordinates(hoveredCell.x, hoveredCell.y);
-        ctx.strokeStyle = 'rgba(255, 255, 0, 0.5)'; // Change to yellow with 50% opacity
-        ctx.lineWidth = 2;
-        ctx.strokeRect(gridX, gridY, gridSize * gridScale, gridSize * gridScale);
-    }
-}
-
-export { startDrag, drag, endDrag, getGridCoordinates, generateNewCells, updateGridScale, drawGrid, getCanvasCoordinates, gridSize, gridScale, drawHoveredCell, hoveredCell };

@@ -1,34 +1,24 @@
-import { getCanvasCoordinates, gridSize } from './grid.js';
-import { placeBuilding, upgradeBuilding } from './buildings.js';
-
-let lastTickCount = 0;
-let lastTickTime = Date.now();
-let tickingSpeedBuffer = [];
-const BUFFER_SIZE = 10;
-const UPDATE_INTERVAL = 500; // Update every 500ms
+let currentCitizenPopup = null;
+let debugConsole;
+let consoleInput;
+let consoleOutput;
+let lastPlacedCitizen = null;
 
 function updateResourcesDisplay() {
-    const population = Math.floor(window.gameState.population) || 0;
-    const availableAccommodations = (window.gameState.total_accommodations - window.gameState.used_accommodations) || 0;
-    const totalAccommodations = window.gameState.total_accommodations || 0;
+    const population = Math.floor(gameState.population) || 0;
+    const availableAccommodations = (gameState.total_accommodations - gameState.used_accommodations) || 0;
+    const totalAccommodations = gameState.total_accommodations || 0;
     
     document.getElementById('population-value').textContent = `${population}`;
     document.getElementById('accommodations-value').textContent = `${availableAccommodations} / ${totalAccommodations}`;
-    document.getElementById('money-value').textContent = `$${window.gameState.money}`;
-    
-    updateNotificationsAndTasks();
-}
-
-function updateNotificationsAndTasks() {
-    document.getElementById('notifications-count').textContent = window.gameState.notifications || 0;
-    document.getElementById('tasks-count').textContent = window.gameState.tasks || 0;
+    document.getElementById('money-value').textContent = `$${gameState.money}`;
 }
 
 function updateTimeDisplay() {
-    const gameDate = new Date(window.gameState.current_date);
+    const gameDate = new Date(gameState.current_date);
     const dateString = gameDate.toDateString();
     
-    const totalMinutes = Math.floor(window.gameState.tick / 4);
+    const totalMinutes = Math.floor(gameState.tick / 4);
     const hours = Math.floor(totalMinutes / 60) % 24;
     const minutes = totalMinutes % 60;
     
@@ -39,6 +29,7 @@ function updateTimeDisplay() {
 }
 
 function showBuildingMenu(x, y, gridX, gridY) {
+    console.log("showBuildingMenu called");
     const existingMenu = document.querySelector('.context-menu');
     if (existingMenu) {
         document.body.removeChild(existingMenu);
@@ -49,17 +40,41 @@ function showBuildingMenu(x, y, gridX, gridY) {
     menu.style.left = `${x}px`;
     menu.style.top = `${y}px`;
 
-    for (const [type, data] of Object.entries(window.gameState.buildings_data)) {
-        const option = document.createElement('div');
-        option.textContent = `${data.name} ($${data.price})`;
-        option.addEventListener('click', () => {
-            placeBuilding(gridX, gridY, type);
+    const existingBuilding = gameState.grid[`${gridX},${gridY}`];
+
+    if (existingBuilding) {
+        console.log("Existing building found:", existingBuilding);
+        const buildingData = gameState.buildings_data[existingBuilding.type];
+        const upgradeOption = document.createElement('div');
+        upgradeOption.textContent = `Upgrade ${buildingData.name} ($${buildingData.upgrade_cost * existingBuilding.level})`;
+        upgradeOption.addEventListener('click', () => {
+            upgradeBuilding(gridX, gridY);
             document.body.removeChild(menu);
         });
-        menu.appendChild(option);
+        menu.appendChild(upgradeOption);
+
+        const infoOption = document.createElement('div');
+        infoOption.textContent = 'Show Info';
+        infoOption.addEventListener('click', () => {
+            showCellPopup(gridX, gridY, existingBuilding);
+            document.body.removeChild(menu);
+        });
+        menu.appendChild(infoOption);
+    } else {
+        console.log("No existing building, showing building options");
+        for (const [type, data] of Object.entries(gameState.buildings_data)) {
+            const option = document.createElement('div');
+            option.textContent = `${data.name} ($${data.price})`;
+            option.addEventListener('click', () => {
+                placeBuilding(gridX, gridY, type);
+                document.body.removeChild(menu);
+            });
+            menu.appendChild(option);
+        }
     }
 
     document.body.appendChild(menu);
+    console.log("Building menu appended to document body");
 
     document.addEventListener('click', removeMenu);
 }
@@ -72,44 +87,22 @@ function removeMenu(e) {
     }
 }
 
-function updateTickingSpeedDisplay() {
-    const currentTime = Date.now();
-    const elapsedTime = (currentTime - lastTickTime) / 1000; // Convert to seconds
-
-    if (elapsedTime >= UPDATE_INTERVAL / 1000) {
-        const ticksDelta = window.gameState.tick - lastTickCount;
-        const tickingSpeed = ticksDelta / elapsedTime;
-        
-        // Add the current ticking speed to the buffer
-        tickingSpeedBuffer.push(tickingSpeed);
-        
-        // Keep only the last BUFFER_SIZE measurements
-        if (tickingSpeedBuffer.length > BUFFER_SIZE) {
-            tickingSpeedBuffer.shift();
-        }
-        
-        // Calculate the average ticking speed
-        const averageTickingSpeed = tickingSpeedBuffer.reduce((a, b) => a + b, 0) / tickingSpeedBuffer.length;
-        
-        // Update the display with a more precise representation
-        const displaySpeed = averageTickingSpeed.toFixed(2);
-        document.getElementById('ticking-speed-value').textContent = `${displaySpeed} ticks/s`;
-        
-        lastTickCount = window.gameState.tick;
-        lastTickTime = currentTime;
-    }
-}
-
 function showCellPopup(x, y, building) {
     const popup = document.createElement('div');
     popup.classList.add('cell-popup');
 
     if (building) {
-        const buildingData = window.gameState.buildings_data[building.type];
+        const buildingData = gameState.buildings_data[building.type];
+        const occupiedAccommodations = building.accommodations.filter(acc => acc.length > 0).length;
+        const totalAccommodations = building.total_accommodations;
+        const population = building.accommodations.reduce((sum, acc) => sum + acc.length, 0);
+        
         popup.innerHTML = `
             <h3>${buildingData.name}</h3>
             <p>Level: ${building.level}</p>
-            <p>Construction Progress: ${(building.construction_progress * 100).toFixed(2)}%</p>
+            <p>Accommodations: ${occupiedAccommodations} / ${totalAccommodations}</p>
+            <p>Population: ${population}</p>
+            <p>Max People per Accommodation: ${buildingData.max_people_per_accommodation}</p>
             <button id="upgrade-btn">Upgrade ($${buildingData.upgrade_cost * building.level})</button>
         `;
         popup.querySelector('#upgrade-btn').addEventListener('click', () => {
@@ -126,30 +119,43 @@ function showCellPopup(x, y, building) {
 
     document.body.appendChild(popup);
 
-    document.addEventListener('click', removePopup);
-
     function removePopup(e) {
-        if (!popup.contains(e.target)) {
+        const popup = document.querySelector('.cell-popup');
+        if (popup && !popup.contains(e.target) && document.body.contains(popup)) {
             document.body.removeChild(popup);
             document.removeEventListener('click', removePopup);
         }
     }
+
+    document.addEventListener('click', removePopup);
 }
 
 function showNewCitizenPopup(citizen) {
+    if (currentCitizenPopup) {
+        return;
+    }
+
     const popup = document.createElement('div');
     popup.classList.add('new-citizen-popup');
+    
+    const birthDate = new Date(citizen.birthday);
+    const gameDate = new Date(gameState.current_date);
+    const age = gameDate.getFullYear() - birthDate.getFullYear();
+    
+    const genderIcon = citizen.gender === 'Male' ? '♂️' : '♀️';
+    const genderColor = citizen.gender === 'Male' ? 'blue' : 'pink';
+
     popup.innerHTML = `
         <div class="popup-header">
-            <h3>New Citizen Arrived!</h3>
-            <button id="move-to-accommodation">➡️</button>
+            <button id="move-to-accommodation" title="Move to accommodation">🏠</button>
+            <h3>New Citizen!</h3>
+            <div style="text-align: right; font-size: 24px; color: ${genderColor};">${genderIcon}</div>
         </div>
         <div class="popup-content">
             <p>Name: ${citizen.first_name} ${citizen.last_name}</p>
-            <p>Gender: ${citizen.gender}</p>
-            <p>Birthday: ${new Date(citizen.birthday).toLocaleDateString()}</p>
+            <p>Age: ${age}</p>
             <p>Previous Job: ${citizen.previous_job}</p>
-            <p>Favorite Music: ${citizen.favorite_music}</p>
+            <p>🎵: ${citizen.favorite_music}</p>
         </div>
         <div class="popup-footer">
             <button id="accept-citizen">Accept</button>
@@ -158,24 +164,100 @@ function showNewCitizenPopup(citizen) {
     `;
 
     document.body.appendChild(popup);
+    currentCitizenPopup = popup;
+    socket.emit('citizen_popup_displayed');
 
-    document.getElementById('accept-citizen').addEventListener('click', () => {
-        window.socket.emit('accept_citizen', { index: window.gameState.pending_citizens.findIndex(c => c.id === citizen.id) });
-        document.body.removeChild(popup);
+    const moveToAccommodationBtn = popup.querySelector('#move-to-accommodation');
+    moveToAccommodationBtn.addEventListener('click', () => {
+        console.log('Move to accommodation button clicked');
+        moveViewToAccommodation(citizen);
     });
 
-    document.getElementById('deny-citizen').addEventListener('click', () => {
-        window.socket.emit('deny_citizen', { index: window.gameState.pending_citizens.findIndex(c => c.id === citizen.id) });
-        document.body.removeChild(popup);
+    moveToAccommodationBtn.addEventListener('mouseenter', () => {
+        popup.style.opacity = '0.5';
     });
 
-    document.getElementById('move-to-accommodation').addEventListener('click', () => {
-        // Implement logic to move citizen to an available accommodation
-        console.log('Move to accommodation clicked');
+    moveToAccommodationBtn.addEventListener('mouseleave', () => {
+        popup.style.opacity = '1';
+    });
+
+    popup.querySelector('#accept-citizen').addEventListener('click', () => {
+        socket.emit('accept_citizen', { index: gameState.pending_citizens.length - 1 });
+        document.body.removeChild(popup);
+        currentCitizenPopup = null;
+    });
+
+    popup.querySelector('#deny-citizen').addEventListener('click', () => {
+        socket.emit('deny_citizen', { index: gameState.pending_citizens.length - 1 });
+        document.body.removeChild(popup);
+        currentCitizenPopup = null;
     });
 }
 
-// Set up an interval to update the ticking speed display
-setInterval(updateTickingSpeedDisplay, UPDATE_INTERVAL);
+function moveViewToAccommodation(citizen) {
+    console.log('moveViewToAccommodation called for citizen:', citizen);
+    if (!citizen) {
+        console.error('Error: Citizen object is undefined or null');
+        return;
+    }
+    if (!lastPlacedCitizen) {
+        console.error('Error: No last placed citizen information available');
+        return;
+    }
+    console.log('Last placed citizen:', lastPlacedCitizen);
+    
+    const buildingEntry = Object.entries(gameState.grid).find(([coords, building]) => 
+        building.accommodations.some(acc => acc.some(c => c.id === citizen.id))
+    );
 
-export { showBuildingMenu, updateResourcesDisplay, updateTickingSpeedDisplay, updateTimeDisplay, showCellPopup, showNewCitizenPopup };
+    if (buildingEntry) {
+        const [coords, building] = buildingEntry;
+        const [x, y] = coords.split(',').map(Number);
+        console.log(`Centering map on building at (${x}, ${y})`);
+        centerMapOnBuilding(x, y);
+    } else {
+        console.error('Error: Building not found for citizen');
+    }
+}
+
+function centerMapOnBuilding(x, y) {
+    console.log(`Centering map on (${x}, ${y})`);
+    gridOffsetX = canvas.width / 2 - x * gridSize * gridScale;
+    gridOffsetY = canvas.height / 2 - y * gridSize * gridScale;
+    drawGame();
+}
+
+function initDebugConsole() {
+    debugConsole = document.getElementById('debug-console');
+    consoleInput = document.getElementById('console-input');
+    consoleOutput = document.getElementById('console-output');
+    
+    document.getElementById('console-submit').addEventListener('click', handleConsoleSubmit);
+    consoleInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            handleConsoleSubmit();
+        }
+    });
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === '/') {
+            e.preventDefault();
+            debugConsole.style.display = debugConsole.style.display === 'none' ? 'block' : 'none';
+        }
+    });
+}
+
+function handleConsoleSubmit() {
+    const command = consoleInput.value.trim();
+    if (command) {
+        socket.emit('console_command', { command: command }, function(response) {
+            appendToConsole(`> ${command}<br>${response.replace(/\n/g, '<br>')}`);
+        });
+        consoleInput.value = '';
+    }
+}
+
+function appendToConsole(message) {
+    consoleOutput.innerHTML += message + '<br>';
+    consoleOutput.scrollTop = consoleOutput.scrollHeight;
+}
