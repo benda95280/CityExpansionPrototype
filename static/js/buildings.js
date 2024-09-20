@@ -46,3 +46,5 @@ function placeBuilding(x, y, type) {
 function upgradeBuilding(x, y) {
     window.socket.emit('upgrade_building', { x, y });
 }
+
+export { drawBuildings, placeBuilding, upgradeBuilding };
