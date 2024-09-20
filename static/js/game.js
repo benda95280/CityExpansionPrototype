@@ -1,5 +1,8 @@
 import { initWebSocket } from './websocket.js';
 
+const canvas = document.getElementById('game-canvas');
+const ctx = canvas.getContext('2d');
+
 let gameState = {
     grid: {},
     population: 0,
@@ -32,7 +35,11 @@ function handleCanvasClick(event) {
 }
 
 function initGame() {
-    initWebSocket();  // Make sure this is called first
+    initWebSocket();
+    if (!canvas) {
+        console.error('Canvas element not found');
+        return;
+    }
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
     
@@ -57,7 +64,5 @@ function initGame() {
     
     drawGame();
 }
-
-// ... (rest of the file remains unchanged)
 
 window.addEventListener('load', initGame);
