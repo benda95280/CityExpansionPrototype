@@ -1,5 +1,5 @@
 import { initWebSocket } from './websocket.js';
-import { startDrag, drag, endDrag, getGridCoordinates, generateNewCells, updateGridScale, drawGrid } from './grid.js';
+import { startDrag, drag, endDrag, getGridCoordinates, generateNewCells, updateGridScale, drawGrid, getCanvasCoordinates } from './grid.js';
 import { showBuildingMenu, updateResourcesDisplay, updateTickingSpeedDisplay, updateTimeDisplay } from './ui.js';
 import { drawBuildings, placeBuilding, upgradeBuilding } from './buildings.js';
 
@@ -22,6 +22,15 @@ let gridOffsetY = 0;
 function resizeCanvas() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
+}
+
+function drawHoveredCell() {
+    if (hoveredCell) {
+        const { gridX, gridY } = getCanvasCoordinates(hoveredCell.x, hoveredCell.y);
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(gridX, gridY, gridSize * gridScale, gridSize * gridScale);
+    }
 }
 
 function drawGame() {
