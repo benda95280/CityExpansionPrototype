@@ -1,3 +1,5 @@
+import { updateResourcesDisplay, updateTickingSpeedDisplay, updateTimeDisplay } from './ui.js';
+
 function initWebSocket() {
     window.socket = io();
     
