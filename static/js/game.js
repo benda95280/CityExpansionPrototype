@@ -1,5 +1,5 @@
 import { initWebSocket } from './websocket.js';
-import { startDrag, drag, endDrag, getGridCoordinates, generateNewCells, updateGridScale } from './grid.js';
+import { startDrag, drag, endDrag, getGridCoordinates, generateNewCells, updateGridScale, drawGrid } from './grid.js';
 import { showBuildingMenu, updateResourcesDisplay, updateTickingSpeedDisplay, updateTimeDisplay } from './ui.js';
 
 const canvas = document.getElementById('game-canvas');
