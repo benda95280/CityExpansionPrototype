@@ -1,5 +1,5 @@
 import { initWebSocket } from './websocket.js';
-import { startDrag, drag, endDrag } from './grid.js';
+import { startDrag, drag, endDrag, getGridCoordinates, generateNewCells } from './grid.js';
 import { showBuildingMenu, updateResourcesDisplay, updateTickingSpeedDisplay, updateTimeDisplay } from './ui.js';
 
 const canvas = document.getElementById('game-canvas');
@@ -40,6 +40,18 @@ function handleCanvasRightClick(event) {
     event.preventDefault();
     const { x, y } = getGridCoordinates(event.clientX, event.clientY);
     showBuildingMenu(event.clientX, event.clientY, x, y);
+}
+
+function handleCanvasMouseMove(event) {
+    const { x, y } = getGridCoordinates(event.clientX, event.clientY);
+    hoveredCell = { x, y };
+    
+    // Check if near edge of current map
+    const edgeThreshold = 3;
+    if (Math.abs(x) > Math.abs(hoveredCell.x) - edgeThreshold || 
+        Math.abs(y) > Math.abs(hoveredCell.y) - edgeThreshold) {
+        generateNewCells(x, y);
+    }
 }
 
 function initGame() {
