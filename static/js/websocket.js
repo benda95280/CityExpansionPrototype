@@ -1,4 +1,4 @@
-import { updateResourcesDisplay, updateTickingSpeedDisplay, updateTimeDisplay } from './ui.js';
+import { updateResourcesDisplay, updateTickingSpeedDisplay, updateTimeDisplay, showNewCitizenPopup } from './ui.js';
 
 function initWebSocket() {
     window.socket = io();

@@ -1,10 +1,11 @@
+import { getCanvasCoordinates, gridSize } from './grid.js';
+import { placeBuilding, upgradeBuilding } from './buildings.js';
+
 let lastTickCount = 0;
 let lastTickTime = Date.now();
 let tickingSpeedBuffer = [];
 const BUFFER_SIZE = 10;
 const UPDATE_INTERVAL = 500; // Update every 500ms
-import { getCanvasCoordinates, gridSize } from './grid.js';
-import { placeBuilding, upgradeBuilding } from './buildings.js';
 
 function updateResourcesDisplay() {
     const population = Math.floor(window.gameState.population) || 0;
@@ -135,7 +136,46 @@ function showCellPopup(x, y, building) {
     }
 }
 
+function showNewCitizenPopup(citizen) {
+    const popup = document.createElement('div');
+    popup.classList.add('new-citizen-popup');
+    popup.innerHTML = `
+        <div class="popup-header">
+            <h3>New Citizen Arrived!</h3>
+            <button id="move-to-accommodation">➡️</button>
+        </div>
+        <div class="popup-content">
+            <p>Name: ${citizen.first_name} ${citizen.last_name}</p>
+            <p>Gender: ${citizen.gender}</p>
+            <p>Birthday: ${new Date(citizen.birthday).toLocaleDateString()}</p>
+            <p>Previous Job: ${citizen.previous_job}</p>
+            <p>Favorite Music: ${citizen.favorite_music}</p>
+        </div>
+        <div class="popup-footer">
+            <button id="accept-citizen">Accept</button>
+            <button id="deny-citizen">Deny</button>
+        </div>
+    `;
+
+    document.body.appendChild(popup);
+
+    document.getElementById('accept-citizen').addEventListener('click', () => {
+        window.socket.emit('accept_citizen', { index: window.gameState.pending_citizens.findIndex(c => c.id === citizen.id) });
+        document.body.removeChild(popup);
+    });
+
+    document.getElementById('deny-citizen').addEventListener('click', () => {
+        window.socket.emit('deny_citizen', { index: window.gameState.pending_citizens.findIndex(c => c.id === citizen.id) });
+        document.body.removeChild(popup);
+    });
+
+    document.getElementById('move-to-accommodation').addEventListener('click', () => {
+        // Implement logic to move citizen to an available accommodation
+        console.log('Move to accommodation clicked');
+    });
+}
+
 // Set up an interval to update the ticking speed display
 setInterval(updateTickingSpeedDisplay, UPDATE_INTERVAL);
 
-export { showBuildingMenu, updateResourcesDisplay, updateTickingSpeedDisplay, updateTimeDisplay, showCellPopup };
+export { showBuildingMenu, updateResourcesDisplay, updateTickingSpeedDisplay, updateTimeDisplay, showCellPopup, showNewCitizenPopup };
