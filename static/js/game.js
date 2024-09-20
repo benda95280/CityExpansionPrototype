@@ -1,5 +1,5 @@
 import { initWebSocket } from './websocket.js';
-import { startDrag, drag, endDrag, getGridCoordinates, generateNewCells, updateGridScale, drawGrid, getCanvasCoordinates, gridSize, gridScale } from './grid.js';
+import { startDrag, drag, endDrag, getGridCoordinates, generateNewCells, updateGridScale, drawGrid, getCanvasCoordinates, gridSize, gridScale, drawHoveredCell } from './grid.js';
 import { showBuildingMenu, updateResourcesDisplay, updateTickingSpeedDisplay, updateTimeDisplay } from './ui.js';
 import { drawBuildings, placeBuilding, upgradeBuilding } from './buildings.js';
 
@@ -24,15 +24,6 @@ function resizeCanvas() {
     canvas.height = window.innerHeight;
 }
 
-function drawHoveredCell() {
-    if (hoveredCell) {
-        const { gridX, gridY } = getCanvasCoordinates(hoveredCell.x, hoveredCell.y);
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(gridX, gridY, gridSize * gridScale, gridSize * gridScale);
-    }
-}
-
 function drawGame() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     drawGrid();
@@ -46,8 +37,12 @@ function drawGame() {
 function handleCanvasClick(event) {
     const { x, y } = getGridCoordinates(event.clientX, event.clientY);
     const buildingId = window.gameState.grid[`${x},${y}`];
-    const building = window.gameState.buildings[buildingId];
-    showCellPopup(x, y, building);
+    if (buildingId) {
+        const building = window.gameState.buildings[buildingId];
+        showCellPopup(x, y, building);
+    } else {
+        showCellPopup(x, y, null); // Pass null for empty cells
+    }
 }
 
 function handleCanvasRightClick(event) {

@@ -88,4 +88,13 @@ function endDrag() {
     isDragging = false;
 }
 
-export { startDrag, drag, endDrag, getGridCoordinates, generateNewCells, updateGridScale, drawGrid, getCanvasCoordinates, gridSize, gridScale };
+function drawHoveredCell() {
+    if (hoveredCell) {
+        const { gridX, gridY } = getCanvasCoordinates(hoveredCell.x, hoveredCell.y);
+        ctx.strokeStyle = 'rgba(255, 255, 0, 0.5)'; // Change to yellow with 50% opacity
+        ctx.lineWidth = 2;
+        ctx.strokeRect(gridX, gridY, gridSize * gridScale, gridSize * gridScale);
+    }
+}
+
+export { startDrag, drag, endDrag, getGridCoordinates, generateNewCells, updateGridScale, drawGrid, getCanvasCoordinates, gridSize, gridScale, drawHoveredCell };

@@ -50,7 +50,7 @@ function showBuildingMenu(x, y, gridX, gridY) {
         const option = document.createElement('div');
         option.textContent = `${data.name} ($${data.price})`;
         option.addEventListener('click', () => {
-            placeBuilding(gridX, gridY, type);
+            placeBuilding(gridX, gridY, type); // Change PlaceBuilding to placeBuilding
             document.body.removeChild(menu);
         });
         menu.appendChild(option);
