@@ -1,4 +1,5 @@
 import { initWebSocket } from './websocket.js';
+import { startDrag, drag, endDrag } from './grid.js';
 
 const canvas = document.getElementById('game-canvas');
 const ctx = canvas.getContext('2d');
@@ -43,10 +44,10 @@ function initGame() {
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
     
-    canvas.addEventListener('mousedown', startDrag);
-    canvas.addEventListener('mousemove', drag);
-    canvas.addEventListener('mouseup', endDrag);
-    canvas.addEventListener('mouseleave', endDrag);
+    canvas.addEventListener('mousedown', (e) => startDrag(e));
+    canvas.addEventListener('mousemove', (e) => drag(e));
+    canvas.addEventListener('mouseup', () => endDrag());
+    canvas.addEventListener('mouseleave', () => endDrag());
     canvas.addEventListener('click', handleCanvasClick);
     canvas.addEventListener('contextmenu', handleCanvasRightClick);
     canvas.addEventListener('mousemove', handleCanvasMouseMove);

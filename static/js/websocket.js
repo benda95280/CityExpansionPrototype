@@ -38,7 +38,7 @@ function updateTickingSpeedDisplay() {
 
     if (elapsedTime >= 1) { // Calculate speed every second
         const ticksDelta = gameState.tick - lastTickCount;
-        const tickingSpeed = Math.round(ticksDelta / elapsedTime);
+        const tickingSpeed = ticksDelta / elapsedTime;
         
         // Add the current ticking speed to the buffer
         tickingSpeedBuffer.push(tickingSpeed);
@@ -49,10 +49,10 @@ function updateTickingSpeedDisplay() {
         }
         
         // Calculate the average ticking speed
-        const averageTickingSpeed = Math.round(tickingSpeedBuffer.reduce((a, b) => a + b, 0) / tickingSpeedBuffer.length);
+        const averageTickingSpeed = tickingSpeedBuffer.reduce((a, b) => a + b, 0) / tickingSpeedBuffer.length;
         
         // Update the display with a more precise representation
-        const displaySpeed = averageTickingSpeed.toFixed(1);
+        const displaySpeed = averageTickingSpeed.toFixed(2);
         document.getElementById('ticking-speed-value').textContent = `${displaySpeed} ticks/s`;
         
         lastTickCount = gameState.tick;

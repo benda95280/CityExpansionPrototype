@@ -65,11 +65,6 @@ function updateGridScale(delta) {
     gridOffsetY += (centerY - gridOffsetY) * (1 - gridScale / oldScale);
 }
 
-canvas.addEventListener('mousedown', startDrag);
-canvas.addEventListener('mousemove', drag);
-canvas.addEventListener('mouseup', endDrag);
-canvas.addEventListener('mouseleave', endDrag);
-
 function startDrag(e) {
     isDragging = true;
     lastMouseX = e.clientX;
@@ -92,3 +87,5 @@ function drag(e) {
 function endDrag() {
     isDragging = false;
 }
+
+export { startDrag, drag, endDrag };
