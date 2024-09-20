@@ -5,7 +5,7 @@ import { showBuildingMenu, updateResourcesDisplay, updateTickingSpeedDisplay, up
 const canvas = document.getElementById('game-canvas');
 const ctx = canvas.getContext('2d');
 
-let gameState = {
+window.gameState = {
     grid: {},
     population: 0,
     money: 1000,
@@ -33,8 +33,8 @@ function drawGame() {
 
 function handleCanvasClick(event) {
     const { x, y } = getGridCoordinates(event.clientX, event.clientY);
-    const buildingId = gameState.grid[`${x},${y}`];
-    const building = gameState.buildings[buildingId];
+    const buildingId = window.gameState.grid[`${x},${y}`];
+    const building = window.gameState.buildings[buildingId];
     showCellPopup(x, y, building);
 }
 
@@ -94,6 +94,3 @@ function initGame() {
 }
 
 window.addEventListener('load', initGame);
-
-// Expose gameState to the global scope for other modules to access
-window.gameState = gameState;
