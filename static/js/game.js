@@ -82,6 +82,11 @@ function handleKeyDown(event) {
     }
 }
 
+function centerMap() {
+    gridOffsetX = initialMapPosition.x;
+    gridOffsetY = initialMapPosition.y;
+}
+
 function initGame() {
     initWebSocket();
     if (!canvas) {
