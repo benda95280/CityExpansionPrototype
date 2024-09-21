@@ -158,19 +158,19 @@ def emit_game_state():
     }
     serializable_game_state['events'] = game_state['event_manager'].to_dict()
     serializable_game_state['pending_citizens'] = [citizen.to_dict() for citizen in game_state['pending_citizens']]
-    serializable_game_state['current_date'] = game_state['current_date'].isoformat()
-    serializable_game_state['start_time'] = game_state['start_time'].isoformat()
-    serializable_game_state['buildings_data'] = buildings_data  # Add this line
-    
+    serializable_game_state['current_date'] = game_state['current_date'].isoformat() if isinstance(game_state['current_date'], datetime) else game_state['current_date']
+    serializable_game_state['start_time'] = game_state['start_time'].isoformat() if isinstance(game_state['start_time'], datetime) else game_state['start_time']
+    serializable_game_state['buildings_data'] = buildings_data
+
     # Serialize datetime objects in the grid
     for building in serializable_game_state['grid'].values():
-        if 'construction_start' in building and isinstance(building['construction_start'], datetime):
-            building['construction_start'] = building['construction_start'].isoformat()
-        if 'construction_end' in building and isinstance(building['construction_end'], datetime):
-            building['construction_end'] = building['construction_end'].isoformat()
-        if 'last_maintenance' in building and isinstance(building['last_maintenance'], datetime):
-            building['last_maintenance'] = building['last_maintenance'].isoformat()
-    
+        for key in ['construction_start', 'construction_end', 'last_maintenance']:
+            if key in building:
+                if isinstance(building[key], datetime):
+                    building[key] = building[key].isoformat()
+                elif not isinstance(building[key], str):
+                    building[key] = str(building[key])
+
     socketio.emit('game_state', serializable_game_state)
 
 @socketio.on('console_command')
