@@ -47,8 +47,9 @@ function upgradeBuilding(x, y) {
     socket.emit('upgrade_building', { x, y });
 }
 
-// Add event listener for building completion
-socket.on('building_completed', (data) => {
-    console.log(`Building completed at (${data.x}, ${data.y})`);
-    // You can add additional logic here, such as updating UI elements or playing a sound
-});
+function initBuildingSocketListeners(socket) {
+    socket.on('building_completed', (data) => {
+        console.log(`Building completed at (${data.x}, ${data.y})`);
+        // You can add additional logic here, such as updating UI elements or playing a sound
+    });
+}

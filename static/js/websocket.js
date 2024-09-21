@@ -23,6 +23,9 @@ function initWebSocket() {
         lastPlacedCitizen = data;
         console.log('Citizen placed:', data);
     });
+
+    // Add this line to initialize building socket listeners
+    initBuildingSocketListeners(socket);
 }
 
 function updateTickingSpeedDisplay() {
