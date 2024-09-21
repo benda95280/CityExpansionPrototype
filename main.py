@@ -160,6 +160,7 @@ def emit_game_state():
     serializable_game_state['pending_citizens'] = [citizen.to_dict() for citizen in game_state['pending_citizens']]
     serializable_game_state['current_date'] = game_state['current_date'].isoformat()
     serializable_game_state['start_time'] = game_state['start_time'].isoformat()
+    serializable_game_state['buildings_data'] = buildings_data  # Add this line
     
     # Serialize datetime objects in the grid
     for building in serializable_game_state['grid'].values():
