@@ -24,10 +24,15 @@ function initWebSocket() {
         console.log('Citizen placed:', data);
     });
 
-    // Add this line to initialize building socket listeners
+    // Initialize building socket listeners
     initBuildingSocketListeners(socket);
 }
 
 function updateTickingSpeedDisplay() {
-    document.getElementById('ticking-speed-value').textContent = `${gameState.ticking_speed} ticks/s`;
+    const tickingSpeedElement = document.getElementById('ticking-speed-value');
+    if (tickingSpeedElement && gameState.ticking_speed !== undefined) {
+        tickingSpeedElement.textContent = `${gameState.ticking_speed} ticks/s`;
+    } else {
+        console.error('Error updating ticking speed display:', gameState.ticking_speed);
+    }
 }
