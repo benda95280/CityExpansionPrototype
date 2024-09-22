@@ -89,10 +89,12 @@ body, html {
 }
 
 #tasks-notifications-bar {
-    position: absolute;
+    position: fixed;
     top: 60px;
-    left: 10px;
-    width: calc(100% - 20px);
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80%;
+    max-width: 1200px;
     background-color: rgba(0, 0, 0, 0.7);
     color: white;
     padding: 10px;
