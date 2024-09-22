@@ -63,8 +63,10 @@ def update_buildings(game_state):
     current_date = game_state['current_date']
     for coords, building in game_state['grid'].items():
         if building['construction_progress'] < 1:
-            total_construction_time = (building['construction_end'] - building['construction_start']).total_seconds()
-            elapsed_time = (current_date - building['construction_start']).total_seconds()
+            construction_start = building['construction_start'] if isinstance(building['construction_start'], datetime) else datetime.fromisoformat(building['construction_start'])
+            construction_end = building['construction_end'] if isinstance(building['construction_end'], datetime) else datetime.fromisoformat(building['construction_end'])
+            total_construction_time = (construction_end - construction_start).total_seconds()
+            elapsed_time = (current_date - construction_start).total_seconds()
             building['construction_progress'] = min(1, elapsed_time / total_construction_time)
             
             if building['construction_progress'] == 1:
@@ -72,7 +74,8 @@ def update_buildings(game_state):
         
         # Apply maintenance cost
         if building['construction_progress'] == 1:
-            days_since_maintenance = (current_date - building['last_maintenance']).days
+            last_maintenance = building['last_maintenance'] if isinstance(building['last_maintenance'], datetime) else datetime.fromisoformat(building['last_maintenance'])
+            days_since_maintenance = (current_date - last_maintenance).days
             if days_since_maintenance >= 1:
                 maintenance_cost = buildings_data[building['type']]['maintenance_cost'] * building['level'] * days_since_maintenance
                 game_state['money'] -= maintenance_cost
