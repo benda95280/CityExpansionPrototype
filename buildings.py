@@ -59,7 +59,7 @@ def handle_upgrade_building(data, game_state, socketio):
             
             socketio.emit('building_upgraded', {'x': x, 'y': y, 'level': next_level})
 
-def update_buildings(game_state):
+def update_buildings(game_state, socketio):
     current_date = game_state['current_date']
     for coords, building in game_state['grid'].items():
         if building['construction_progress'] < 1:

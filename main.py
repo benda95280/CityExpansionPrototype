@@ -101,7 +101,7 @@ def generate_new_citizen(game_state):
         print(f"New citizen generated successfully: {new_citizen.to_dict()}")
     return True
 
-def game_loop():
+def game_loop(socketio):
     last_update = datetime.now()
     last_ticking_speed_update = datetime.now()
     ticks_since_last_update = 0
@@ -122,7 +122,7 @@ def game_loop():
             event.execute(game_state)
         
         # Update buildings and city finances
-        update_buildings(game_state)
+        update_buildings(game_state, socketio)
         update_city_finances(game_state)
         
         # Update population and accommodations
@@ -184,5 +184,5 @@ def initialize_events():
 
 if __name__ == '__main__':
     initialize_events()
-    socketio.start_background_task(game_loop)
+    socketio.start_background_task(game_loop, socketio)
     socketio.run(app, host='0.0.0.0', port=5000, debug=True, use_reloader=False)
