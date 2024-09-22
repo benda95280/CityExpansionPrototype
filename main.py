@@ -36,6 +36,16 @@ game_state = {
     'buildings_data': buildings_data,
     'current_date': datetime(2024, 1, 1),
     'ticking_speed': 0,
+    'notifications': [
+        {
+            'message': "Welcome to your new city! Start by placing some buildings.",
+            'timestamp': datetime.now().isoformat()
+        },
+        {
+            'message': "Tip: Use the right-click menu to place buildings on the grid.",
+            'timestamp': datetime.now().isoformat()
+        }
+    ]
 }
 
 @app.route('/')
@@ -70,13 +80,21 @@ def handle_accept_citizen(data):
                     game_state['population'] += 1
                     game_state['used_accommodations'] += 1
                     socketio.emit('citizen_placed', {'citizen': accepted_citizen.to_dict(), 'building': available_building})
+                    game_state['notifications'].append({
+                        'message': f"Citizen {accepted_citizen.first_name} {accepted_citizen.last_name} has been accepted and placed in a {building.type}.",
+                        'timestamp': datetime.now().isoformat()
+                    })
     emit_game_state()
 
 @socketio.on('deny_citizen')
 def handle_deny_citizen(data):
     citizen_index = data['index']
     if 0 <= citizen_index < len(game_state['pending_citizens']):
-        game_state['pending_citizens'].pop(citizen_index)
+        denied_citizen = game_state['pending_citizens'].pop(citizen_index)
+        game_state['notifications'].append({
+            'message': f"Citizen {denied_citizen.first_name} {denied_citizen.last_name} has been denied entry to the city.",
+            'timestamp': datetime.now().isoformat()
+        })
     emit_game_state()
 
 def generate_new_citizen(game_state):
@@ -175,6 +193,12 @@ def handle_console_command_socket(data):
 def initialize_tasks():
     new_citizen_task = Task('new_citizen', 'random', generate_new_citizen, min_interval=config['min_ticks_for_new_citizen'], max_interval=config['max_ticks_for_new_citizen'])
     task_manager.add_task(new_citizen_task)
+
+    # Add some dummy tasks for testing
+    dummy_task1 = Task('dummy_task1', 'recurring', lambda gs: print("Dummy task 1 executed"), interval=300)
+    dummy_task2 = Task('dummy_task2', 'random', lambda gs: print("Dummy task 2 executed"), min_interval=200, max_interval=600)
+    task_manager.add_task(dummy_task1)
+    task_manager.add_task(dummy_task2)
 
 if __name__ == '__main__':
     initialize_tasks()

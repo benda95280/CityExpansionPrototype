@@ -41,9 +41,11 @@ function updateTasksNotifications() {
     // Update tasks
     if (gameState.tasks && gameState.tasks.tasks) {
         gameState.tasks.tasks.forEach(task => {
-            const li = document.createElement('li');
-            li.textContent = `${task.name}: ${task.task_type}`;
-            tasksList.appendChild(li);
+            if (task.name !== 'new_citizen') {
+                const li = document.createElement('li');
+                li.textContent = `${task.name}: ${task.task_type}`;
+                tasksList.appendChild(li);
+            }
         });
     }
 
@@ -298,7 +300,6 @@ function appendToConsole(message) {
     consoleOutput.scrollTop = consoleOutput.scrollHeight;
 }
 
-// Call updateTasksNotifications when the game state is updated
 function updateUI() {
     updateResourcesDisplay();
     updateTimeDisplay();
