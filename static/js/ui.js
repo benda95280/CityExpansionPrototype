@@ -30,6 +30,33 @@ function updateTimeDisplay() {
     document.getElementById('time-value').textContent = timeString;
 }
 
+function updateTasksNotifications() {
+    const tasksList = document.getElementById('tasks-list');
+    const notificationsList = document.getElementById('notifications-list');
+
+    // Clear existing tasks and notifications
+    tasksList.innerHTML = '';
+    notificationsList.innerHTML = '';
+
+    // Update tasks
+    if (gameState.tasks && gameState.tasks.tasks) {
+        gameState.tasks.tasks.forEach(task => {
+            const li = document.createElement('li');
+            li.textContent = `${task.name}: ${task.task_type}`;
+            tasksList.appendChild(li);
+        });
+    }
+
+    // Update notifications (you'll need to implement a system to generate and store notifications)
+    if (gameState.notifications) {
+        gameState.notifications.forEach(notification => {
+            const li = document.createElement('li');
+            li.textContent = notification.message;
+            notificationsList.appendChild(li);
+        });
+    }
+}
+
 function showBuildingMenu(x, y, gridX, gridY) {
     console.log("showBuildingMenu called");
     const existingMenu = document.querySelector('.context-menu');
@@ -269,4 +296,11 @@ function handleConsoleSubmit() {
 function appendToConsole(message) {
     consoleOutput.innerHTML += message + '<br>';
     consoleOutput.scrollTop = consoleOutput.scrollHeight;
+}
+
+// Call updateTasksNotifications when the game state is updated
+function updateUI() {
+    updateResourcesDisplay();
+    updateTimeDisplay();
+    updateTasksNotifications();
 }

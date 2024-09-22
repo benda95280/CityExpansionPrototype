@@ -10,9 +10,7 @@ function initWebSocket() {
     socket.on('game_state', (newState) => {
         console.log('Received game state update:', newState);
         gameState = newState;
-        updateResourcesDisplay();
-        updateTickingSpeedDisplay();
-        updateTimeDisplay();
+        updateUI();
     });
 
     socket.on('new_citizen', (citizen) => {
