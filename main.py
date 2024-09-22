@@ -7,6 +7,7 @@ from events import Event, EventManager
 from commands import Commands, handle_console_command
 from buildings import buildings_data, find_available_building, handle_place_building, handle_upgrade_building, update_buildings, update_city_finances
 from citizen import Citizen
+from building import Building
 
 DEBUG_MODE = True
 
@@ -63,14 +64,12 @@ def handle_accept_citizen(data):
         available_building = find_available_building(game_state)
         if available_building:
             building = game_state['grid'][available_building]
-            if building['is_built']:
-                for accommodation in building['accommodations']:
-                    if len(accommodation) < buildings_data[building['type']]['max_people_per_accommodation']:
-                        accommodation.append(accepted_citizen.to_dict())
-                        game_state['population'] += 1
-                        game_state['used_accommodations'] += 1
-                        socketio.emit('citizen_placed', {'citizen': accepted_citizen.to_dict(), 'building': available_building})
-                        break
+            if building.is_built:
+                max_people = buildings_data[building.type]['max_people_per_accommodation']
+                if building.add_citizen(accepted_citizen.to_dict(), max_people):
+                    game_state['population'] += 1
+                    game_state['used_accommodations'] += 1
+                    socketio.emit('citizen_placed', {'citizen': accepted_citizen.to_dict(), 'building': available_building})
     emit_game_state()
 
 @socketio.on('deny_citizen')
@@ -84,7 +83,7 @@ def generate_new_citizen(game_state):
     if DEBUG_MODE:
         print(f"Attempting to generate new citizen at {datetime.now()}")
     
-    total_accommodations = sum(building['total_accommodations'] for building in game_state['grid'].values())
+    total_accommodations = sum(building.total_accommodations for building in game_state['grid'].values())
     if game_state['population'] >= total_accommodations:
         if DEBUG_MODE:
             print("Failed to generate new citizen: No available accommodations")
@@ -146,9 +145,9 @@ def update_population_and_accommodations():
     total_population = 0
     used_accommodations = 0
     for building in game_state['grid'].values():
-        building_population = sum(len(accommodation) for accommodation in building['accommodations'])
+        building_population = sum(len(accommodation) for accommodation in building.accommodations)
         total_population += building_population
-        used_accommodations += len([acc for acc in building['accommodations'] if acc])
+        used_accommodations += len([acc for acc in building.accommodations if acc])
     
     game_state['population'] = total_population
     game_state['used_accommodations'] = used_accommodations
@@ -163,14 +162,8 @@ def emit_game_state():
     serializable_game_state['start_time'] = game_state['start_time'].isoformat() if isinstance(game_state['start_time'], datetime) else game_state['start_time']
     serializable_game_state['buildings_data'] = buildings_data
 
-    # Serialize datetime objects in the grid
-    for building in serializable_game_state['grid'].values():
-        for key in ['construction_start', 'construction_end', 'last_maintenance']:
-            if key in building:
-                if isinstance(building[key], datetime):
-                    building[key] = building[key].isoformat()
-                elif not isinstance(building[key], str):
-                    building[key] = str(building[key])
+    # Serialize Building objects in the grid
+    serializable_game_state['grid'] = {coords: building.to_dict() for coords, building in game_state['grid'].items()}
 
     socketio.emit('game_state', serializable_game_state)
 
