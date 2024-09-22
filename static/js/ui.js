@@ -6,7 +6,9 @@ let lastPlacedCitizen = null;
 
 function updateResourcesDisplay() {
     const population = Math.floor(gameState.population) || 0;
-    const availableAccommodations = (gameState.total_accommodations - gameState.used_accommodations) || 0;
+    const availableAccommodations = gameState.grid ? Object.values(gameState.grid).reduce((sum, building) => {
+        return building.is_built ? sum + (building.total_accommodations - building.accommodations.flat().length) : sum;
+    }, 0) : 0;
     const totalAccommodations = gameState.total_accommodations || 0;
     
     document.getElementById('population-value').textContent = `${population}`;
@@ -93,22 +95,29 @@ function showCellPopup(x, y, building) {
 
     if (building) {
         const buildingData = gameState.buildings_data[building.type];
-        const occupiedAccommodations = building.accommodations.filter(acc => acc.length > 0).length;
+        const occupiedAccommodations = building.accommodations.flat().length;
         const totalAccommodations = building.total_accommodations;
-        const population = building.accommodations.reduce((sum, acc) => sum + acc.length, 0);
         
         popup.innerHTML = `
             <h3>${buildingData.name}</h3>
             <p>Level: ${building.level}</p>
-            <p>Accommodations: ${occupiedAccommodations} / ${totalAccommodations}</p>
-            <p>Population: ${population}</p>
-            <p>Max People per Accommodation: ${buildingData.max_people_per_accommodation}</p>
-            <button id="upgrade-btn">Upgrade ($${buildingData.upgrade_cost * building.level})</button>
+            ${building.is_built ? `
+                <p>Accommodations: ${occupiedAccommodations} / ${totalAccommodations}</p>
+                <p>Population: ${occupiedAccommodations}</p>
+                <p>Max People per Accommodation: ${buildingData.max_people_per_accommodation}</p>
+                <button id="upgrade-btn">Upgrade ($${buildingData.upgrade_cost * building.level})</button>
+            ` : `
+                <p>Under Construction</p>
+                <p>Progress: ${Math.round(building.construction_progress * 100)}%</p>
+            `}
         `;
-        popup.querySelector('#upgrade-btn').addEventListener('click', () => {
-            upgradeBuilding(x, y);
-            document.body.removeChild(popup);
-        });
+        
+        if (building.is_built) {
+            popup.querySelector('#upgrade-btn').addEventListener('click', () => {
+                upgradeBuilding(x, y);
+                document.body.removeChild(popup);
+            });
+        }
     } else {
         popup.innerHTML = `<p>Empty cell (${x}, ${y})</p>`;
     }

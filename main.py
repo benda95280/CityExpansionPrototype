@@ -63,13 +63,14 @@ def handle_accept_citizen(data):
         available_building = find_available_building(game_state)
         if available_building:
             building = game_state['grid'][available_building]
-            for accommodation in building['accommodations']:
-                if len(accommodation) < buildings_data[building['type']]['max_people_per_accommodation']:
-                    accommodation.append(accepted_citizen.to_dict())
-                    game_state['population'] += 1
-                    game_state['used_accommodations'] += 1
-                    socketio.emit('citizen_placed', {'citizen': accepted_citizen.to_dict(), 'building': available_building})
-                    break
+            if building['is_built']:
+                for accommodation in building['accommodations']:
+                    if len(accommodation) < buildings_data[building['type']]['max_people_per_accommodation']:
+                        accommodation.append(accepted_citizen.to_dict())
+                        game_state['population'] += 1
+                        game_state['used_accommodations'] += 1
+                        socketio.emit('citizen_placed', {'citizen': accepted_citizen.to_dict(), 'building': available_building})
+                        break
     emit_game_state()
 
 @socketio.on('deny_citizen')
