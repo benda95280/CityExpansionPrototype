@@ -8,7 +8,7 @@ with open('static/data/buildings.json', 'r') as f:
 
 def find_available_building(game_state):
     for coords, building in game_state['grid'].items():
-        if building['construction_progress'] == 1:  # Only consider completed buildings
+        if building['is_built']:  # Only consider built buildings
             for accommodation in building['accommodations']:
                 if len(accommodation) < buildings_data[building['type']]['max_people_per_accommodation']:
                     return coords
@@ -28,7 +28,8 @@ def handle_place_building(data, game_state, socketio):
             'construction_start': game_state['current_date'],
             'construction_end': game_state['current_date'] + construction_time,
             'construction_progress': 0,
-            'last_maintenance': game_state['current_date']
+            'last_maintenance': game_state['current_date'],
+            'is_built': False  # Add this line
         }
         game_state['money'] -= buildings_data[building_type]['price']
         game_state['total_accommodations'] += buildings_data[building_type]['accommodations']
@@ -39,7 +40,7 @@ def handle_upgrade_building(data, game_state, socketio):
     x, y = data['x'], data['y']
     building = game_state['grid'].get(f"{x},{y}")
     
-    if building and building['construction_progress'] == 1:
+    if building and building['is_built']:
         building_type = building['type']
         next_level = building['level'] + 1
         upgrade_cost = buildings_data[building_type]['upgrade_cost'] * next_level
@@ -56,6 +57,7 @@ def handle_upgrade_building(data, game_state, socketio):
             building['construction_start'] = game_state['current_date']
             building['construction_end'] = game_state['current_date'] + upgrade_time
             building['construction_progress'] = 0
+            building['is_built'] = False
             
             socketio.emit('building_upgraded', {'x': x, 'y': y, 'level': next_level})
 
@@ -70,10 +72,11 @@ def update_buildings(game_state, socketio):
             building['construction_progress'] = min(1, elapsed_time / total_construction_time)
             
             if building['construction_progress'] == 1:
+                building['is_built'] = True  # Add this line
                 socketio.emit('building_completed', {'x': int(coords.split(',')[0]), 'y': int(coords.split(',')[1])})
         
-        # Apply maintenance cost
-        if building['construction_progress'] == 1:
+        # Apply maintenance cost only for built buildings
+        if building['is_built']:
             last_maintenance = building['last_maintenance'] if isinstance(building['last_maintenance'], datetime) else datetime.fromisoformat(building['last_maintenance'])
             days_since_maintenance = (current_date - last_maintenance).days
             if days_since_maintenance >= 1:
@@ -84,7 +87,7 @@ def update_buildings(game_state, socketio):
 def calculate_city_income(game_state):
     total_income = 0
     for building in game_state['grid'].values():
-        if building['construction_progress'] == 1:
+        if building['is_built']:  # Only consider built buildings
             building_type = building['type']
             building_level = building['level']
             income_per_citizen = buildings_data[building_type]['income_per_citizen']
