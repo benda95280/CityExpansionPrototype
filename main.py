@@ -3,7 +3,7 @@ from flask_socketio import SocketIO, emit
 import json
 import time
 from datetime import datetime, timedelta
-from events import Event, EventManager
+from tasks import Task, TaskManager
 from commands import Commands, handle_console_command
 from buildings import buildings_data, find_available_building, handle_place_building, handle_upgrade_building, update_buildings, update_city_finances
 from citizen import Citizen
@@ -19,8 +19,8 @@ socketio = SocketIO(app)
 with open('config.json', 'r') as f:
     config = json.load(f)
 
-# Initialize EventManager
-event_manager = EventManager()
+# Initialize TaskManager
+task_manager = TaskManager()
 
 # Game state
 game_state = {
@@ -32,7 +32,7 @@ game_state = {
     'tick': 0,
     'pending_citizens': [],
     'start_time': datetime.now(),
-    'event_manager': event_manager,
+    'task_manager': task_manager,
     'buildings_data': buildings_data,
     'current_date': datetime(2024, 1, 1),
     'ticking_speed': 0,
@@ -117,9 +117,9 @@ def game_loop(socketio):
         if game_state['tick'] % 20 == 0:
             game_state['current_date'] += timedelta(minutes=5)
         
-        # Process events
-        for event in event_manager.update_events(game_state):
-            event.execute(game_state)
+        # Process tasks
+        for task in task_manager.update_tasks(game_state):
+            task.execute(game_state)
         
         # Update buildings and city finances
         update_buildings(game_state, socketio)
@@ -154,9 +154,9 @@ def update_population_and_accommodations():
 
 def emit_game_state():
     serializable_game_state = {
-        key: value for key, value in game_state.items() if key != 'event_manager'
+        key: value for key, value in game_state.items() if key != 'task_manager'
     }
-    serializable_game_state['events'] = game_state['event_manager'].to_dict()
+    serializable_game_state['tasks'] = game_state['task_manager'].to_dict()
     serializable_game_state['pending_citizens'] = [citizen.to_dict() for citizen in game_state['pending_citizens']]
     serializable_game_state['current_date'] = game_state['current_date'].isoformat() if isinstance(game_state['current_date'], datetime) else game_state['current_date']
     serializable_game_state['start_time'] = game_state['start_time'].isoformat() if isinstance(game_state['start_time'], datetime) else game_state['start_time']
@@ -170,13 +170,13 @@ def emit_game_state():
 @socketio.on('console_command')
 def handle_console_command_socket(data):
     command = data['command']
-    return handle_console_command(command, game_state, event_manager)
+    return handle_console_command(command, game_state, task_manager)
 
-def initialize_events():
-    new_citizen_event = Event('new_citizen', 'random', generate_new_citizen, min_interval=config['min_ticks_for_new_citizen'], max_interval=config['max_ticks_for_new_citizen'])
-    event_manager.add_event(new_citizen_event)
+def initialize_tasks():
+    new_citizen_task = Task('new_citizen', 'random', generate_new_citizen, min_interval=config['min_ticks_for_new_citizen'], max_interval=config['max_ticks_for_new_citizen'])
+    task_manager.add_task(new_citizen_task)
 
 if __name__ == '__main__':
-    initialize_events()
+    initialize_tasks()
     socketio.start_background_task(game_loop, socketio)
     socketio.run(app, host='0.0.0.0', port=5000, debug=True, use_reloader=False)
