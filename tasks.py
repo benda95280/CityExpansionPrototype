@@ -11,6 +11,7 @@ class Task:
         self.max_interval = max_interval
         self.active = True
         self.next_execution = None
+        self.completion_percentage = 0
         self.update_next_execution()
 
     def update_next_execution(self):
@@ -36,7 +37,8 @@ class Task:
             'min_interval': self.min_interval,
             'max_interval': self.max_interval,
             'next_execution': self.next_execution.isoformat() if self.next_execution else None,
-            'active': self.active
+            'active': self.active,
+            'completion_percentage': self.completion_percentage
         }
 
 class TaskManager:
@@ -73,3 +75,9 @@ class TaskManager:
         return {
             'tasks': [task.to_dict() for task in self.tasks]
         }
+
+    def update_task_completion(self, task_name, completion_percentage):
+        for task in self.tasks:
+            if task.name == task_name:
+                task.completion_percentage = completion_percentage
+                break

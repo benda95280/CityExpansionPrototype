@@ -42,7 +42,24 @@ function updateTasksNotifications() {
         gameState.tasks.tasks.forEach(task => {
             if (task.name !== 'new_citizen') {
                 const li = document.createElement('li');
-                li.textContent = `📋 ${task.name}: ${task.task_type}`;
+                const taskName = document.createElement('span');
+                taskName.textContent = `${task.name}: ${task.task_type}`;
+                
+                const progressBar = document.createElement('div');
+                progressBar.className = 'task-progress-bar';
+                const progressFill = document.createElement('div');
+                progressFill.className = 'task-progress-fill';
+                progressFill.style.width = `${task.completion_percentage}%`;
+                
+                const progressText = document.createElement('span');
+                progressText.className = 'task-progress-text';
+                progressText.textContent = `${task.completion_percentage}%`;
+                
+                progressBar.appendChild(progressFill);
+                progressBar.appendChild(progressText);
+                
+                li.appendChild(taskName);
+                li.appendChild(progressBar);
                 tasksList.appendChild(li);
             }
         });
@@ -51,7 +68,7 @@ function updateTasksNotifications() {
     if (gameState.notifications) {
         gameState.notifications.forEach(notification => {
             const li = document.createElement('li');
-            li.textContent = `🔔 ${notification.message}`;
+            li.textContent = `${notification.message}`;
             notificationsList.appendChild(li);
         });
     }
