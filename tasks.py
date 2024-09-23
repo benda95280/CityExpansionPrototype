@@ -12,6 +12,7 @@ class Task:
         self.active = True
         self.next_execution = None
         self.completion_percentage = 0
+        self.is_recurring = task_type == 'recurring'
         self.update_next_execution()
 
     def update_next_execution(self):
@@ -26,6 +27,8 @@ class Task:
         if callable(self.callback):
             result = self.callback(game_state)
             self.update_next_execution()
+            if not self.is_recurring:
+                self.active = False
             return result
         return None
 
@@ -38,7 +41,8 @@ class Task:
             'max_interval': self.max_interval,
             'next_execution': self.next_execution.isoformat() if self.next_execution else None,
             'active': self.active,
-            'completion_percentage': self.completion_percentage
+            'completion_percentage': self.completion_percentage,
+            'is_recurring': self.is_recurring
         }
 
 class TaskManager:
@@ -65,12 +69,20 @@ class TaskManager:
 
     def update_tasks(self, game_state):
         now = datetime.now()
+        completed_tasks = []
         for task in self.get_active_tasks():
             if now >= task.next_execution:
                 if self.debug:
                     print(f"Task '{task.name}' is going to be executed")
                 yield task
-                task.completion_percentage = min(100, task.completion_percentage + 1)
+                if not task.is_recurring:
+                    completed_tasks.append(task)
+        
+        # Remove completed non-recurring tasks
+        for task in completed_tasks:
+            self.remove_task(task.name)
+            if self.debug:
+                print(f"Task '{task.name}' completed and removed")
 
     def to_dict(self):
         return {
