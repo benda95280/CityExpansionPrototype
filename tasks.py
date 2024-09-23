@@ -11,19 +11,26 @@ class Task:
         self.active = True
         self.next_execution_tick = None
         self.completion_percentage = 0
+        self.last_execution_tick = 0
         self.is_recurring = task_type == 'recurring'
         self.update_next_execution(0)
 
     def update_next_execution(self, current_tick):
         if self.task_type == 'recurring':
             self.next_execution_tick = current_tick + self.interval
+            self.completion_percentage = ((current_tick - self.last_execution_tick) / self.interval) * 100
         elif self.task_type == 'random':
             random_interval = random.randint(self.min_interval, self.max_interval)
             self.next_execution_tick = current_tick + random_interval
+            self.completion_percentage = ((current_tick - self.last_execution_tick) / random_interval) * 100
+        
+        self.completion_percentage = min(100, max(0, self.completion_percentage))
 
     def execute(self, game_state):
         if callable(self.callback):
             result = self.callback(game_state)
+            self.last_execution_tick = game_state['tick']
+            self.completion_percentage = 0
             self.update_next_execution(game_state['tick'])
             if not self.is_recurring:
                 self.active = False
@@ -75,6 +82,8 @@ class TaskManager:
                 yield task
                 if not task.is_recurring:
                     completed_tasks.append(task)
+            else:
+                task.update_next_execution(current_tick)
         
         # Remove completed non-recurring tasks
         for task in completed_tasks:
