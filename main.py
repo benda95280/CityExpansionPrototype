@@ -191,7 +191,7 @@ def handle_console_command_socket(data):
     return handle_console_command(command, game_state, task_manager)
 
 def initialize_tasks():
-    new_citizen_task = Task('new_citizen', 'recurring', generate_new_citizen, 
+    new_citizen_task = Task('New citizen', 'recurring', generate_new_citizen, 
                             interval=config['min_ticks_for_new_citizen'])
     task_manager.add_task(new_citizen_task)
 

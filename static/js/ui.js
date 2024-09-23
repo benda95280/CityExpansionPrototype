@@ -42,7 +42,7 @@ function updateTasksNotifications() {
         gameState.tasks.tasks.forEach(task => {
             const li = document.createElement('li');
             const taskName = document.createElement('span');
-            taskName.textContent = `${task.name}: ${task.task_type}`;
+            taskName.textContent = task.name;
             
             const progressBar = document.createElement('div');
             progressBar.className = 'task-progress-bar';
@@ -52,22 +52,13 @@ function updateTasksNotifications() {
             
             const progressText = document.createElement('span');
             progressText.className = 'task-progress-text';
-            progressText.textContent = `${task.completion_percentage}% (${task.ticks_until_execution} ticks)`;
+            progressText.textContent = `${task.completion_percentage}%`;
             
             progressBar.appendChild(progressFill);
             progressBar.appendChild(progressText);
             
-            const taskInfo = document.createElement('div');
-            taskInfo.className = 'task-info';
-            if (task.task_type === 'recurring') {
-                taskInfo.textContent = `Interval: ${task.interval} ticks`;
-            } else if (task.task_type === 'random') {
-                taskInfo.textContent = `Interval: ${task.min_interval}-${task.max_interval} ticks`;
-            }
-            
             li.appendChild(taskName);
             li.appendChild(progressBar);
-            li.appendChild(taskInfo);
             tasksList.appendChild(li);
         });
     }
