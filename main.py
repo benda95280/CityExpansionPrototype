@@ -99,7 +99,7 @@ def handle_deny_citizen(data):
 
 def generate_new_citizen(game_state):
     if DEBUG_MODE:
-        print(f"Attempting to generate new citizen at {datetime.now()}")
+        print(f"Attempting to generate new citizen at tick {game_state['tick']}")
     
     total_accommodations = sum(building.total_accommodations for building in game_state['grid'].values())
     if game_state['population'] >= total_accommodations:
@@ -120,12 +120,12 @@ def generate_new_citizen(game_state):
     return True
 
 def game_loop(socketio):
-    last_update = datetime.now()
-    last_ticking_speed_update = datetime.now()
+    last_update = time.time()
+    last_ticking_speed_update = time.time()
     ticks_since_last_update = 0
     while True:
-        current_time = datetime.now()
-        delta_time = (current_time - last_update).total_seconds()
+        current_time = time.time()
+        delta_time = current_time - last_update
         
         # Update game state
         game_state['tick'] += 1
@@ -149,13 +149,13 @@ def game_loop(socketio):
         update_population_and_accommodations()
         
         # Update ticking speed every second
-        if (current_time - last_ticking_speed_update).total_seconds() >= 1:
+        if current_time - last_ticking_speed_update >= 1:
             game_state['ticking_speed'] = ticks_since_last_update
             ticks_since_last_update = 0
             last_ticking_speed_update = current_time
         
         # Emit game state every second
-        if (current_time - last_update).total_seconds() >= 1:
+        if current_time - last_update >= 1:
             emit_game_state()
             last_update = current_time
         

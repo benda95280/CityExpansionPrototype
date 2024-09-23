@@ -1,5 +1,4 @@
 import random
-from datetime import datetime, timedelta
 
 class Task:
     def __init__(self, name, task_type, callback, interval=None, min_interval=None, max_interval=None):
@@ -10,23 +9,22 @@ class Task:
         self.min_interval = min_interval
         self.max_interval = max_interval
         self.active = True
-        self.next_execution = None
+        self.next_execution_tick = None
         self.completion_percentage = 0
         self.is_recurring = task_type == 'recurring'
-        self.update_next_execution()
+        self.update_next_execution(0)
 
-    def update_next_execution(self):
-        now = datetime.now()
+    def update_next_execution(self, current_tick):
         if self.task_type == 'recurring':
-            self.next_execution = now + timedelta(seconds=self.interval)
+            self.next_execution_tick = current_tick + self.interval
         elif self.task_type == 'random':
             random_interval = random.randint(self.min_interval, self.max_interval)
-            self.next_execution = now + timedelta(seconds=random_interval)
+            self.next_execution_tick = current_tick + random_interval
 
     def execute(self, game_state):
         if callable(self.callback):
             result = self.callback(game_state)
-            self.update_next_execution()
+            self.update_next_execution(game_state['tick'])
             if not self.is_recurring:
                 self.active = False
             return result
@@ -39,7 +37,7 @@ class Task:
             'interval': self.interval,
             'min_interval': self.min_interval,
             'max_interval': self.max_interval,
-            'next_execution': self.next_execution.isoformat() if self.next_execution else None,
+            'next_execution_tick': self.next_execution_tick,
             'active': self.active,
             'completion_percentage': int(self.completion_percentage),
             'is_recurring': self.is_recurring
@@ -68,10 +66,10 @@ class TaskManager:
         self.debug = debug
 
     def update_tasks(self, game_state):
-        now = datetime.now()
+        current_tick = game_state['tick']
         completed_tasks = []
         for task in self.get_active_tasks():
-            if now >= task.next_execution:
+            if current_tick >= task.next_execution_tick:
                 if self.debug:
                     print(f"Task '{task.name}' is going to be executed")
                 yield task
