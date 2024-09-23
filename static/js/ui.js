@@ -11,9 +11,16 @@ function updateResourcesDisplay() {
     }, 0) : 0;
     const totalAccommodations = gameState.total_accommodations || 0;
     
-    document.getElementById('population-value').textContent = `${population}`;
-    document.getElementById('accommodations-value').textContent = `${availableAccommodations} / ${totalAccommodations}`;
-    document.getElementById('money-value').textContent = `$${gameState.money}`;
+    console.log('Updating resources display');
+    console.log(`Population: 👥 ${population}`);
+    console.log(`Accommodations: 🏠 ${availableAccommodations} / ${totalAccommodations}`);
+    console.log(`Money: 💰 $${gameState.money}`);
+    console.log(`Ticking speed: ⏱️ ${gameState.ticking_speed} ticks/s`);
+    
+    document.getElementById('population-value').textContent = `👥 ${population}`;
+    document.getElementById('accommodations-value').textContent = `🏠 ${availableAccommodations} / ${totalAccommodations}`;
+    document.getElementById('money-value').textContent = `💰 $${gameState.money}`;
+    document.getElementById('ticking-speed-value').textContent = `⏱️ ${gameState.ticking_speed} ticks/s`;
 }
 
 function updateTimeDisplay() {
@@ -26,19 +33,21 @@ function updateTimeDisplay() {
     
     const timeString = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
     
-    document.getElementById('date-value').textContent = dateString;
-    document.getElementById('time-value').textContent = timeString;
+    console.log('Updating time display');
+    console.log(`Date: 📅 ${dateString}`);
+    console.log(`Time: 🕒 ${timeString}`);
+    
+    document.getElementById('date-value').textContent = `📅 ${dateString}`;
+    document.getElementById('time-value').textContent = `🕒 ${timeString}`;
 }
 
 function updateTasksNotifications() {
     const tasksList = document.getElementById('tasks-list');
     const notificationsList = document.getElementById('notifications-list');
 
-    // Clear existing tasks and notifications
     tasksList.innerHTML = '';
     notificationsList.innerHTML = '';
 
-    // Update tasks
     if (gameState.tasks && gameState.tasks.tasks) {
         gameState.tasks.tasks.forEach(task => {
             if (task.name !== 'new_citizen') {
@@ -49,7 +58,6 @@ function updateTasksNotifications() {
         });
     }
 
-    // Update notifications (you'll need to implement a system to generate and store notifications)
     if (gameState.notifications) {
         gameState.notifications.forEach(notification => {
             const li = document.createElement('li');
