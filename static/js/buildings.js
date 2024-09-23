@@ -20,10 +20,14 @@ function drawBuilding(x, y, type, level, constructionProgress) {
     }
     
     ctx.fillStyle = 'white';
-    ctx.font = `${12 * gridScale}px Arial`;
+    ctx.font = `${16 * gridScale}px Arial`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(`${type} (${level})`, gridX + gridSize * gridScale / 2, gridY + gridSize * gridScale / 2);
+    ctx.fillText(getBuildingEmoji(type), gridX + gridSize * gridScale / 2, gridY + gridSize * gridScale / 2);
+    
+    // Draw level indicator
+    ctx.font = `${10 * gridScale}px Arial`;
+    ctx.fillText(`${level}`, gridX + gridSize * gridScale - 10, gridY + gridSize * gridScale - 10);
 }
 
 function getBuildingColor(type) {
@@ -36,6 +40,19 @@ function getBuildingColor(type) {
             return '#9C27B0';
         default:
             return '#757575';
+    }
+}
+
+function getBuildingEmoji(type) {
+    switch (type) {
+        case 'house':
+            return '🏠';
+        case 'apartment':
+            return '🏢';
+        case 'skyscraper':
+            return '🏙️';
+        default:
+            return '🏗️';
     }
 }
 
