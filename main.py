@@ -138,6 +138,8 @@ def game_loop(socketio):
         # Process tasks
         for task in task_manager.update_tasks(game_state):
             task.execute(game_state)
+            # Update task completion percentage
+            task.completion_percentage = min(100, task.completion_percentage + 10)
         
         # Update buildings and city finances
         update_buildings(game_state, socketio)
