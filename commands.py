@@ -1,3 +1,4 @@
+from datetime import datetime
 from tasks import TaskManager
 
 DEBUG_MODE = True
@@ -46,7 +47,14 @@ def get_tick(game_state, task_manager):
     return f"Current tick: {game_state['tick']}"
 
 def get_tasks(game_state, task_manager):
-    tasks_info = [f"{t.name}: task_type={t.task_type}, interval={t.interval}, min_interval={t.min_interval}, max_interval={t.max_interval}, next_execution={t.next_execution}, active={t.active}" for t in task_manager.get_tasks()]
+    tasks_info = [
+        f"{t.name}: task_type={t.task_type}, interval={t.interval}, "
+        f"min_interval={t.min_interval}, max_interval={t.max_interval}, "
+        f"next_execution={t.next_execution}, active={t.active}, "
+        f"completion_percentage={t.completion_percentage}%, "
+        f"next_tick={game_state['tick'] + (t.next_execution - datetime.now()).seconds // 3}"
+        for t in task_manager.get_tasks()
+    ]
     return "Tasks:\n" + "\n".join(tasks_info)
 
 commands.register_command('debug on', debug_on, description='Enable debug mode')
