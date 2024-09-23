@@ -41,7 +41,7 @@ class Task:
             'max_interval': self.max_interval,
             'next_execution': self.next_execution.isoformat() if self.next_execution else None,
             'active': self.active,
-            'completion_percentage': self.completion_percentage,
+            'completion_percentage': int(self.completion_percentage),
             'is_recurring': self.is_recurring
         }
 
