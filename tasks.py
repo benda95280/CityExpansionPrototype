@@ -1,4 +1,5 @@
 import random
+from datetime import datetime, timedelta
 
 class Task:
     def __init__(self, name, task_type, callback, interval=None, min_interval=None, max_interval=None):
@@ -13,18 +14,20 @@ class Task:
         self.completion_percentage = 0
         self.last_execution_tick = 0
         self.is_recurring = task_type == 'recurring'
+        self.ticks_until_execution = None
         self.update_next_execution(0)
 
     def update_next_execution(self, current_tick):
         if self.task_type == 'recurring':
             self.next_execution_tick = current_tick + self.interval
-            self.completion_percentage = ((current_tick - self.last_execution_tick) / self.interval) * 100
+            self.ticks_until_execution = self.interval
         elif self.task_type == 'random':
             random_interval = random.randint(self.min_interval, self.max_interval)
             self.next_execution_tick = current_tick + random_interval
-            self.completion_percentage = ((current_tick - self.last_execution_tick) / random_interval) * 100
+            self.ticks_until_execution = random_interval
         
-        self.completion_percentage = min(100, max(0, self.completion_percentage))
+        self.completion_percentage = 0 if self.ticks_until_execution == 0 else \
+            min(100, max(0, ((current_tick - self.last_execution_tick) / self.ticks_until_execution) * 100))
 
     def execute(self, game_state):
         if callable(self.callback):
@@ -47,7 +50,8 @@ class Task:
             'next_execution_tick': self.next_execution_tick,
             'active': self.active,
             'completion_percentage': int(self.completion_percentage),
-            'is_recurring': self.is_recurring
+            'is_recurring': self.is_recurring,
+            'ticks_until_execution': self.ticks_until_execution
         }
 
 class TaskManager:

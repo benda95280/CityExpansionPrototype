@@ -40,28 +40,35 @@ function updateTasksNotifications() {
 
     if (gameState.tasks && gameState.tasks.tasks) {
         gameState.tasks.tasks.forEach(task => {
-            if (task.name !== 'new_citizen') {
-                const li = document.createElement('li');
-                const taskName = document.createElement('span');
-                taskName.textContent = `${task.name}: ${task.task_type}`;
-                
-                const progressBar = document.createElement('div');
-                progressBar.className = 'task-progress-bar';
-                const progressFill = document.createElement('div');
-                progressFill.className = 'task-progress-fill';
-                progressFill.style.width = `${task.completion_percentage}%`;
-                
-                const progressText = document.createElement('span');
-                progressText.className = 'task-progress-text';
-                progressText.textContent = `${task.completion_percentage}%`;
-                
-                progressBar.appendChild(progressFill);
-                progressBar.appendChild(progressText);
-                
-                li.appendChild(taskName);
-                li.appendChild(progressBar);
-                tasksList.appendChild(li);
+            const li = document.createElement('li');
+            const taskName = document.createElement('span');
+            taskName.textContent = `${task.name}: ${task.task_type}`;
+            
+            const progressBar = document.createElement('div');
+            progressBar.className = 'task-progress-bar';
+            const progressFill = document.createElement('div');
+            progressFill.className = 'task-progress-fill';
+            progressFill.style.width = `${task.completion_percentage}%`;
+            
+            const progressText = document.createElement('span');
+            progressText.className = 'task-progress-text';
+            progressText.textContent = `${task.completion_percentage}% (${task.ticks_until_execution} ticks)`;
+            
+            progressBar.appendChild(progressFill);
+            progressBar.appendChild(progressText);
+            
+            const taskInfo = document.createElement('div');
+            taskInfo.className = 'task-info';
+            if (task.task_type === 'recurring') {
+                taskInfo.textContent = `Interval: ${task.interval} ticks`;
+            } else if (task.task_type === 'random') {
+                taskInfo.textContent = `Interval: ${task.min_interval}-${task.max_interval} ticks`;
             }
+            
+            li.appendChild(taskName);
+            li.appendChild(progressBar);
+            li.appendChild(taskInfo);
+            tasksList.appendChild(li);
         });
     }
 
