@@ -11,12 +11,6 @@ function updateResourcesDisplay() {
     }, 0) : 0;
     const totalAccommodations = gameState.total_accommodations || 0;
     
-    console.log('Updating resources display');
-    console.log(`Population: 👥 ${population}`);
-    console.log(`Accommodations: 🏠 ${availableAccommodations} / ${totalAccommodations}`);
-    console.log(`Money: 💰 $${gameState.money}`);
-    console.log(`Ticking speed: ⏱️ ${gameState.ticking_speed} ticks/s`);
-    
     document.getElementById('population-value').textContent = `👥 ${population}`;
     document.getElementById('accommodations-value').textContent = `🏠 ${availableAccommodations} / ${totalAccommodations}`;
     document.getElementById('money-value').textContent = `💰 $${gameState.money}`;
@@ -33,10 +27,6 @@ function updateTimeDisplay() {
     
     const timeString = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
     
-    console.log('Updating time display');
-    console.log(`Date: 📅 ${dateString}`);
-    console.log(`Time: 🕒 ${timeString}`);
-    
     document.getElementById('date-value').textContent = `📅 ${dateString}`;
     document.getElementById('time-value').textContent = `🕒 ${timeString}`;
 }
@@ -52,7 +42,7 @@ function updateTasksNotifications() {
         gameState.tasks.tasks.forEach(task => {
             if (task.name !== 'new_citizen') {
                 const li = document.createElement('li');
-                li.textContent = `${task.name}: ${task.task_type}`;
+                li.textContent = `📋 ${task.name}: ${task.task_type}`;
                 tasksList.appendChild(li);
             }
         });
@@ -61,14 +51,13 @@ function updateTasksNotifications() {
     if (gameState.notifications) {
         gameState.notifications.forEach(notification => {
             const li = document.createElement('li');
-            li.textContent = notification.message;
+            li.textContent = `🔔 ${notification.message}`;
             notificationsList.appendChild(li);
         });
     }
 }
 
 function showBuildingMenu(x, y, gridX, gridY) {
-    console.log("showBuildingMenu called");
     const existingMenu = document.querySelector('.context-menu');
     if (existingMenu) {
         document.body.removeChild(existingMenu);
@@ -82,10 +71,9 @@ function showBuildingMenu(x, y, gridX, gridY) {
     const existingBuilding = gameState.grid[`${gridX},${gridY}`];
 
     if (existingBuilding) {
-        console.log("Existing building found:", existingBuilding);
         const buildingData = gameState.buildings_data[existingBuilding.type];
         const upgradeOption = document.createElement('div');
-        upgradeOption.textContent = `Upgrade ${buildingData.name} ($${buildingData.upgrade_cost * existingBuilding.level})`;
+        upgradeOption.textContent = `🔧 Upgrade ${buildingData.name} ($${buildingData.upgrade_cost * existingBuilding.level})`;
         upgradeOption.addEventListener('click', () => {
             upgradeBuilding(gridX, gridY);
             document.body.removeChild(menu);
@@ -93,17 +81,16 @@ function showBuildingMenu(x, y, gridX, gridY) {
         menu.appendChild(upgradeOption);
 
         const infoOption = document.createElement('div');
-        infoOption.textContent = 'Show Info';
+        infoOption.textContent = '📊 Show Info';
         infoOption.addEventListener('click', () => {
             showCellPopup(gridX, gridY, existingBuilding);
             document.body.removeChild(menu);
         });
         menu.appendChild(infoOption);
     } else {
-        console.log("No existing building, showing building options");
         for (const [type, data] of Object.entries(gameState.buildings_data)) {
             const option = document.createElement('div');
-            option.textContent = `${data.name} ($${data.price})`;
+            option.textContent = `🏗️ ${data.name} ($${data.price})`;
             option.addEventListener('click', () => {
                 placeBuilding(gridX, gridY, type);
                 document.body.removeChild(menu);
@@ -113,7 +100,6 @@ function showBuildingMenu(x, y, gridX, gridY) {
     }
 
     document.body.appendChild(menu);
-    console.log("Building menu appended to document body");
 
     document.addEventListener('click', removeMenu);
 }
@@ -136,16 +122,16 @@ function showCellPopup(x, y, building) {
         const totalAccommodations = building.total_accommodations;
         
         popup.innerHTML = `
-            <h3>${buildingData.name}</h3>
-            <p>Level: ${building.level}</p>
+            <h3>🏢 ${buildingData.name}</h3>
+            <p>🏆 Level: ${building.level}</p>
             ${building.is_built ? `
-                <p>Accommodations: ${occupiedAccommodations} / ${totalAccommodations}</p>
-                <p>Population: ${occupiedAccommodations}</p>
-                <p>Max People per Accommodation: ${buildingData.max_people_per_accommodation}</p>
-                <button id="upgrade-btn">Upgrade ($${buildingData.upgrade_cost * building.level})</button>
+                <p>🏠 Accommodations: ${occupiedAccommodations} / ${totalAccommodations}</p>
+                <p>👥 Population: ${occupiedAccommodations}</p>
+                <p>👨‍👩‍👧‍👦 Max People per Accommodation: ${buildingData.max_people_per_accommodation}</p>
+                <button id="upgrade-btn">🔧 Upgrade ($${buildingData.upgrade_cost * building.level})</button>
             ` : `
-                <p>Under Construction</p>
-                <p>Progress: ${Math.round(building.construction_progress * 100)}%</p>
+                <p>🚧 Under Construction</p>
+                <p>📊 Progress: ${Math.round(building.construction_progress * 100)}%</p>
             `}
         `;
         
@@ -156,7 +142,7 @@ function showCellPopup(x, y, building) {
             });
         }
     } else {
-        popup.innerHTML = `<p>Empty cell (${x}, ${y})</p>`;
+        popup.innerHTML = `<p>🏞️ Empty cell (${x}, ${y})</p>`;
     }
 
     const { gridX, gridY } = getCanvasCoordinates(x, y);
@@ -194,18 +180,18 @@ function showNewCitizenPopup(citizen) {
     popup.innerHTML = `
         <div class="popup-header">
             <button id="move-to-accommodation" title="Move to accommodation">🏠</button>
-            <h3>New Citizen!</h3>
+            <h3>👋 New Citizen!</h3>
             <div style="text-align: right; font-size: 24px; color: ${genderColor};">${genderIcon}</div>
         </div>
         <div class="popup-content">
-            <p>Name: ${citizen.first_name} ${citizen.last_name}</p>
-            <p>Age: ${age}</p>
-            <p>Previous Job: ${citizen.previous_job}</p>
-            <p>🎵: ${citizen.favorite_music}</p>
+            <p>📛 Name: ${citizen.first_name} ${citizen.last_name}</p>
+            <p>🎂 Age: ${age}</p>
+            <p>💼 Previous Job: ${citizen.previous_job}</p>
+            <p>🎵 Favorite Music: ${citizen.favorite_music}</p>
         </div>
         <div class="popup-footer">
-            <button id="accept-citizen">Accept</button>
-            <button id="deny-citizen">Deny</button>
+            <button id="accept-citizen">✅ Accept</button>
+            <button id="deny-citizen">❌ Deny</button>
         </div>
     `;
 
@@ -215,7 +201,6 @@ function showNewCitizenPopup(citizen) {
 
     const moveToAccommodationBtn = popup.querySelector('#move-to-accommodation');
     moveToAccommodationBtn.addEventListener('click', () => {
-        console.log('Move to accommodation button clicked');
         moveViewToAccommodation(citizen);
     });
 
@@ -241,7 +226,6 @@ function showNewCitizenPopup(citizen) {
 }
 
 function moveViewToAccommodation(citizen) {
-    console.log('moveViewToAccommodation called for citizen:', citizen);
     if (!citizen) {
         console.error('Error: Citizen object is undefined or null');
         return;
@@ -250,7 +234,6 @@ function moveViewToAccommodation(citizen) {
         console.error('Error: No last placed citizen information available');
         return;
     }
-    console.log('Last placed citizen:', lastPlacedCitizen);
     
     const buildingEntry = Object.entries(gameState.grid).find(([coords, building]) => 
         building.accommodations.some(acc => acc.some(c => c.id === citizen.id))
@@ -259,7 +242,6 @@ function moveViewToAccommodation(citizen) {
     if (buildingEntry) {
         const [coords, building] = buildingEntry;
         const [x, y] = coords.split(',').map(Number);
-        console.log(`Centering map on building at (${x}, ${y})`);
         centerMapOnBuilding(x, y);
     } else {
         console.error('Error: Building not found for citizen');
@@ -267,7 +249,6 @@ function moveViewToAccommodation(citizen) {
 }
 
 function centerMapOnBuilding(x, y) {
-    console.log(`Centering map on (${x}, ${y})`);
     gridOffsetX = canvas.width / 2 - x * gridSize * gridScale;
     gridOffsetY = canvas.height / 2 - y * gridSize * gridScale;
     drawGame();
