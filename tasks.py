@@ -70,7 +70,7 @@ class TaskManager:
                 if self.debug:
                     print(f"Task '{task.name}' is going to be executed")
                 yield task
-                task.completion_percentage = min(100, task.completion_percentage + 10)
+                task.completion_percentage = min(100, task.completion_percentage + 1)
 
     def to_dict(self):
         return {
