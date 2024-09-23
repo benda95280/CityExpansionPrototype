@@ -15,14 +15,11 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
 socketio = SocketIO(app)
 
-# Load config
 with open('config.json', 'r') as f:
     config = json.load(f)
 
-# Initialize TaskManager
 task_manager = TaskManager()
 
-# Game state
 game_state = {
     'grid': {},
     'money': 1000,
@@ -36,16 +33,13 @@ game_state = {
     'buildings_data': buildings_data,
     'current_date': datetime(2024, 1, 1),
     'ticking_speed': 0,
-    'notifications': [
-        {
-            'message': "Welcome to your new city! Start by placing some buildings.",
-            'timestamp': datetime.now().isoformat()
-        },
-        {
-            'message': "Tip: Use the right-click menu to place buildings on the grid.",
-            'timestamp': datetime.now().isoformat()
-        }
-    ]
+    'notifications': [{
+        'message': "Welcome to your new city! Start by placing some buildings.",
+        'timestamp': datetime.now().isoformat()
+    }, {
+        'message': "Tip: Use the right-click menu to place buildings on the grid.",
+        'timestamp': datetime.now().isoformat()
+    }]
 }
 
 @app.route('/')
@@ -79,7 +73,10 @@ def handle_accept_citizen(data):
                 if building.add_citizen(accepted_citizen.to_dict(), max_people):
                     game_state['population'] += 1
                     game_state['used_accommodations'] += 1
-                    socketio.emit('citizen_placed', {'citizen': accepted_citizen.to_dict(), 'building': available_building})
+                    socketio.emit('citizen_placed', {
+                        'citizen': accepted_citizen.to_dict(),
+                        'building': available_building
+                    })
                     game_state['notifications'].append({
                         'message': f"Citizen {accepted_citizen.first_name} {accepted_citizen.last_name} has been accepted and placed in a {building.type}.",
                         'timestamp': datetime.now().isoformat()
@@ -100,13 +97,13 @@ def handle_deny_citizen(data):
 def generate_new_citizen(game_state):
     if DEBUG_MODE:
         print(f"Attempting to generate new citizen at tick {game_state['tick']}")
-    
+
     total_accommodations = sum(building.total_accommodations for building in game_state['grid'].values())
     if game_state['population'] >= total_accommodations:
         if DEBUG_MODE:
             print("Failed to generate new citizen: No available accommodations")
         return False
-    
+
     if len(game_state['pending_citizens']) >= 5:
         if DEBUG_MODE:
             print("Failed to generate new citizen: Maximum pending citizens reached (5)")
@@ -126,38 +123,36 @@ def game_loop(socketio):
     while True:
         current_time = time.time()
         delta_time = current_time - last_update
-        
-        # Update game state
+
         game_state['tick'] += 1
         ticks_since_last_update += 1
-        
-        # Update game time (5 minutes every 20 ticks)
+
+        if DEBUG_MODE:
+            print(f"Debug: Current tick: {game_state['tick']}")
+
         if game_state['tick'] % 20 == 0:
             game_state['current_date'] += timedelta(minutes=5)
-        
-        # Process tasks
+
         for task in task_manager.update_tasks(game_state):
+            if DEBUG_MODE:
+                print(f"Debug: Processing task '{task.name}' at tick {game_state['tick']}")
             task.execute(game_state)
-        
-        # Update buildings and city finances
+
         update_buildings(game_state, socketio)
         update_city_finances(game_state)
-        
-        # Update population and accommodations
+
         update_population_and_accommodations()
-        
-        # Update ticking speed every second
+
         if current_time - last_ticking_speed_update >= 1:
             game_state['ticking_speed'] = ticks_since_last_update
             ticks_since_last_update = 0
             last_ticking_speed_update = current_time
-        
-        # Emit game state every second
+
         if current_time - last_update >= 1:
             emit_game_state()
             last_update = current_time
-        
-        time.sleep(0.05)  # 20 ticks per second
+
+        time.sleep(0.05)
 
 def update_population_and_accommodations():
     total_population = 0
@@ -166,21 +161,18 @@ def update_population_and_accommodations():
         building_population = sum(len(accommodation) for accommodation in building.accommodations)
         total_population += building_population
         used_accommodations += len([acc for acc in building.accommodations if acc])
-    
+
     game_state['population'] = total_population
     game_state['used_accommodations'] = used_accommodations
 
 def emit_game_state():
-    serializable_game_state = {
-        key: value for key, value in game_state.items() if key != 'task_manager'
-    }
+    serializable_game_state = {key: value for key, value in game_state.items() if key != 'task_manager'}
     serializable_game_state['tasks'] = game_state['task_manager'].to_dict()
     serializable_game_state['pending_citizens'] = [citizen.to_dict() for citizen in game_state['pending_citizens']]
     serializable_game_state['current_date'] = game_state['current_date'].isoformat() if isinstance(game_state['current_date'], datetime) else game_state['current_date']
     serializable_game_state['start_time'] = game_state['start_time'].isoformat() if isinstance(game_state['start_time'], datetime) else game_state['start_time']
     serializable_game_state['buildings_data'] = buildings_data
 
-    # Serialize Building objects in the grid
     serializable_game_state['grid'] = {coords: building.to_dict() for coords, building in game_state['grid'].items()}
 
     socketio.emit('game_state', serializable_game_state)
@@ -191,15 +183,28 @@ def handle_console_command_socket(data):
     return handle_console_command(command, game_state, task_manager)
 
 def initialize_tasks():
-    new_citizen_task = Task('New citizen', 'recurring', generate_new_citizen, 
+    new_citizen_task = Task('New citizen',
+                            'recurring',
+                            generate_new_citizen,
                             interval=config['min_ticks_for_new_citizen'])
     task_manager.add_task(new_citizen_task)
 
-    # Add some dummy tasks for testing
-    dummy_task1 = Task('dummy_task1', 'recurring', lambda gs: print("Dummy task 1 executed"), interval=300)
-    dummy_task2 = Task('dummy_task2', 'random', lambda gs: print("Dummy task 2 executed"), min_interval=200, max_interval=600)
+    dummy_task1 = Task('Dummy task 1',
+                       'recurring',
+                       lambda gs: print("Dummy task 1 executed"),
+                       interval=300)
+    dummy_task2 = Task('Dummy task 2',
+                       'random',
+                       lambda gs: print("Dummy task 2 executed"),
+                       min_interval=200,
+                       max_interval=600)
     task_manager.add_task(dummy_task1)
     task_manager.add_task(dummy_task2)
+
+    if DEBUG_MODE:
+        print("Debug: Tasks initialized")
+        for task in task_manager.get_tasks():
+            print(f"Debug: Task '{task.name}' registered with next execution at tick {task.next_execution_tick}")
 
 if __name__ == '__main__':
     initialize_tasks()
