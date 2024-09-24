@@ -31,6 +31,10 @@ function updateTimeDisplay() {
     document.getElementById('time-value').textContent = `🕒 ${timeString}`;
 }
 
+function dismissNotification(index) {
+    socket.emit('dismiss_notification', { index: index });
+}
+
 function updateTasksNotifications() {
     const tasksList = document.getElementById('tasks-list');
     const notificationsList = document.getElementById('notifications-list');
@@ -65,8 +69,8 @@ function updateTasksNotifications() {
         });
     }
 
-    if (gameState.notifications) {
-        gameState.notifications.forEach((notification, index) => {
+    if (gameState.notifications && gameState.notifications.notifications) {
+        gameState.notifications.notifications.forEach((notification, index) => {
             const li = document.createElement('li');
             li.className = 'notification-item';
             
@@ -83,12 +87,6 @@ function updateTasksNotifications() {
             notificationsList.appendChild(li);
         });
     }
-}
-
-function dismissNotification(index) {
-    gameState.notifications.splice(index, 1);
-    updateTasksNotifications();
-    socket.emit('dismiss_notification', { index: index });
 }
 
 function showBuildingMenu(x, y, gridX, gridY) {

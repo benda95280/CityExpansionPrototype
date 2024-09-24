@@ -90,7 +90,13 @@ def handle_deny_citizen(data):
 @socketio.on('dismiss_notification')
 def handle_dismiss_notification(data):
     index = data['index']
-    game_state['notification_manager'].remove_notification(index)
+    try:
+        game_state['notification_manager'].remove_notification(index)
+        print(f"Debug: Notification at index {index} removed successfully")
+    except IndexError:
+        print(f"Debug: Failed to remove notification at index {index}. Index out of range.")
+    except Exception as e:
+        print(f"Debug: Error removing notification: {str(e)}")
     emit_game_state()
 
 def generate_new_citizen(game_state):
