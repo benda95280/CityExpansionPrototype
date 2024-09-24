@@ -2,7 +2,7 @@ import random
 from datetime import datetime, timedelta
 
 class Task:
-    def __init__(self, name, task_type, is_recurring, callback, min_interval=20000, max_interval=0):
+    def __init__(self, name, task_type, is_recurring, callback, min_interval=20000, max_interval=0, hidden=False):
         self.name = name
         self.task_type = task_type
         self.is_recurring = is_recurring
@@ -13,6 +13,7 @@ class Task:
         self.next_execution_tick = None
         self.completion_percentage = 0
         self.last_execution_tick = 0
+        self.hidden = hidden
         self.update_next_execution(0)
 
     def update_next_execution(self, current_tick):
@@ -45,7 +46,8 @@ class Task:
             'max_interval': self.max_interval,
             'next_execution_tick': self.next_execution_tick,
             'completion_percentage': int(self.completion_percentage),
-            'last_execution_tick': self.last_execution_tick
+            'last_execution_tick': self.last_execution_tick,
+            'hidden': self.hidden
         }
 
 class TaskManager:

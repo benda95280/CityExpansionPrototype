@@ -185,7 +185,8 @@ def initialize_tasks():
                             True,
                             generate_new_citizen,
                             min_interval=config['min_ticks_for_new_citizen'],
-                            max_interval=config['max_ticks_for_new_citizen'])
+                            max_interval=config['max_ticks_for_new_citizen'],
+                            hidden=True)
     task_manager.add_task(new_citizen_task)
 
     dummy_task1 = Task('Dummy task 1',

@@ -40,26 +40,28 @@ function updateTasksNotifications() {
 
     if (gameState.tasks && gameState.tasks.tasks) {
         gameState.tasks.tasks.forEach(task => {
-            const li = document.createElement('li');
-            const taskName = document.createElement('span');
-            taskName.textContent = task.name;
-            
-            const progressBar = document.createElement('div');
-            progressBar.className = 'task-progress-bar';
-            const progressFill = document.createElement('div');
-            progressFill.className = 'task-progress-fill';
-            progressFill.style.width = `${task.completion_percentage}%`;
-            
-            const progressText = document.createElement('span');
-            progressText.className = 'task-progress-text';
-            progressText.textContent = `${task.completion_percentage}%`;
-            
-            progressBar.appendChild(progressFill);
-            progressBar.appendChild(progressText);
-            
-            li.appendChild(taskName);
-            li.appendChild(progressBar);
-            tasksList.appendChild(li);
+            if (!task.hidden) {  // Only display non-hidden tasks
+                const li = document.createElement('li');
+                const taskName = document.createElement('span');
+                taskName.textContent = task.name;
+                
+                const progressBar = document.createElement('div');
+                progressBar.className = 'task-progress-bar';
+                const progressFill = document.createElement('div');
+                progressFill.className = 'task-progress-fill';
+                progressFill.style.width = `${task.completion_percentage}%`;
+                
+                const progressText = document.createElement('span');
+                progressText.className = 'task-progress-text';
+                progressText.textContent = `${task.completion_percentage}%`;
+                
+                progressBar.appendChild(progressFill);
+                progressBar.appendChild(progressText);
+                
+                li.appendChild(taskName);
+                li.appendChild(progressBar);
+                tasksList.appendChild(li);
+            }
         });
     }
 
