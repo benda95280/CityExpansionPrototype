@@ -208,6 +208,8 @@ function showExpandOptions(x, y, building) {
 }
 
 function showCellPopup(x, y, building) {
+    console.log('showCellPopup called with:', x, y, building);  // Debug log
+    
     const existingPopup = document.querySelector('.cell-popup');
     if (existingPopup) {
         document.body.removeChild(existingPopup);
@@ -217,9 +219,15 @@ function showCellPopup(x, y, building) {
     popup.classList.add('cell-popup');
 
     if (building) {
+        console.log('Building data:', building);  // Debug log
         const buildingData = gameState.buildings_data[building.type];
-        const occupiedAccommodations = building.accommodations.flat().length;
-        const totalAccommodations = building.total_accommodations;
+        if (!buildingData) {
+            console.error('Building data not found for type:', building.type);
+            return;
+        }
+        
+        const occupiedAccommodations = Array.isArray(building.accommodations) ? building.accommodations.flat().length : 0;
+        const totalAccommodations = building.total_accommodations || 0;
         
         popup.innerHTML = `
             <button class="close-popup">✖️</button>
@@ -229,12 +237,12 @@ function showCellPopup(x, y, building) {
                 <p>🏠 Accommodations: ${occupiedAccommodations} / ${totalAccommodations}</p>
                 <p>👥 Population: ${occupiedAccommodations}</p>
                 <p>👨‍👩‍👧‍👦 Max People per Accommodation: ${buildingData.max_people_per_accommodation}</p>
-                <p>💰 Total Money Spent: $${building.spend_cost}</p>
-                <p>🔄 Expanded Cells: ${building.expanded_cells.length} / ${buildingData.expansion_limit}</p>
+                <p>💰 Total Money Spent: $${building.spend_cost || 0}</p>
+                <p>🔄 Expanded Cells: ${Array.isArray(building.expanded_cells) ? building.expanded_cells.length : 0} / ${buildingData.expansion_limit}</p>
                 <button id="upgrade-btn">🔧 Upgrade ($${buildingData.upgrade_cost * building.level})</button>
             ` : `
                 <p>🚧 Under Construction</p>
-                <p>📊 Progress: ${Math.round(building.construction_progress * 100)}%</p>
+                <p>📊 Progress: ${Math.round((building.construction_progress || 0) * 100)}%</p>
             `}
         `;
         
