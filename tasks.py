@@ -70,9 +70,6 @@ class TaskManager:
     def get_active_tasks(self):
         return [t for t in self.tasks if t.active]
 
-    def set_debug(self, debug):
-        self.game_state['debug_mode'] = debug
-
     def update_tasks(self, game_state):
         current_tick = game_state['tick']
         tasks_to_remove = []

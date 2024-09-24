@@ -31,12 +31,10 @@ commands = Commands()
 
 def debug_on(game_state, task_manager):
     game_state['debug_mode'] = True
-    task_manager.set_debug(True)
     return 'Debug mode enabled'
 
 def debug_off(game_state, task_manager):
     game_state['debug_mode'] = False
-    task_manager.set_debug(False)
     return 'Debug mode disabled'
 
 def get_tick(game_state, task_manager):

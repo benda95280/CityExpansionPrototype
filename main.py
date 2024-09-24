@@ -10,9 +10,6 @@ from citizen import Citizen
 from building import Building
 from notification import Notification, NotificationManager
 
-def get_debug_mode():
-    return game_state.get('debug_mode', False)
-
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
 socketio = SocketIO(app)
@@ -94,35 +91,35 @@ def handle_dismiss_notification(data):
     index = data['index']
     try:
         game_state['notification_manager'].remove_notification(index)
-        if get_debug_mode():
+        if game_state['debug_mode']:
             print(f"Debug: Notification at index {index} removed successfully")
     except IndexError:
-        if get_debug_mode():
+        if game_state['debug_mode']:
             print(f"Debug: Failed to remove notification at index {index}. Index out of range.")
     except Exception as e:
-        if get_debug_mode():
+        if game_state['debug_mode']:
             print(f"Debug: Error removing notification: {str(e)}")
     emit_game_state()
 
 def generate_new_citizen(game_state):
-    if get_debug_mode():
+    if game_state['debug_mode']:
         print(f"Attempting to generate new citizen at tick {game_state['tick']}")
 
     total_accommodations = sum(building.total_accommodations for building in game_state['grid'].values())
     if game_state['population'] >= total_accommodations:
-        if get_debug_mode():
+        if game_state['debug_mode']:
             print("Failed to generate new citizen: No available accommodations")
         return False
 
     if len(game_state['pending_citizens']) >= 5:
-        if get_debug_mode():
+        if game_state['debug_mode']:
             print("Failed to generate new citizen: Maximum pending citizens reached (5)")
         return False
 
     new_citizen = Citizen.generate_random_citizen()
     game_state['pending_citizens'].append(new_citizen)
     socketio.emit('new_citizen', new_citizen.to_dict())
-    if get_debug_mode():
+    if game_state['debug_mode']:
         print(f"New citizen generated successfully: {new_citizen.to_dict()}")
     return True
 
@@ -137,7 +134,7 @@ def game_loop(socketio):
         game_state['tick'] += 1
         ticks_since_last_update += 1
 
-        if get_debug_mode():
+        if game_state['debug_mode']:
             print(f"Debug: Current tick: {game_state['tick']}")
 
         if game_state['tick'] % 20 == 0:
@@ -182,7 +179,7 @@ def emit_game_state():
     serializable_game_state['buildings_data'] = buildings_data
     serializable_game_state['grid'] = {coords: building.to_dict() for coords, building in game_state['grid'].items()}
 
-    if get_debug_mode():
+    if game_state['debug_mode']:
         print("Debug: Tasks being sent to frontend:")
         for task in game_state['task_manager'].get_tasks():
             print(f"  - {task.name}: next_execution_tick={task.next_execution_tick}, completion_percentage={task.completion_percentage}")
@@ -220,7 +217,7 @@ def initialize_tasks():
     task_manager.add_task(dummy_task1)
     task_manager.add_task(dummy_task2)
 
-    if get_debug_mode():
+    if game_state['debug_mode']:
         print("Debug: Tasks initialized")
         for task in task_manager.get_tasks():
             print(f"Debug: Task '{task.name}' registered with next execution at tick {task.next_execution_tick}")
@@ -228,4 +225,4 @@ def initialize_tasks():
 if __name__ == '__main__':
     initialize_tasks()
     socketio.start_background_task(game_loop, socketio)
-    socketio.run(app, host='0.0.0.0', port=5000, debug=True, use_reloader=False)
+    socketio.run(app, host='0.0.0.0', port=5000, debug=True, use_reloader=False, log_output=True)
