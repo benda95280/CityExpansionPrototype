@@ -172,6 +172,12 @@ def emit_game_state():
 
     serializable_game_state['grid'] = {coords: building.to_dict() for coords, building in game_state['grid'].items()}
 
+    print("Debug: Tasks being sent to frontend:")
+    for task in game_state['task_manager'].get_tasks():
+        print(f"  - {task.name}: next_execution_tick={task.next_execution_tick}, completion_percentage={task.completion_percentage}")
+
+    print(f"Debug: Serializable game state: {serializable_game_state}")
+
     socketio.emit('game_state', serializable_game_state)
 
 @socketio.on('console_command')
