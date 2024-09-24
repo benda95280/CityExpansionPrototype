@@ -22,19 +22,21 @@ def handle_place_building(data, game_state, socketio):
     if game_state['money'] >= buildings_data[building_type]['price']:
         construction_time = timedelta(minutes=buildings_data[building_type]['construction_time'])
         current_date = game_state['current_date']
+        initial_cost = buildings_data[building_type]['price']
         new_building = Building(
             building_type,
             1,
             x,
             y,
             current_date,
-            current_date + construction_time
+            current_date + construction_time,
+            initial_cost
         )
         new_building.total_accommodations = buildings_data[building_type]['accommodations']
         new_building.accommodations = [[] for _ in range(new_building.total_accommodations)]
         
         game_state['grid'][f"{x},{y}"] = new_building
-        game_state['money'] -= buildings_data[building_type]['price']
+        game_state['money'] -= initial_cost
         game_state['total_accommodations'] += new_building.total_accommodations
         
         socketio.emit('building_placed', {'x': x, 'y': y, 'type': building_type})
@@ -52,7 +54,7 @@ def handle_upgrade_building(data, game_state, socketio):
             upgrade_time = buildings_data[building_type]['upgrade_time']
             new_accommodations = buildings_data[building_type]['accommodations']
             
-            building.upgrade(upgrade_time, new_accommodations)
+            building.upgrade(upgrade_time, new_accommodations, upgrade_cost)
             game_state['total_accommodations'] += new_accommodations
             game_state['money'] -= upgrade_cost
             
