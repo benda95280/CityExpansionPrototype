@@ -8,6 +8,7 @@ from commands import Commands, handle_console_command
 from buildings import buildings_data, find_available_building, handle_place_building, handle_upgrade_building, update_buildings, update_city_finances
 from citizen import Citizen
 from building import Building
+from notification import Notification
 
 DEBUG_MODE = True
 
@@ -33,13 +34,10 @@ game_state = {
     'buildings_data': buildings_data,
     'current_date': datetime(2024, 1, 1),
     'ticking_speed': 0,
-    'notifications': [{
-        'message': "Welcome to your new city! Start by placing some buildings.",
-        'timestamp': datetime.now().isoformat()
-    }, {
-        'message': "Tip: Use the right-click menu to place buildings on the grid.",
-        'timestamp': datetime.now().isoformat()
-    }]
+    'notifications': [
+        Notification("Welcome to your new city! Start by placing some buildings."),
+        Notification("Tip: Use the right-click menu to place buildings on the grid.")
+    ]
 }
 
 @app.route('/')
@@ -77,10 +75,7 @@ def handle_accept_citizen(data):
                         'citizen': accepted_citizen.to_dict(),
                         'building': available_building
                     })
-                    game_state['notifications'].append({
-                        'message': f"Citizen {accepted_citizen.first_name} {accepted_citizen.last_name} has been accepted and placed in a {building.type}.",
-                        'timestamp': datetime.now().isoformat()
-                    })
+                    game_state['notifications'].append(Notification(f"Citizen {accepted_citizen.first_name} {accepted_citizen.last_name} has been accepted and placed in a {building.type}."))
     emit_game_state()
 
 @socketio.on('deny_citizen')
@@ -88,10 +83,7 @@ def handle_deny_citizen(data):
     citizen_index = data['index']
     if 0 <= citizen_index < len(game_state['pending_citizens']):
         denied_citizen = game_state['pending_citizens'].pop(citizen_index)
-        game_state['notifications'].append({
-            'message': f"Citizen {denied_citizen.first_name} {denied_citizen.last_name} has been denied entry to the city.",
-            'timestamp': datetime.now().isoformat()
-        })
+        game_state['notifications'].append(Notification(f"Citizen {denied_citizen.first_name} {denied_citizen.last_name} has been denied entry to the city."))
     emit_game_state()
 
 @socketio.on('dismiss_notification')
@@ -176,8 +168,8 @@ def emit_game_state():
     serializable_game_state['current_date'] = game_state['current_date'].isoformat() if isinstance(game_state['current_date'], datetime) else game_state['current_date']
     serializable_game_state['start_time'] = game_state['start_time'].isoformat() if isinstance(game_state['start_time'], datetime) else game_state['start_time']
     serializable_game_state['buildings_data'] = buildings_data
-
     serializable_game_state['grid'] = {coords: building.to_dict() for coords, building in game_state['grid'].items()}
+    serializable_game_state['notifications'] = [notification.to_dict() for notification in game_state['notifications']]
 
     print("Debug: Tasks being sent to frontend:")
     for task in game_state['task_manager'].get_tasks():
