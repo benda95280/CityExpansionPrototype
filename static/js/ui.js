@@ -115,6 +115,7 @@ function showBuildingMenu(x, y, gridX, gridY) {
         const infoOption = document.createElement('div');
         infoOption.textContent = '📊 Show Info';
         infoOption.addEventListener('click', () => {
+            console.log('Show Info clicked for building at', gridX, gridY);
             showCellPopup(gridX, gridY, existingBuilding);
             document.body.removeChild(menu);
         });
