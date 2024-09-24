@@ -146,10 +146,12 @@ function removeMenu(e) {
 }
 
 function showCellPopup(x, y, building) {
+    console.log('showCellPopup called with:', x, y, building);
     const popup = document.createElement('div');
     popup.classList.add('cell-popup');
 
     if (building) {
+        console.log('Building data:', building);
         const buildingData = gameState.buildings_data[building.type];
         const occupiedAccommodations = building.accommodations.flat().length;
         const totalAccommodations = building.total_accommodations;
@@ -175,6 +177,7 @@ function showCellPopup(x, y, building) {
             });
         }
     } else {
+        console.log('No building at this location');
         popup.innerHTML = `<p>🏞️ Empty cell (${x}, ${y})</p>`;
     }
 
@@ -183,6 +186,7 @@ function showCellPopup(x, y, building) {
     popup.style.top = `${gridY + gridSize / 2}px`;
 
     document.body.appendChild(popup);
+    console.log('Popup appended to document body');
 
     function removePopup(e) {
         const popup = document.querySelector('.cell-popup');
