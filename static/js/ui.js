@@ -147,6 +147,13 @@ function removeMenu(e) {
 
 function showCellPopup(x, y, building) {
     console.log('showCellPopup called with:', x, y, building);
+    
+    // Remove existing popup if any
+    const existingPopup = document.querySelector('.cell-popup');
+    if (existingPopup) {
+        document.body.removeChild(existingPopup);
+    }
+
     const popup = document.createElement('div');
     popup.classList.add('cell-popup');
 
@@ -157,6 +164,7 @@ function showCellPopup(x, y, building) {
         const totalAccommodations = building.total_accommodations;
         
         popup.innerHTML = `
+            <button class="close-popup">✖️</button>
             <h3>🏢 ${buildingData.name}</h3>
             <p>🏆 Level: ${building.level}</p>
             ${building.is_built ? `
@@ -178,7 +186,10 @@ function showCellPopup(x, y, building) {
         }
     } else {
         console.log('No building at this location');
-        popup.innerHTML = `<p>🏞️ Empty cell (${x}, ${y})</p>`;
+        popup.innerHTML = `
+            <button class="close-popup">✖️</button>
+            <p>🏞️ Empty cell (${x}, ${y})</p>
+        `;
     }
 
     const { gridX, gridY } = getCanvasCoordinates(x, y);
@@ -188,15 +199,10 @@ function showCellPopup(x, y, building) {
     document.body.appendChild(popup);
     console.log('Popup appended to document body');
 
-    function removePopup(e) {
-        const popup = document.querySelector('.cell-popup');
-        if (popup && !popup.contains(e.target) && document.body.contains(popup)) {
-            document.body.removeChild(popup);
-            document.removeEventListener('click', removePopup);
-        }
-    }
-
-    document.addEventListener('click', removePopup);
+    // Add event listener for close button
+    popup.querySelector('.close-popup').addEventListener('click', () => {
+        document.body.removeChild(popup);
+    });
 }
 
 function showNewCitizenPopup(citizen) {
