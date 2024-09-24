@@ -116,7 +116,12 @@ function showBuildingMenu(x, y, gridX, gridY) {
     const existingBuilding = gameState.grid[`${gridX},${gridY}`];
 
     if (existingBuilding) {
-        const buildingData = gameState.buildings_data[existingBuilding.type];
+        const buildingData = existingBuilding && gameState.buildings_data[existingBuilding.type];
+        if (!buildingData) {
+            console.error('Building data not found for type:', existingBuilding.type);
+            return;
+        }
+        
         const upgradeOption = document.createElement('div');
         upgradeOption.textContent = `🔧 Upgrade ${buildingData.name} ($${buildingData.upgrade_cost * existingBuilding.level})`;
         upgradeOption.addEventListener('click', () => {
@@ -125,14 +130,16 @@ function showBuildingMenu(x, y, gridX, gridY) {
         });
         menu.appendChild(upgradeOption);
 
-        if (existingBuilding.expanded_cells.length < buildingData.expansion_limit) {
-            const expandOption = document.createElement('div');
-            expandOption.textContent = '🔄 Expand';
-            expandOption.addEventListener('click', () => {
-                showExpandOptions(gridX, gridY, existingBuilding);
-                document.body.removeChild(menu);
-            });
-            menu.appendChild(expandOption);
+        if (existingBuilding && buildingData && existingBuilding.expanded_cells && buildingData.expansion_limit) {
+            if (existingBuilding.expanded_cells.length < buildingData.expansion_limit) {
+                const expandOption = document.createElement('div');
+                expandOption.textContent = '🔄 Expand';
+                expandOption.addEventListener('click', () => {
+                    showExpandOptions(gridX, gridY, existingBuilding);
+                    document.body.removeChild(menu);
+                });
+                menu.appendChild(expandOption);
+            }
         }
 
         const infoOption = document.createElement('div');
