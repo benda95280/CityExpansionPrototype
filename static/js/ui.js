@@ -239,19 +239,11 @@ function showCellPopup(x, y, building) {
                 <p>👨‍👩‍👧‍👦 Max People per Accommodation: ${buildingData.max_people_per_accommodation}</p>
                 <p>💰 Total Money Spent: $${building.spend_cost || 0}</p>
                 <p>🔄 Expanded Cells: ${Array.isArray(building.expanded_cells) ? building.expanded_cells.length : 0} / ${buildingData.expansion_limit}</p>
-                <button id="upgrade-btn">🔧 Upgrade ($${buildingData.upgrade_cost * building.level})</button>
             ` : `
                 <p>🚧 Under Construction</p>
                 <p>📊 Progress: ${Math.round((building.construction_progress || 0) * 100)}%</p>
             `}
         `;
-        
-        if (building.is_built) {
-            popup.querySelector('#upgrade-btn').addEventListener('click', () => {
-                upgradeBuilding(x, y);
-                document.body.removeChild(popup);
-            });
-        }
     } else {
         popup.innerHTML = `
             <button class="close-popup">✖️</button>
