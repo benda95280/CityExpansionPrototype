@@ -146,6 +146,29 @@ body, html {
     padding: 5px;
     background-color: rgba(255, 255, 255, 0.1);
     border-radius: 3px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.notification-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.dismiss-notification {
+    background: none;
+    border: none;
+    color: #ffffff;
+    cursor: pointer;
+    font-size: 14px;
+    padding: 0;
+    margin-left: 10px;
+}
+
+.dismiss-notification:hover {
+    color: #ff4444;
 }
 
 .task-progress-bar {

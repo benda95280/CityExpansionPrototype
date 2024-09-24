@@ -66,12 +66,29 @@ function updateTasksNotifications() {
     }
 
     if (gameState.notifications) {
-        gameState.notifications.forEach(notification => {
+        gameState.notifications.forEach((notification, index) => {
             const li = document.createElement('li');
-            li.textContent = `${notification.message}`;
+            li.className = 'notification-item';
+            
+            const messageSpan = document.createElement('span');
+            messageSpan.textContent = notification.message;
+            li.appendChild(messageSpan);
+            
+            const dismissButton = document.createElement('button');
+            dismissButton.className = 'dismiss-notification';
+            dismissButton.innerHTML = '<i class="fas fa-times"></i>';
+            dismissButton.onclick = () => dismissNotification(index);
+            li.appendChild(dismissButton);
+            
             notificationsList.appendChild(li);
         });
     }
+}
+
+function dismissNotification(index) {
+    gameState.notifications.splice(index, 1);
+    updateTasksNotifications();
+    socket.emit('dismiss_notification', { index: index });
 }
 
 function showBuildingMenu(x, y, gridX, gridY) {

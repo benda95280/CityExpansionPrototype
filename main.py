@@ -94,6 +94,13 @@ def handle_deny_citizen(data):
         })
     emit_game_state()
 
+@socketio.on('dismiss_notification')
+def handle_dismiss_notification(data):
+    index = data['index']
+    if 0 <= index < len(game_state['notifications']):
+        game_state['notifications'].pop(index)
+        emit_game_state()
+
 def generate_new_citizen(game_state):
     if DEBUG_MODE:
         print(f"Attempting to generate new citizen at tick {game_state['tick']}")
