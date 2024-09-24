@@ -2,11 +2,11 @@ import random
 from datetime import datetime, timedelta
 
 class Task:
-    def __init__(self, name, task_type, callback, interval=None, min_interval=None, max_interval=None):
+    def __init__(self, name, task_type, is_recurring, callback, min_interval=20000, max_interval=0):
         self.name = name
         self.task_type = task_type
+        self.is_recurring = is_recurring
         self.callback = callback
-        self.interval = interval
         self.min_interval = min_interval
         self.max_interval = max_interval
         self.active = True
@@ -16,8 +16,8 @@ class Task:
         self.update_next_execution(0)
 
     def update_next_execution(self, current_tick):
-        if self.task_type == 'recurring':
-            self.next_execution_tick = current_tick + self.interval
+        if self.task_type == 'classic':
+            self.next_execution_tick = current_tick + self.min_interval
         elif self.task_type == 'random':
             random_interval = random.randint(self.min_interval, self.max_interval)
             self.next_execution_tick = current_tick + random_interval
@@ -33,14 +33,14 @@ class Task:
             self.completion_percentage = 0
             self.update_next_execution(game_state['tick'])
             print(f"Debug: Task '{self.name}' execution complete. Next execution at tick {self.next_execution_tick}")
-            return result
-        return None
+            return result, not self.is_recurring
+        return None, False
 
     def to_dict(self):
         return {
             'name': self.name,
             'task_type': self.task_type,
-            'interval': self.interval,
+            'is_recurring': self.is_recurring,
             'min_interval': self.min_interval,
             'max_interval': self.max_interval,
             'next_execution_tick': self.next_execution_tick,
@@ -72,16 +72,24 @@ class TaskManager:
 
     def update_tasks(self, game_state):
         current_tick = game_state['tick']
+        tasks_to_remove = []
         for task in self.get_active_tasks():
             if current_tick >= task.next_execution_tick:
                 if self.debug:
                     print(f"Debug: Task '{task.name}' is ready for execution at tick {current_tick}")
-                yield task
+                result, should_remove = task.execute(game_state)
+                if should_remove:
+                    tasks_to_remove.append(task.name)
             else:
                 task.completion_percentage = int((current_tick - task.last_execution_tick) / (task.next_execution_tick - task.last_execution_tick) * 100)
                 if self.debug:
                     print(f"Debug: Task '{task.name}' progress: {task.completion_percentage}%")
         
+        for task_name in tasks_to_remove:
+            self.remove_task(task_name)
+            if self.debug:
+                print(f"Debug: Non-recurring task '{task_name}' removed after execution")
+
     def to_dict(self):
         return {
             'tasks': [task.to_dict() for task in self.tasks]

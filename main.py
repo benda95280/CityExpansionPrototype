@@ -133,10 +133,7 @@ def game_loop(socketio):
         if game_state['tick'] % 20 == 0:
             game_state['current_date'] += timedelta(minutes=5)
 
-        for task in task_manager.update_tasks(game_state):
-            if DEBUG_MODE:
-                print(f"Debug: Processing task '{task.name}' at tick {game_state['tick']}")
-            task.execute(game_state)
+        task_manager.update_tasks(game_state)
 
         update_buildings(game_state, socketio)
         update_city_finances(game_state)
@@ -184,17 +181,21 @@ def handle_console_command_socket(data):
 
 def initialize_tasks():
     new_citizen_task = Task('New citizen',
-                            'recurring',
+                            'random',
+                            True,
                             generate_new_citizen,
-                            interval=config['min_ticks_for_new_citizen'])
+                            min_interval=config['min_ticks_for_new_citizen'],
+                            max_interval=config['max_ticks_for_new_citizen'])
     task_manager.add_task(new_citizen_task)
 
     dummy_task1 = Task('Dummy task 1',
-                       'recurring',
+                       'classic',
+                       True,
                        lambda gs: print("Dummy task 1 executed"),
-                       interval=300)
+                       min_interval=300)
     dummy_task2 = Task('Dummy task 2',
                        'random',
+                       False,
                        lambda gs: print("Dummy task 2 executed"),
                        min_interval=200,
                        max_interval=600)
