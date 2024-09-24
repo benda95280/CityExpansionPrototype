@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 
 class Building:
-    def __init__(self, type, level, x, y, construction_start, construction_end, initial_cost):
+    def __init__(self, type, level, x, y, construction_start, construction_end, spend_cost):
         self.type = type
         self.level = level
         self.x = x
@@ -12,7 +12,7 @@ class Building:
         self.construction_end = construction_end
         self.construction_progress = 0
         self.is_built = False
-        self.total_money_spent = initial_cost
+        self.spend_cost = spend_cost
 
     def update_construction(self, current_date):
         if not self.is_built:
@@ -31,7 +31,7 @@ class Building:
         self.is_built = False
         self.total_accommodations += new_accommodations
         self.accommodations.extend([[] for _ in range(new_accommodations)])
-        self.total_money_spent += upgrade_cost
+        self.spend_cost += upgrade_cost
 
     def add_citizen(self, citizen, max_people_per_accommodation):
         for accommodation in self.accommodations:
@@ -52,7 +52,7 @@ class Building:
             'construction_end': self.construction_end.isoformat(),
             'construction_progress': self.construction_progress,
             'is_built': self.is_built,
-            'total_money_spent': self.total_money_spent
+            'spend_cost': self.spend_cost
         }
 
     @classmethod
@@ -64,7 +64,7 @@ class Building:
             data['y'],
             datetime.fromisoformat(data['construction_start']),
             datetime.fromisoformat(data['construction_end']),
-            data['total_money_spent']
+            data['spend_cost']
         )
         building.accommodations = data['accommodations']
         building.total_accommodations = data['total_accommodations']
