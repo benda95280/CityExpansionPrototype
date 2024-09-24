@@ -1,8 +1,6 @@
 from datetime import datetime
 from tasks import TaskManager
 
-DEBUG_MODE = True
-
 class Commands:
     def __init__(self):
         self.commands = {}
@@ -32,14 +30,12 @@ class Commands:
 commands = Commands()
 
 def debug_on(game_state, task_manager):
-    global DEBUG_MODE
-    DEBUG_MODE = True
+    game_state['debug_mode'] = True
     task_manager.set_debug(True)
     return 'Debug mode enabled'
 
 def debug_off(game_state, task_manager):
-    global DEBUG_MODE
-    DEBUG_MODE = False
+    game_state['debug_mode'] = False
     task_manager.set_debug(False)
     return 'Debug mode disabled'
 

@@ -24,16 +24,17 @@ class Task:
             self.next_execution_tick = current_tick + random_interval
         
         self.completion_percentage = 0
-        print(f"Debug: Task '{self.name}' next execution set to tick {self.next_execution_tick}")
 
     def execute(self, game_state):
         if callable(self.callback):
-            print(f"Debug: Executing task '{self.name}' at tick {game_state['tick']}")
+            if game_state['debug_mode']:
+                print(f"Debug: Executing task '{self.name}' at tick {game_state['tick']}")
             result = self.callback(game_state)
             self.last_execution_tick = game_state['tick']
             self.completion_percentage = 0
             self.update_next_execution(game_state['tick'])
-            print(f"Debug: Task '{self.name}' execution complete. Next execution at tick {self.next_execution_tick}")
+            if game_state['debug_mode']:
+                print(f"Debug: Task '{self.name}' execution complete. Next execution at tick {self.next_execution_tick}")
             return result, not self.is_recurring
         return None, False
 
@@ -51,13 +52,13 @@ class Task:
         }
 
 class TaskManager:
-    def __init__(self):
+    def __init__(self, game_state):
         self.tasks = []
-        self.debug = True
+        self.game_state = game_state
 
     def add_task(self, task):
         self.tasks.append(task)
-        if self.debug:
+        if self.game_state['debug_mode']:
             print(f"Task registered: {task.name}")
 
     def remove_task(self, task_name):
@@ -70,26 +71,26 @@ class TaskManager:
         return [t for t in self.tasks if t.active]
 
     def set_debug(self, debug):
-        self.debug = debug
+        self.game_state['debug_mode'] = debug
 
     def update_tasks(self, game_state):
         current_tick = game_state['tick']
         tasks_to_remove = []
         for task in self.get_active_tasks():
             if current_tick >= task.next_execution_tick:
-                if self.debug:
+                if self.game_state['debug_mode']:
                     print(f"Debug: Task '{task.name}' is ready for execution at tick {current_tick}")
                 result, should_remove = task.execute(game_state)
                 if should_remove:
                     tasks_to_remove.append(task.name)
             else:
                 task.completion_percentage = int((current_tick - task.last_execution_tick) / (task.next_execution_tick - task.last_execution_tick) * 100)
-                if self.debug:
+                if self.game_state['debug_mode']:
                     print(f"Debug: Task '{task.name}' progress: {task.completion_percentage}%")
         
         for task_name in tasks_to_remove:
             self.remove_task(task_name)
-            if self.debug:
+            if self.game_state['debug_mode']:
                 print(f"Debug: Non-recurring task '{task_name}' removed after execution")
 
     def to_dict(self):
