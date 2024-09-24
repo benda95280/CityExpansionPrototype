@@ -13,6 +13,7 @@ class Building:
         self.construction_progress = 0
         self.is_built = False
         self.spend_cost = spend_cost
+        self.expanded_cells = []  # New attribute to track expanded cells
 
     def update_construction(self, current_date):
         if not self.is_built:
@@ -40,6 +41,12 @@ class Building:
                 return True
         return False
 
+    def can_expand(self, expansion_limit):
+        return len(self.expanded_cells) < expansion_limit
+
+    def expand(self, new_cell):
+        self.expanded_cells.append(new_cell)
+
     def to_dict(self):
         return {
             'type': self.type,
@@ -52,7 +59,8 @@ class Building:
             'construction_end': self.construction_end.isoformat(),
             'construction_progress': self.construction_progress,
             'is_built': self.is_built,
-            'spend_cost': self.spend_cost
+            'spend_cost': self.spend_cost,
+            'expanded_cells': self.expanded_cells
         }
 
     @classmethod
@@ -70,4 +78,5 @@ class Building:
         building.total_accommodations = data['total_accommodations']
         building.construction_progress = data['construction_progress']
         building.is_built = data['is_built']
+        building.expanded_cells = data.get('expanded_cells', [])
         return building

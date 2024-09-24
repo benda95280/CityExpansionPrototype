@@ -60,6 +60,28 @@ def handle_upgrade_building(data, game_state, socketio):
             
             socketio.emit('building_upgraded', {'x': x, 'y': y, 'level': next_level})
 
+def handle_expand_building(data, game_state, socketio):
+    x, y = data['x'], data['y']
+    new_x, new_y = data['new_x'], data['new_y']
+    building = game_state['grid'].get(f"{x},{y}")
+    
+    if building and building.is_built:
+        building_type = building.type
+        expansion_limit = buildings_data[building_type]['expansion_limit']
+        
+        if building.can_expand(expansion_limit) and is_adjacent(x, y, new_x, new_y) and is_cell_empty(game_state, new_x, new_y):
+            building.expand((new_x, new_y))
+            game_state['grid'][f"{new_x},{new_y}"] = building
+            socketio.emit('building_expanded', {'x': x, 'y': y, 'new_x': new_x, 'new_y': new_y})
+        else:
+            socketio.emit('expansion_failed', {'message': 'Expansion not possible'})
+
+def is_adjacent(x1, y1, x2, y2):
+    return abs(x1 - x2) + abs(y1 - y2) == 1
+
+def is_cell_empty(game_state, x, y):
+    return f"{x},{y}" not in game_state['grid']
+
 def update_buildings(game_state, socketio):
     current_date = game_state['current_date']
     for coords, building in game_state['grid'].items():

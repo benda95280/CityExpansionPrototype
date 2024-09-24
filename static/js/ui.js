@@ -89,6 +89,19 @@ function updateTasksNotifications() {
     }
 }
 
+function getBuildingEmoji(type) {
+    switch (type) {
+        case 'house':
+            return '🏠';
+        case 'apartment':
+            return '🏢';
+        case 'skyscraper':
+            return '🏙️';
+        default:
+            return '🏗️';
+    }
+}
+
 function showBuildingMenu(x, y, gridX, gridY) {
     const existingMenu = document.querySelector('.context-menu');
     if (existingMenu) {
@@ -112,10 +125,19 @@ function showBuildingMenu(x, y, gridX, gridY) {
         });
         menu.appendChild(upgradeOption);
 
+        if (existingBuilding.expanded_cells.length < buildingData.expansion_limit) {
+            const expandOption = document.createElement('div');
+            expandOption.textContent = '🔄 Expand';
+            expandOption.addEventListener('click', () => {
+                showExpandOptions(gridX, gridY, existingBuilding);
+                document.body.removeChild(menu);
+            });
+            menu.appendChild(expandOption);
+        }
+
         const infoOption = document.createElement('div');
         infoOption.textContent = '📊 Show Info';
         infoOption.addEventListener('click', () => {
-            console.log('Show Info clicked for building at', gridX, gridY);
             showCellPopup(gridX, gridY, existingBuilding);
             document.body.removeChild(menu);
         });
@@ -123,7 +145,7 @@ function showBuildingMenu(x, y, gridX, gridY) {
     } else {
         for (const [type, data] of Object.entries(gameState.buildings_data)) {
             const option = document.createElement('div');
-            option.textContent = `🏗️ ${data.name} ($${data.price})`;
+            option.textContent = `${getBuildingEmoji(type)} ${data.name} ($${data.price})`;
             option.addEventListener('click', () => {
                 placeBuilding(gridX, gridY, type);
                 document.body.removeChild(menu);
@@ -145,10 +167,40 @@ function removeMenu(e) {
     }
 }
 
+function showExpandOptions(x, y, building) {
+    const expandMenu = document.createElement('div');
+    expandMenu.classList.add('context-menu');
+    expandMenu.style.left = `${x * gridSize * gridScale + gridOffsetX}px`;
+    expandMenu.style.top = `${y * gridSize * gridScale + gridOffsetY}px`;
+
+    const directions = [
+        { dx: 0, dy: -1, name: 'North' },
+        { dx: 1, dy: 0, name: 'East' },
+        { dx: 0, dy: 1, name: 'South' },
+        { dx: -1, dy: 0, name: 'West' }
+    ];
+
+    for (const dir of directions) {
+        const newX = x + dir.dx;
+        const newY = y + dir.dy;
+        const option = document.createElement('div');
+        option.textContent = `Expand ${dir.name}`;
+        option.addEventListener('click', () => {
+            expandBuilding(x, y, newX, newY);
+            document.body.removeChild(expandMenu);
+        });
+        expandMenu.appendChild(option);
+    }
+
+    document.body.appendChild(expandMenu);
+    document.addEventListener('click', (e) => {
+        if (!expandMenu.contains(e.target)) {
+            document.body.removeChild(expandMenu);
+        }
+    });
+}
+
 function showCellPopup(x, y, building) {
-    console.log('showCellPopup called with:', x, y, building);
-    
-    // Remove existing popup if any
     const existingPopup = document.querySelector('.cell-popup');
     if (existingPopup) {
         document.body.removeChild(existingPopup);
@@ -158,19 +210,20 @@ function showCellPopup(x, y, building) {
     popup.classList.add('cell-popup');
 
     if (building) {
-        console.log('Building data:', building);
         const buildingData = gameState.buildings_data[building.type];
         const occupiedAccommodations = building.accommodations.flat().length;
         const totalAccommodations = building.total_accommodations;
         
         popup.innerHTML = `
             <button class="close-popup">✖️</button>
-            <h3>🏢 ${buildingData.name}</h3>
+            <h3>${getBuildingEmoji(building.type)} ${buildingData.name}</h3>
             <p>🏆 Level: ${building.level}</p>
             ${building.is_built ? `
                 <p>🏠 Accommodations: ${occupiedAccommodations} / ${totalAccommodations}</p>
                 <p>👥 Population: ${occupiedAccommodations}</p>
                 <p>👨‍👩‍👧‍👦 Max People per Accommodation: ${buildingData.max_people_per_accommodation}</p>
+                <p>💰 Total Money Spent: $${building.spend_cost}</p>
+                <p>🔄 Expanded Cells: ${building.expanded_cells.length} / ${buildingData.expansion_limit}</p>
                 <button id="upgrade-btn">🔧 Upgrade ($${buildingData.upgrade_cost * building.level})</button>
             ` : `
                 <p>🚧 Under Construction</p>
@@ -185,7 +238,6 @@ function showCellPopup(x, y, building) {
             });
         }
     } else {
-        console.log('No building at this location');
         popup.innerHTML = `
             <button class="close-popup">✖️</button>
             <p>🏞️ Empty cell (${x}, ${y})</p>
@@ -193,13 +245,11 @@ function showCellPopup(x, y, building) {
     }
 
     const { gridX, gridY } = getCanvasCoordinates(x, y);
-    popup.style.left = `${gridX + gridSize / 2}px`;
-    popup.style.top = `${gridY + gridSize / 2}px`;
+    popup.style.left = `${gridX + gridSize * gridScale / 2}px`;
+    popup.style.top = `${gridY + gridSize * gridScale / 2}px`;
 
     document.body.appendChild(popup);
-    console.log('Popup appended to document body');
 
-    // Add event listener for close button
     popup.querySelector('.close-popup').addEventListener('click', () => {
         document.body.removeChild(popup);
     });

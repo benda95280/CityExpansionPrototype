@@ -5,7 +5,7 @@ import time
 from datetime import datetime, timedelta
 from tasks import Task, TaskManager
 from commands import Commands, handle_console_command
-from buildings import buildings_data, find_available_building, handle_place_building, handle_upgrade_building, update_buildings, update_city_finances
+from buildings import buildings_data, find_available_building, handle_place_building, handle_upgrade_building, handle_expand_building, update_buildings, update_city_finances
 from citizen import Citizen
 from building import Building
 from notification import Notification, NotificationManager
@@ -60,6 +60,11 @@ def handle_place_building_socket(data):
 @socketio.on('upgrade_building')
 def handle_upgrade_building_socket(data):
     handle_upgrade_building(data, game_state, socketio)
+    emit_game_state()
+
+@socketio.on('expand_building')
+def handle_expand_building_socket(data):
+    handle_expand_building(data, game_state, socketio)
     emit_game_state()
 
 @socketio.on('accept_citizen')
