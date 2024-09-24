@@ -56,7 +56,7 @@ function handleCanvasClick(event) {
     event.preventDefault();
     const { x, y } = getGridCoordinates(event.clientX, event.clientY);
     const building = gameState.grid[`${x},${y}`];
-    showCellPopup(x, y, building);
+    console.log(`Left-click on cell (${x}, ${y}), building: ${building ? building.type : 'empty'}`);
 }
 
 function handleCanvasRightClick(event) {
