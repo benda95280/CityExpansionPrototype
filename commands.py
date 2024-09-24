@@ -13,7 +13,14 @@ class Commands:
         }
 
     def execute_command(self, command, game_state, task_manager):
-        if command == 'help':
+        parts = command.split()
+        if parts[0] == 'debug' and len(parts) > 1 and parts[1] in ['on', 'off']:
+            component = parts[2] if len(parts) > 2 else 'all'
+            if parts[1] == 'on':
+                return debug_on(game_state, task_manager, component)
+            else:
+                return debug_off(game_state, task_manager, component)
+        elif command == 'help':
             return self.get_help_message()
         elif command in self.commands:
             return self.commands[command]['function'](game_state, task_manager)
@@ -29,13 +36,49 @@ class Commands:
 
 commands = Commands()
 
-def debug_on(game_state, task_manager):
-    game_state['debug_mode'] = True
-    return 'Debug mode enabled'
+def debug_on(game_state, task_manager, component='all'):
+    if component == 'all':
+        game_state['debug_mode'] = True
+        game_state['tasks_debug'] = True
+        game_state['buildings_debug'] = True
+        game_state['notifications_debug'] = True
+        return 'Debug mode enabled for all components'
+    elif component == 'main':
+        game_state['debug_mode'] = True
+        return 'Debug mode enabled for main component'
+    elif component == 'tasks':
+        game_state['tasks_debug'] = True
+        return 'Debug mode enabled for tasks component'
+    elif component == 'buildings':
+        game_state['buildings_debug'] = True
+        return 'Debug mode enabled for buildings component'
+    elif component == 'notifications':
+        game_state['notifications_debug'] = True
+        return 'Debug mode enabled for notifications component'
+    else:
+        return f'Unknown component: {component}'
 
-def debug_off(game_state, task_manager):
-    game_state['debug_mode'] = False
-    return 'Debug mode disabled'
+def debug_off(game_state, task_manager, component='all'):
+    if component == 'all':
+        game_state['debug_mode'] = False
+        game_state['tasks_debug'] = False
+        game_state['buildings_debug'] = False
+        game_state['notifications_debug'] = False
+        return 'Debug mode disabled for all components'
+    elif component == 'main':
+        game_state['debug_mode'] = False
+        return 'Debug mode disabled for main component'
+    elif component == 'tasks':
+        game_state['tasks_debug'] = False
+        return 'Debug mode disabled for tasks component'
+    elif component == 'buildings':
+        game_state['buildings_debug'] = False
+        return 'Debug mode disabled for buildings component'
+    elif component == 'notifications':
+        game_state['notifications_debug'] = False
+        return 'Debug mode disabled for notifications component'
+    else:
+        return f'Unknown component: {component}'
 
 def get_tick(game_state, task_manager):
     return f"Current tick: {game_state['tick']}"
@@ -110,8 +153,8 @@ def calculate_age(birthday):
     today = datetime.now()
     return today.year - birthday.year - ((today.month, today.day) < (birthday.month, birthday.day))
 
-commands.register_command('debug on', debug_on, description='Enable debug mode')
-commands.register_command('debug off', debug_off, description='Disable debug mode')
+commands.register_command('debug on', debug_on, options=['[component]'], description='Enable debug mode for a specific component or all components')
+commands.register_command('debug off', debug_off, options=['[component]'], description='Disable debug mode for a specific component or all components')
 commands.register_command('get tick', get_tick, description='Get the current tick count')
 commands.register_command('get tasks', get_tasks, description='Get information about all tasks')
 commands.register_command('get buildings', get_buildings, description='Get information about all buildings')

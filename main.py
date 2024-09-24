@@ -30,6 +30,9 @@ game_state = {
     'current_date': datetime(2024, 1, 1),
     'ticking_speed': 0,
     'debug_mode': False,
+    'tasks_debug': False,
+    'buildings_debug': False,
+    'notifications_debug': False,
     'fast_forward': False,
 }
 
@@ -92,35 +95,35 @@ def handle_dismiss_notification(data):
     index = data['index']
     try:
         game_state['notification_manager'].remove_notification(index)
-        if game_state['debug_mode']:
+        if game_state['notifications_debug']:
             print(f"Debug: Notification at index {index} removed successfully")
     except IndexError:
-        if game_state['debug_mode']:
+        if game_state['notifications_debug']:
             print(f"Debug: Failed to remove notification at index {index}. Index out of range.")
     except Exception as e:
-        if game_state['debug_mode']:
+        if game_state['notifications_debug']:
             print(f"Debug: Error removing notification: {str(e)}")
     emit_game_state()
 
 def generate_new_citizen(game_state):
-    if game_state['debug_mode']:
+    if game_state['tasks_debug']:
         print(f"Attempting to generate new citizen at tick {game_state['tick']}")
 
     total_accommodations = sum(building.total_accommodations for building in game_state['grid'].values())
     if game_state['population'] >= total_accommodations:
-        if game_state['debug_mode']:
+        if game_state['tasks_debug']:
             print("Failed to generate new citizen: No available accommodations")
         return False
 
     if len(game_state['pending_citizens']) >= 5:
-        if game_state['debug_mode']:
+        if game_state['tasks_debug']:
             print("Failed to generate new citizen: Maximum pending citizens reached (5)")
         return False
 
     new_citizen = Citizen.generate_random_citizen()
     game_state['pending_citizens'].append(new_citizen)
     socketio.emit('new_citizen', new_citizen.to_dict())
-    if game_state['debug_mode']:
+    if game_state['tasks_debug']:
         print(f"New citizen generated successfully: {new_citizen.to_dict()}")
     return True
 
@@ -219,7 +222,7 @@ def initialize_tasks():
     task_manager.add_task(dummy_task1)
     task_manager.add_task(dummy_task2)
 
-    if game_state['debug_mode']:
+    if game_state['tasks_debug']:
         print("Debug: Tasks initialized")
         for task in task_manager.get_tasks():
             print(f"Debug: Task '{task.name}' registered with next execution at tick {task.next_execution_tick}")
