@@ -30,6 +30,7 @@ game_state = {
     'current_date': datetime(2024, 1, 1),
     'ticking_speed': 0,
     'debug_mode': False,
+    'fast_forward': False,
 }
 
 task_manager = TaskManager(game_state)
@@ -156,7 +157,8 @@ def game_loop(socketio):
             emit_game_state()
             last_update = current_time
 
-        time.sleep(0.05)
+        sleep_time = 0.01 if game_state['fast_forward'] else 0.05
+        time.sleep(sleep_time)
 
 def update_population_and_accommodations():
     total_population = 0
