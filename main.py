@@ -8,7 +8,7 @@ from commands import Commands, handle_console_command
 from buildings import buildings_data, find_available_building, handle_place_building, handle_upgrade_building, update_buildings, update_city_finances
 from citizen import Citizen
 from building import Building
-from notification import Notification
+from notification import Notification, NotificationManager
 
 DEBUG_MODE = True
 
@@ -20,6 +20,7 @@ with open('config.json', 'r') as f:
     config = json.load(f)
 
 task_manager = TaskManager()
+notification_manager = NotificationManager()
 
 game_state = {
     'grid': {},
@@ -31,14 +32,14 @@ game_state = {
     'pending_citizens': [],
     'start_time': datetime.now(),
     'task_manager': task_manager,
+    'notification_manager': notification_manager,
     'buildings_data': buildings_data,
     'current_date': datetime(2024, 1, 1),
     'ticking_speed': 0,
-    'notifications': [
-        Notification("Welcome to your new city! Start by placing some buildings."),
-        Notification("Tip: Use the right-click menu to place buildings on the grid.")
-    ]
 }
+
+notification_manager.add_notification("Welcome to your new city! Start by placing some buildings.")
+notification_manager.add_notification("Tip: Use the right-click menu to place buildings on the grid.")
 
 @app.route('/')
 def index():
@@ -75,7 +76,7 @@ def handle_accept_citizen(data):
                         'citizen': accepted_citizen.to_dict(),
                         'building': available_building
                     })
-                    game_state['notifications'].append(Notification(f"Citizen {accepted_citizen.first_name} {accepted_citizen.last_name} has been accepted and placed in a {building.type}."))
+                    game_state['notification_manager'].add_notification(f"Citizen {accepted_citizen.first_name} {accepted_citizen.last_name} has been accepted and placed in a {building.type}.")
     emit_game_state()
 
 @socketio.on('deny_citizen')
@@ -83,15 +84,14 @@ def handle_deny_citizen(data):
     citizen_index = data['index']
     if 0 <= citizen_index < len(game_state['pending_citizens']):
         denied_citizen = game_state['pending_citizens'].pop(citizen_index)
-        game_state['notifications'].append(Notification(f"Citizen {denied_citizen.first_name} {denied_citizen.last_name} has been denied entry to the city."))
+        game_state['notification_manager'].add_notification(f"Citizen {denied_citizen.first_name} {denied_citizen.last_name} has been denied entry to the city.")
     emit_game_state()
 
 @socketio.on('dismiss_notification')
 def handle_dismiss_notification(data):
     index = data['index']
-    if 0 <= index < len(game_state['notifications']):
-        game_state['notifications'].pop(index)
-        emit_game_state()
+    game_state['notification_manager'].remove_notification(index)
+    emit_game_state()
 
 def generate_new_citizen(game_state):
     if DEBUG_MODE:
@@ -162,14 +162,14 @@ def update_population_and_accommodations():
     game_state['used_accommodations'] = used_accommodations
 
 def emit_game_state():
-    serializable_game_state = {key: value for key, value in game_state.items() if key != 'task_manager'}
+    serializable_game_state = {key: value for key, value in game_state.items() if key not in ['task_manager', 'notification_manager']}
     serializable_game_state['tasks'] = game_state['task_manager'].to_dict()
+    serializable_game_state['notifications'] = game_state['notification_manager'].to_dict()
     serializable_game_state['pending_citizens'] = [citizen.to_dict() for citizen in game_state['pending_citizens']]
     serializable_game_state['current_date'] = game_state['current_date'].isoformat() if isinstance(game_state['current_date'], datetime) else game_state['current_date']
     serializable_game_state['start_time'] = game_state['start_time'].isoformat() if isinstance(game_state['start_time'], datetime) else game_state['start_time']
     serializable_game_state['buildings_data'] = buildings_data
     serializable_game_state['grid'] = {coords: building.to_dict() for coords, building in game_state['grid'].items()}
-    serializable_game_state['notifications'] = [notification.to_dict() for notification in game_state['notifications']]
 
     print("Debug: Tasks being sent to frontend:")
     for task in game_state['task_manager'].get_tasks():
