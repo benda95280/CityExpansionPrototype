@@ -8,7 +8,7 @@ function initWebSocket() {
     });
     
     socket.on('game_state', (newState) => {
-        console.log('Received game state update:', newState);
+        //console.log('Received game state update:', newState);
         gameState = newState;
         updateUI();
     });
