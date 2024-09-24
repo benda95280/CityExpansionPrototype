@@ -41,15 +41,27 @@ def get_tick(game_state, task_manager):
     return f"Current tick: {game_state['tick']}"
 
 def get_tasks(game_state, task_manager):
+    print("Debug: Entering get_tasks function")
     current_tick = game_state['tick']
-    tasks_info = [
-        f"{t.name}: task_type={t.task_type}, interval={t.interval}, "
-        f"min_interval={t.min_interval}, max_interval={t.max_interval}, "
-        f"next_execution_tick={t.next_execution_tick}, active={t.active}, "
-        f"completion_percentage={t.completion_percentage}%, "
-        f"ticks_until_execution={t.next_execution_tick - current_tick if t.next_execution_tick else 'N/A'}"
-        for t in task_manager.get_tasks()
-    ]
+    tasks = task_manager.get_tasks()
+    print(f"Debug: Number of tasks: {len(tasks)}")
+    
+    if not tasks:
+        return "No tasks found."
+    
+    tasks_info = []
+    for t in tasks:
+        task_info = (
+            f"{t.name}: task_type={t.task_type}, "
+            f"is_recurring={t.is_recurring}, "
+            f"min_interval={t.min_interval}, max_interval={t.max_interval}, "
+            f"next_execution_tick={t.next_execution_tick}, active={t.active}, "
+            f"completion_percentage={t.completion_percentage}%, "
+            f"ticks_until_execution={t.next_execution_tick - current_tick if t.next_execution_tick else 'N/A'}"
+        )
+        tasks_info.append(task_info)
+        print(f"Debug: Task info: {task_info}")
+    
     return "Tasks:\n" + "\n".join(tasks_info)
 
 commands.register_command('debug on', debug_on, description='Enable debug mode')
