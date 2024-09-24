@@ -63,31 +63,11 @@ def update_buildings(game_state, socketio):
     for coords, building in game_state['grid'].items():
         building.update_construction(current_date)
         
-        if building.is_built:
-            maintenance_cost = buildings_data[building.type]['maintenance_cost']
-            game_state['money'] -= building.apply_maintenance(current_date, maintenance_cost)
-        
         if building.construction_progress == 1 and not building.is_built:
             building.is_built = True
             x, y = map(int, coords.split(','))
             socketio.emit('building_completed', {'x': x, 'y': y})
 
-def calculate_city_income(game_state):
-    total_income = 0
-    for building in game_state['grid'].values():
-        if building.is_built:
-            building_type = building.type
-            building_level = building.level
-            income_per_citizen = buildings_data[building_type]['income_per_citizen']
-            total_citizens = sum(len(acc) for acc in building.accommodations)
-            
-            # Calculate happiness factor (simplified version)
-            happiness_factor = min(1.0, total_citizens / (building.total_accommodations * buildings_data[building_type]['max_people_per_accommodation']))
-            
-            building_income = total_citizens * income_per_citizen * building_level * happiness_factor
-            total_income += building_income
-    return total_income
-
 def update_city_finances(game_state):
-    hourly_income = calculate_city_income(game_state)
-    game_state['money'] += hourly_income
+    # This function is now empty as we've removed income calculations
+    pass

@@ -11,7 +11,6 @@ class Building:
         self.construction_start = construction_start
         self.construction_end = construction_end
         self.construction_progress = 0
-        self.last_maintenance = construction_start
         self.is_built = False
 
     def update_construction(self, current_date):
@@ -22,14 +21,6 @@ class Building:
             
             if self.construction_progress == 1:
                 self.is_built = True
-
-    def apply_maintenance(self, current_date, maintenance_cost):
-        days_since_maintenance = (current_date - self.last_maintenance).days
-        if days_since_maintenance >= 1:
-            total_cost = maintenance_cost * self.level * days_since_maintenance
-            self.last_maintenance = current_date
-            return total_cost
-        return 0
 
     def upgrade(self, upgrade_time, new_accommodations):
         self.level += 1
@@ -58,7 +49,6 @@ class Building:
             'construction_start': self.construction_start.isoformat(),
             'construction_end': self.construction_end.isoformat(),
             'construction_progress': self.construction_progress,
-            'last_maintenance': self.last_maintenance.isoformat(),
             'is_built': self.is_built
         }
 
@@ -75,6 +65,5 @@ class Building:
         building.accommodations = data['accommodations']
         building.total_accommodations = data['total_accommodations']
         building.construction_progress = data['construction_progress']
-        building.last_maintenance = datetime.fromisoformat(data['last_maintenance'])
         building.is_built = data['is_built']
         return building
