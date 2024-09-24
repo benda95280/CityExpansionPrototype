@@ -130,10 +130,11 @@ function showBuildingMenu(x, y, gridX, gridY) {
         });
         menu.appendChild(upgradeOption);
 
-        if (existingBuilding && buildingData && existingBuilding.expanded_cells && buildingData.expansion_limit) {
-            if (existingBuilding.expanded_cells.length < buildingData.expansion_limit) {
+        if (existingBuilding.is_built && buildingData.expandable) {
+            const currentExpansions = existingBuilding.expanded_cells ? existingBuilding.expanded_cells.length : 0;
+            if (currentExpansions < buildingData.expansion_limit) {
                 const expandOption = document.createElement('div');
-                expandOption.textContent = '🔄 Expand';
+                expandOption.textContent = `🔄 Expand (${currentExpansions}/${buildingData.expansion_limit})`;
                 expandOption.addEventListener('click', () => {
                     showExpandOptions(gridX, gridY, existingBuilding);
                     document.body.removeChild(menu);
