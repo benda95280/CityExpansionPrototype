@@ -200,7 +200,7 @@ function showExpandOptions(x, y, building) {
         const newY = y + dir.dy;
         if (isValidExpansionCell(newX, newY)) {
             console.log('Valid expansion cell found at', newX, newY);
-            highlightCell(newX, newY, 'rgba(0, 255, 0, 0.3)');
+            highlightCell(newX, newY, 'rgba(0, 255, 0, 0.5)');
         }
     }
 
@@ -238,6 +238,12 @@ function showExpandOptions(x, y, building) {
         const { gridX, gridY } = getCanvasCoordinates(x, y);
         ctx.fillStyle = color;
         ctx.fillRect(gridX, gridY, gridSize * gridScale, gridSize * gridScale);
+        
+        ctx.strokeStyle = 'white';
+        ctx.lineWidth = 2 * gridScale;
+        ctx.strokeRect(gridX, gridY, gridSize * gridScale, gridSize * gridScale);
+        
+        console.log(`Highlighted cell at (${x}, ${y}) with color ${color}`);
     }
 }
 
