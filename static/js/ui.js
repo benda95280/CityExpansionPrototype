@@ -204,6 +204,22 @@ function showExpandOptions(x, y, building) {
         }
     }
 
+    canvas.addEventListener('mousemove', handleExpansionHover);
+
+    function handleExpansionHover(e) {
+        const { x: hoverX, y: hoverY } = getGridCoordinates(e.clientX, e.clientY);
+        console.log('Hover detected at', hoverX, hoverY);
+        for (const dir of directions) {
+            const newX = x + dir.dx;
+            const newY = y + dir.dy;
+            if (hoverX === newX && hoverY === newY && isValidExpansionCell(newX, newY)) {
+                highlightCell(newX, newY, 'rgba(255, 255, 0, 0.5)');
+            } else if (isValidExpansionCell(newX, newY)) {
+                highlightCell(newX, newY, 'rgba(0, 255, 0, 0.5)');
+            }
+        }
+    }
+
     function handleExpansionClick(e) {
         const { x: clickX, y: clickY } = getGridCoordinates(e.clientX, e.clientY);
         console.log('Expansion click detected at', clickX, clickY);
@@ -223,6 +239,7 @@ function showExpandOptions(x, y, building) {
     function removeExpandOptions() {
         console.log('Removing expand options');
         canvas.removeEventListener('click', handleExpansionClick);
+        canvas.removeEventListener('mousemove', handleExpansionHover);
         document.body.removeChild(overlay);
         drawGame();
     }
