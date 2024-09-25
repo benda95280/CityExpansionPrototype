@@ -136,6 +136,7 @@ function showBuildingMenu(x, y, gridX, gridY) {
                 const expandOption = document.createElement('div');
                 expandOption.textContent = `🔄 Expand (${currentExpansions}/${buildingData.expansion_limit})`;
                 expandOption.addEventListener('click', () => {
+                    console.log('Expand option clicked for building at', gridX, gridY);
                     showExpandOptions(gridX, gridY, existingBuilding);
                     document.body.removeChild(menu);
                 });
@@ -176,6 +177,7 @@ function removeMenu(e) {
 }
 
 function showExpandOptions(x, y, building) {
+    console.log('showExpandOptions called for building at', x, y);
     const directions = [
         { dx: 0, dy: -1, name: 'North' },
         { dx: 1, dy: 0, name: 'East' },
@@ -187,6 +189,7 @@ function showExpandOptions(x, y, building) {
         const newX = x + dir.dx;
         const newY = y + dir.dy;
         if (isValidExpansionCell(newX, newY)) {
+            console.log('Valid expansion cell found at', newX, newY);
             highlightCell(newX, newY, 'rgba(0, 255, 0, 0.3)');
         }
     }
@@ -195,10 +198,12 @@ function showExpandOptions(x, y, building) {
 
     function handleExpansionClick(e) {
         const { x: clickX, y: clickY } = getGridCoordinates(e.clientX, e.clientY);
+        console.log('Expansion click detected at', clickX, clickY);
         for (const dir of directions) {
             const newX = x + dir.dx;
             const newY = y + dir.dy;
             if (clickX === newX && clickY === newY && isValidExpansionCell(newX, newY)) {
+                console.log('Valid expansion clicked at', newX, newY);
                 expandBuilding(x, y, newX, newY);
                 removeExpandOptions();
                 return;
@@ -208,6 +213,7 @@ function showExpandOptions(x, y, building) {
     }
 
     function removeExpandOptions() {
+        console.log('Removing expand options');
         canvas.removeEventListener('click', handleExpansionClick);
         drawGame();
     }
