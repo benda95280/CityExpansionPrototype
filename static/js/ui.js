@@ -185,14 +185,8 @@ function showExpandOptions(x, y, building) {
         { dx: -1, dy: 0, name: 'West' }
     ];
 
-    for (const dir of directions) {
-        const newX = x + dir.dx;
-        const newY = y + dir.dy;
-        if (isValidExpansionCell(newX, newY)) {
-            console.log('Valid expansion cell found at', newX, newY);
-            highlightCell(newX, newY, 'rgba(0, 255, 0, 0.5)');
-        }
-    }
+    const originalGridState = JSON.parse(JSON.stringify(gameState.grid));
+    let highlightedCells = [];
 
     const overlay = document.createElement('div');
     overlay.style.position = 'fixed';
@@ -204,52 +198,63 @@ function showExpandOptions(x, y, building) {
     overlay.style.zIndex = '1000';
     document.body.appendChild(overlay);
 
-    canvas.addEventListener('mousemove', handleExpansionHover);
-
-    function handleExpansionHover(e) {
-        const { x: hoverX, y: hoverY } = getGridCoordinates(e.clientX, e.clientY);
-        console.log('Hover detected at', hoverX, hoverY);
-        for (const dir of directions) {
-            const newX = x + dir.dx;
-            const newY = y + dir.dy;
-            if (hoverX === newX && hoverY === newY && isValidExpansionCell(newX, newY)) {
-                highlightCell(newX, newY, 'rgba(255, 255, 0, 0.5)');
-            } else if (isValidExpansionCell(newX, newY)) {
-                highlightCell(newX, newY, 'rgba(0, 255, 0, 0.5)');
+    function handleCanvasEvents(e) {
+        const { x: eventX, y: eventY } = getGridCoordinates(e.clientX, e.clientY);
+        
+        if (e.type === 'mousemove') {
+            highlightedCells = [];
+            for (const dir of directions) {
+                const newX = x + dir.dx;
+                const newY = y + dir.dy;
+                if (isValidExpansionCell(newX, newY)) {
+                    const color = (eventX === newX && eventY === newY) ? 'rgba(255, 255, 0, 0.5)' : 'rgba(0, 255, 0, 0.5)';
+                    highlightedCells.push({ x: newX, y: newY, color });
+                }
             }
+            requestAnimationFrame(redrawCanvas);
+        } else if (e.type === 'click') {
+            for (const dir of directions) {
+                const newX = x + dir.dx;
+                const newY = y + dir.dy;
+                if (eventX === newX && eventY === newY && isValidExpansionCell(newX, newY)) {
+                    console.log('Valid expansion clicked at', newX, newY);
+                    expandBuilding(x, y, newX, newY);
+                    removeExpandOptions();
+                    return;
+                }
+            }
+            removeExpandOptions();
         }
     }
 
-    function handleExpansionClick(e) {
-        const { x: clickX, y: clickY } = getGridCoordinates(e.clientX, e.clientY);
-        console.log('Expansion click detected at', clickX, clickY);
-        for (const dir of directions) {
-            const newX = x + dir.dx;
-            const newY = y + dir.dy;
-            if (clickX === newX && clickY === newY && isValidExpansionCell(newX, newY)) {
-                console.log('Valid expansion clicked at', newX, newY);
-                expandBuilding(x, y, newX, newY);
-                removeExpandOptions();
-                return;
-            }
+    function redrawCanvas() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        drawGrid();
+        drawBuildings();
+        
+        for (const cell of highlightedCells) {
+            highlightCell(cell.x, cell.y, cell.color);
         }
-        removeExpandOptions();
     }
 
     function removeExpandOptions() {
         console.log('Removing expand options');
-        canvas.removeEventListener('click', handleExpansionClick);
-        canvas.removeEventListener('mousemove', handleExpansionHover);
+        canvas.removeEventListener('mousemove', handleCanvasEvents);
+        canvas.removeEventListener('click', handleCanvasEvents);
         document.body.removeChild(overlay);
-        drawGame();
+        gameState.grid = originalGridState;
+        requestAnimationFrame(drawGame);
     }
 
-    canvas.addEventListener('click', handleExpansionClick);
+    canvas.addEventListener('mousemove', handleCanvasEvents);
+    canvas.addEventListener('click', handleCanvasEvents);
     overlay.addEventListener('click', removeExpandOptions);
 
     function isValidExpansionCell(x, y) {
         return !gameState.grid[`${x},${y}`];
     }
+
+    requestAnimationFrame(redrawCanvas);
 }
 
 function highlightCell(x, y, color) {
@@ -260,8 +265,6 @@ function highlightCell(x, y, color) {
     ctx.strokeStyle = 'white';
     ctx.lineWidth = 2 * gridScale;
     ctx.strokeRect(gridX, gridY, gridSize * gridScale, gridSize * gridScale);
-    
-    console.log(`Highlighted cell at (${x}, ${y}) with color ${color}`);
 }
 
 function showCellPopup(x, y, building) {
