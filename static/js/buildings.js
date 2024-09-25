@@ -25,11 +25,9 @@ function drawBuilding(x, y, building) {
     ctx.textBaseline = 'middle';
     ctx.fillText(getBuildingEmoji(building.type), gridX + gridSize * gridScale / 2, gridY + gridSize * gridScale / 2);
     
-    // Draw level indicator
     ctx.font = `${10 * gridScale}px Arial`;
     ctx.fillText(`${building.level}`, gridX + gridSize * gridScale - 10, gridY + gridSize * gridScale - 10);
 
-    // Draw expanded cells
     if (building.expanded_cells) {
         for (const [expX, expY] of building.expanded_cells) {
             const { gridX: expGridX, gridY: expGridY } = getCanvasCoordinates(expX, expY);
@@ -78,7 +76,19 @@ function upgradeBuilding(x, y) {
 }
 
 function expandBuilding(x, y, newX, newY) {
-    socket.emit('expand_building', { x, y, new_x: newX, new_y: newY });
+    if (isValidExpansionCell(newX, newY) && isAdjacentCell(x, y, newX, newY)) {
+        socket.emit('expand_building', { x, y, new_x: newX, new_y: newY });
+    } else {
+        console.log('Invalid expansion: cell is not empty or not adjacent');
+    }
+}
+
+function isValidExpansionCell(x, y) {
+    return !gameState.grid[`${x},${y}`];
+}
+
+function isAdjacentCell(x1, y1, x2, y2) {
+    return Math.abs(x1 - x2) + Math.abs(y1 - y2) === 1;
 }
 
 function initBuildingSocketListeners(socket) {

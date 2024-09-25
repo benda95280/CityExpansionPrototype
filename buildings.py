@@ -69,12 +69,27 @@ def handle_expand_building(data, game_state, socketio):
         building_type = building.type
         expansion_limit = buildings_data[building_type]['expansion_limit']
         
-        if building.can_expand(expansion_limit) and is_adjacent(x, y, new_x, new_y) and is_cell_empty(game_state, new_x, new_y):
+        if (building.can_expand(expansion_limit) and
+            is_adjacent(x, y, new_x, new_y) and
+            is_cell_empty(game_state, new_x, new_y)):
+            
             building.expand((new_x, new_y))
             game_state['grid'][f"{new_x},{new_y}"] = building
             socketio.emit('building_expanded', {'x': x, 'y': y, 'new_x': new_x, 'new_y': new_y})
         else:
-            socketio.emit('expansion_failed', {'message': 'Expansion not possible'})
+            reason = get_expansion_failure_reason(building, expansion_limit, x, y, new_x, new_y, game_state)
+            socketio.emit('expansion_failed', {'message': f'Expansion not possible: {reason}'})
+    else:
+        socketio.emit('expansion_failed', {'message': 'Invalid building or not fully constructed'})
+
+def get_expansion_failure_reason(building, expansion_limit, x, y, new_x, new_y, game_state):
+    if not building.can_expand(expansion_limit):
+        return 'Expansion limit reached'
+    if not is_adjacent(x, y, new_x, new_y):
+        return 'New cell is not adjacent'
+    if not is_cell_empty(game_state, new_x, new_y):
+        return 'Target cell is not empty'
+    return 'Unknown reason'
 
 def is_adjacent(x1, y1, x2, y2):
     return abs(x1 - x2) + abs(y1 - y2) == 1
@@ -93,5 +108,4 @@ def update_buildings(game_state, socketio):
             socketio.emit('building_completed', {'x': x, 'y': y})
 
 def update_city_finances(game_state):
-    # This function is now empty as we've removed income calculations
     pass

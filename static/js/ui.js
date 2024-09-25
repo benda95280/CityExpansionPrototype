@@ -44,7 +44,7 @@ function updateTasksNotifications() {
 
     if (gameState.tasks && gameState.tasks.tasks) {
         gameState.tasks.tasks.forEach(task => {
-            if (!task.hidden) {  // Only display non-hidden tasks
+            if (!task.hidden) {
                 const li = document.createElement('li');
                 const taskName = document.createElement('span');
                 taskName.textContent = task.name;
@@ -176,11 +176,6 @@ function removeMenu(e) {
 }
 
 function showExpandOptions(x, y, building) {
-    const expandMenu = document.createElement('div');
-    expandMenu.classList.add('context-menu');
-    expandMenu.style.left = `${x * gridSize * gridScale + gridOffsetX}px`;
-    expandMenu.style.top = `${y * gridSize * gridScale + gridOffsetY}px`;
-
     const directions = [
         { dx: 0, dy: -1, name: 'North' },
         { dx: 1, dy: 0, name: 'East' },
@@ -191,25 +186,51 @@ function showExpandOptions(x, y, building) {
     for (const dir of directions) {
         const newX = x + dir.dx;
         const newY = y + dir.dy;
-        const option = document.createElement('div');
-        option.textContent = `Expand ${dir.name}`;
-        option.addEventListener('click', () => {
-            expandBuilding(x, y, newX, newY);
-            document.body.removeChild(expandMenu);
-        });
-        expandMenu.appendChild(option);
+        if (isValidExpansionCell(newX, newY)) {
+            highlightCell(newX, newY, 'rgba(0, 255, 0, 0.3)');
+        }
     }
 
-    document.body.appendChild(expandMenu);
-    document.addEventListener('click', (e) => {
-        if (!expandMenu.contains(e.target)) {
-            document.body.removeChild(expandMenu);
+    canvas.addEventListener('click', handleExpansionClick);
+
+    function handleExpansionClick(e) {
+        const { x: clickX, y: clickY } = getGridCoordinates(e.clientX, e.clientY);
+        for (const dir of directions) {
+            const newX = x + dir.dx;
+            const newY = y + dir.dy;
+            if (clickX === newX && clickY === newY && isValidExpansionCell(newX, newY)) {
+                expandBuilding(x, y, newX, newY);
+                removeExpandOptions();
+                return;
+            }
         }
-    });
+        removeExpandOptions();
+    }
+
+    function removeExpandOptions() {
+        canvas.removeEventListener('click', handleExpansionClick);
+        drawGame();
+    }
+
+    function isValidExpansionCell(x, y) {
+        return !gameState.grid[`${x},${y}`];
+    }
+
+    function highlightCell(x, y, color) {
+        const { gridX, gridY } = getCanvasCoordinates(x, y);
+        ctx.fillStyle = color;
+        ctx.fillRect(gridX, gridY, gridSize * gridScale, gridSize * gridScale);
+    }
+
+    document.addEventListener('click', (e) => {
+        if (e.target !== canvas) {
+            removeExpandOptions();
+        }
+    }, { once: true });
 }
 
 function showCellPopup(x, y, building) {
-    console.log('showCellPopup called with:', x, y, building);  // Debug log
+    console.log('showCellPopup called with:', x, y, building);
     
     const existingPopup = document.querySelector('.cell-popup');
     if (existingPopup) {
@@ -220,7 +241,7 @@ function showCellPopup(x, y, building) {
     popup.classList.add('cell-popup');
 
     if (building) {
-        console.log('Building data:', building);  // Debug log
+        console.log('Building data:', building);
         const buildingData = gameState.buildings_data[building.type];
         if (!buildingData) {
             console.error('Building data not found for type:', building.type);
