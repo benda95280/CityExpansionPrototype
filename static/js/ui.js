@@ -185,6 +185,15 @@ function showExpandOptions(x, y, building) {
         { dx: -1, dy: 0, name: 'West' }
     ];
 
+    for (const dir of directions) {
+        const newX = x + dir.dx;
+        const newY = y + dir.dy;
+        if (isValidExpansionCell(newX, newY)) {
+            console.log('Valid expansion cell found at', newX, newY);
+            highlightCell(newX, newY, 'rgba(0, 255, 0, 0.5)');
+        }
+    }
+
     const overlay = document.createElement('div');
     overlay.style.position = 'fixed';
     overlay.style.top = '0';
@@ -194,15 +203,6 @@ function showExpandOptions(x, y, building) {
     overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.1)';
     overlay.style.zIndex = '1000';
     document.body.appendChild(overlay);
-
-    for (const dir of directions) {
-        const newX = x + dir.dx;
-        const newY = y + dir.dy;
-        if (isValidExpansionCell(newX, newY)) {
-            console.log('Valid expansion cell found at', newX, newY);
-            highlightCell(newX, newY, 'rgba(0, 255, 0, 0.5)');
-        }
-    }
 
     canvas.addEventListener('mousemove', handleExpansionHover);
 
@@ -250,18 +250,18 @@ function showExpandOptions(x, y, building) {
     function isValidExpansionCell(x, y) {
         return !gameState.grid[`${x},${y}`];
     }
+}
 
-    function highlightCell(x, y, color) {
-        const { gridX, gridY } = getCanvasCoordinates(x, y);
-        ctx.fillStyle = color;
-        ctx.fillRect(gridX, gridY, gridSize * gridScale, gridSize * gridScale);
-        
-        ctx.strokeStyle = 'white';
-        ctx.lineWidth = 2 * gridScale;
-        ctx.strokeRect(gridX, gridY, gridSize * gridScale, gridSize * gridScale);
-        
-        console.log(`Highlighted cell at (${x}, ${y}) with color ${color}`);
-    }
+function highlightCell(x, y, color) {
+    const { gridX, gridY } = getCanvasCoordinates(x, y);
+    ctx.fillStyle = color;
+    ctx.fillRect(gridX, gridY, gridSize * gridScale, gridSize * gridScale);
+    
+    ctx.strokeStyle = 'white';
+    ctx.lineWidth = 2 * gridScale;
+    ctx.strokeRect(gridX, gridY, gridSize * gridScale, gridSize * gridScale);
+    
+    console.log(`Highlighted cell at (${x}, ${y}) with color ${color}`);
 }
 
 function showCellPopup(x, y, building) {
