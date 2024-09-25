@@ -185,6 +185,16 @@ function showExpandOptions(x, y, building) {
         { dx: -1, dy: 0, name: 'West' }
     ];
 
+    const overlay = document.createElement('div');
+    overlay.style.position = 'fixed';
+    overlay.style.top = '0';
+    overlay.style.left = '0';
+    overlay.style.width = '100%';
+    overlay.style.height = '100%';
+    overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.1)';
+    overlay.style.zIndex = '1000';
+    document.body.appendChild(overlay);
+
     for (const dir of directions) {
         const newX = x + dir.dx;
         const newY = y + dir.dy;
@@ -193,8 +203,6 @@ function showExpandOptions(x, y, building) {
             highlightCell(newX, newY, 'rgba(0, 255, 0, 0.3)');
         }
     }
-
-    canvas.addEventListener('click', handleExpansionClick);
 
     function handleExpansionClick(e) {
         const { x: clickX, y: clickY } = getGridCoordinates(e.clientX, e.clientY);
@@ -215,8 +223,12 @@ function showExpandOptions(x, y, building) {
     function removeExpandOptions() {
         console.log('Removing expand options');
         canvas.removeEventListener('click', handleExpansionClick);
+        document.body.removeChild(overlay);
         drawGame();
     }
+
+    canvas.addEventListener('click', handleExpansionClick);
+    overlay.addEventListener('click', removeExpandOptions);
 
     function isValidExpansionCell(x, y) {
         return !gameState.grid[`${x},${y}`];
@@ -227,12 +239,6 @@ function showExpandOptions(x, y, building) {
         ctx.fillStyle = color;
         ctx.fillRect(gridX, gridY, gridSize * gridScale, gridSize * gridScale);
     }
-
-    document.addEventListener('click', (e) => {
-        if (e.target !== canvas) {
-            removeExpandOptions();
-        }
-    }, { once: true });
 }
 
 function showCellPopup(x, y, building) {
