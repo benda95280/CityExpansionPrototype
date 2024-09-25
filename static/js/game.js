@@ -8,18 +8,36 @@ let gameState = {
 let selectedBuilding = null;
 let hoveredCell = null;
 let initialMapPosition = { x: 0, y: 0 };
+let isDirty = true;
+let animationFrameId = null;
+
+let fpsCounter = 0;
+let lastFpsUpdate = 0;
+let currentFps = 0;
 
 function resizeCanvas() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
+    isDirty = true;
 }
 
-function drawGame() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    drawGrid();
-    drawBuildings();
-    drawHoveredCell();
-    requestAnimationFrame(drawGame);
+function drawGame(timestamp) {
+    fpsCounter++;
+    if (timestamp - lastFpsUpdate >= 1000) {
+        currentFps = fpsCounter;
+        fpsCounter = 0;
+        lastFpsUpdate = timestamp;
+        document.getElementById('fps-counter').textContent = `FPS: ${currentFps}`;
+    }
+
+    if (isDirty) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        drawGrid();
+        drawBuildings();
+        drawHoveredCell();
+        isDirty = false;
+    }
+    animationFrameId = requestAnimationFrame(drawGame);
 }
 
 function initGame() {
@@ -47,6 +65,17 @@ function initGame() {
     
     initWebSocket();
     
+    const fpsCounter = document.createElement('div');
+    fpsCounter.id = 'fps-counter';
+    fpsCounter.style.position = 'fixed';
+    fpsCounter.style.top = '10px';
+    fpsCounter.style.left = '10px';
+    fpsCounter.style.color = 'white';
+    fpsCounter.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+    fpsCounter.style.padding = '5px';
+    fpsCounter.style.borderRadius = '5px';
+    document.body.appendChild(fpsCounter);
+
     drawGame();
     
     initDebugConsole();
@@ -61,9 +90,9 @@ function handleCanvasClick(event) {
 
 function handleCanvasRightClick(event) {
     event.preventDefault();
-    console.log("Right-click event triggered"); // Debug log
+    console.log("Right-click event triggered");
     const { x, y } = getGridCoordinates(event.clientX, event.clientY);
-    console.log(`Grid coordinates: (${x}, ${y})`); // Debug log
+    console.log(`Grid coordinates: (${x}, ${y})`);
     showBuildingMenu(event.clientX, event.clientY, x, y);
 }
 
@@ -76,6 +105,7 @@ function handleCanvasMouseMove(event) {
         Math.abs(y) > Math.abs(hoveredCell.y) - edgeThreshold) {
         generateNewCells(x, y);
     }
+    isDirty = true;
 }
 
 function drawHoveredCell() {
@@ -96,6 +126,7 @@ function handleCanvasWheel(event) {
 function centerMap() {
     gridOffsetX = initialMapPosition.x;
     gridOffsetY = initialMapPosition.y;
+    isDirty = true;
 }
 
 function handleKeyDown(event) {
@@ -114,6 +145,27 @@ function handleKeyDown(event) {
             gridOffsetX -= moveStep;
             break;
     }
+    isDirty = true;
 }
 
+function stressTest(buildingCount) {
+    for (let i = 0; i < buildingCount; i++) {
+        const x = Math.floor(Math.random() * 100) - 50;
+        const y = Math.floor(Math.random() * 100) - 50;
+        const buildingType = ['house', 'apartment', 'skyscraper'][Math.floor(Math.random() * 3)];
+        placeBuilding(x, y, buildingType);
+    }
+    isDirty = true;
+}
+
+window.runStressTest = function(count) {
+    stressTest(count);
+};
+
 window.addEventListener('load', initGame);
+
+function cleanUp() {
+    if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+    }
+}
