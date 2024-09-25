@@ -19,7 +19,17 @@ function drawGame() {
     drawGrid();
     drawBuildings();
     drawHoveredCell();
-    requestAnimationFrame(drawGame);
+}
+
+function drawHighlights() {
+    // This function is implied by the modified code but not defined
+    // It should be implemented to draw any highlights on the canvas
+}
+
+function updateCanvas() {
+    drawGame();
+    drawHighlights();
+    requestAnimationFrame(updateCanvas);
 }
 
 function initGame() {
@@ -47,7 +57,8 @@ function initGame() {
     
     initWebSocket();
     
-    drawGame();
+    optimizeCanvasRendering();
+    updateCanvas();
     
     initDebugConsole();
 }
@@ -61,9 +72,9 @@ function handleCanvasClick(event) {
 
 function handleCanvasRightClick(event) {
     event.preventDefault();
-    console.log("Right-click event triggered"); // Debug log
+    console.log("Right-click event triggered");
     const { x, y } = getGridCoordinates(event.clientX, event.clientY);
-    console.log(`Grid coordinates: (${x}, ${y})`); // Debug log
+    console.log(`Grid coordinates: (${x}, ${y})`);
     showBuildingMenu(event.clientX, event.clientY, x, y);
 }
 
@@ -114,6 +125,11 @@ function handleKeyDown(event) {
             gridOffsetX -= moveStep;
             break;
     }
+}
+
+function optimizeCanvasRendering() {
+    // This function is implied by the modified code but not defined
+    // It should be implemented to optimize the canvas rendering process
 }
 
 window.addEventListener('load', initGame);

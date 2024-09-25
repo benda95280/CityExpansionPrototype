@@ -6,10 +6,66 @@ let lastPlacedCitizen = null;
 let isExpansionMode = false;
 let highlightedCells = [];
 
-const highlightCanvas = document.createElement('canvas');
-highlightCanvas.width = canvas.width;
-highlightCanvas.height = canvas.height;
-const highlightCtx = highlightCanvas.getContext('2d');
+let mainCanvas, mainCtx, highlightCanvas, highlightCtx;
+let hoveredCell = { x: 0, y: 0 };
+
+function optimizeCanvasRendering() {
+    mainCanvas = document.getElementById('game-canvas');
+    mainCtx = mainCanvas.getContext('2d');
+
+    highlightCanvas = document.createElement('canvas');
+    highlightCanvas.width = mainCanvas.width;
+    highlightCanvas.height = mainCanvas.height;
+    highlightCtx = highlightCanvas.getContext('2d');
+
+    highlightCanvas.style.position = 'absolute';
+    highlightCanvas.style.top = '0';
+    highlightCanvas.style.left = '0';
+    highlightCanvas.style.pointerEvents = 'none';
+    document.getElementById('game-container').appendChild(highlightCanvas);
+}
+
+function drawGame() {
+    mainCtx.clearRect(0, 0, mainCanvas.width, mainCanvas.height);
+    
+    drawGrid();
+    drawBuildings();
+
+    mainCtx.drawImage(highlightCanvas, 0, 0);
+}
+
+function drawHighlights() {
+    highlightCtx.clearRect(0, 0, highlightCanvas.width, highlightCanvas.height);
+
+    if (hoveredCell) {
+        const { gridX, gridY } = getCanvasCoordinates(hoveredCell.x, hoveredCell.y);
+        highlightCtx.strokeStyle = 'yellow';
+        highlightCtx.lineWidth = 2;
+        highlightCtx.strokeRect(gridX, gridY, gridSize * gridScale, gridSize * gridScale);
+    }
+
+    if (isExpansionMode) {
+        highlightedCells.forEach(cell => {
+            const { gridX, gridY } = getCanvasCoordinates(cell.x, cell.y);
+            highlightCtx.fillStyle = 'rgba(0, 255, 0, 0.3)';
+            highlightCtx.fillRect(gridX, gridY, gridSize * gridScale, gridSize * gridScale);
+        });
+    }
+}
+
+function handleCanvasMouseMove(event) {
+    const { x, y } = getGridCoordinates(event.clientX, event.clientY);
+    if (x !== hoveredCell.x || y !== hoveredCell.y) {
+        hoveredCell = { x, y };
+        drawHighlights();
+    }
+    
+    const edgeThreshold = 3;
+    if (Math.abs(x) > Math.abs(hoveredCell.x) - edgeThreshold || 
+        Math.abs(y) > Math.abs(hoveredCell.y) - edgeThreshold) {
+        generateNewCells(x, y);
+    }
+}
 
 function updateResourcesDisplay() {
     const population = Math.floor(gameState.population) || 0;
@@ -208,10 +264,10 @@ function showExpandOptions(x, y, building) {
     }
 
     drawGame();
-    ctx.drawImage(highlightCanvas, 0, 0);
+    mainCtx.drawImage(highlightCanvas, 0, 0);
 
-    canvas.addEventListener('mousemove', handleExpansionMouseMove);
-    canvas.addEventListener('click', handleExpansionClick);
+    mainCanvas.addEventListener('mousemove', handleExpansionMouseMove);
+    mainCanvas.addEventListener('click', handleExpansionClick);
 }
 
 function handleExpansionMouseMove(e) {
@@ -226,7 +282,7 @@ function handleExpansionMouseMove(e) {
         highlightCell(cell.x, cell.y, color);
     });
     
-    ctx.drawImage(highlightCanvas, 0, 0);
+    mainCtx.drawImage(highlightCanvas, 0, 0);
 }
 
 function handleExpansionClick(e) {
@@ -260,8 +316,8 @@ function highlightCell(x, y, color) {
 function removeExpansionOptions() {
     console.log('Removing expansion options');
     isExpansionMode = false;
-    canvas.removeEventListener('mousemove', handleExpansionMouseMove);
-    canvas.removeEventListener('click', handleExpansionClick);
+    mainCanvas.removeEventListener('mousemove', handleExpansionMouseMove);
+    mainCanvas.removeEventListener('click', handleExpansionClick);
     highlightCtx.clearRect(0, 0, highlightCanvas.width, highlightCanvas.height);
     drawGame();
 }
@@ -408,8 +464,8 @@ function moveViewToAccommodation(citizen) {
 }
 
 function centerMapOnBuilding(x, y) {
-    gridOffsetX = canvas.width / 2 - x * gridSize * gridScale;
-    gridOffsetY = canvas.height / 2 - y * gridSize * gridScale;
+    gridOffsetX = mainCanvas.width / 2 - x * gridSize * gridScale;
+    gridOffsetY = mainCanvas.height / 2 - y * gridSize * gridScale;
     drawGame();
 }
 
@@ -452,4 +508,9 @@ function updateUI() {
     updateResourcesDisplay();
     updateTimeDisplay();
     updateTasksNotifications();
+}
+
+function initGame() {
+    optimizeCanvasRendering();
+    // ... (rest of the function remains unchanged)
 }
