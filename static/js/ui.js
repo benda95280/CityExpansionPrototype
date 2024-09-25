@@ -207,11 +207,11 @@ function showExpandOptions(x, y, building) {
         }
     }
 
-    canvas.addEventListener('mousemove', handleExpansionMouseMove);
-    canvas.addEventListener('click', handleExpansionClick);
-
     drawGame();
     ctx.drawImage(highlightCanvas, 0, 0);
+
+    canvas.addEventListener('mousemove', handleExpansionMouseMove);
+    canvas.addEventListener('click', handleExpansionClick);
 }
 
 function handleExpansionMouseMove(e) {
@@ -226,7 +226,6 @@ function handleExpansionMouseMove(e) {
         highlightCell(cell.x, cell.y, color);
     });
     
-    drawGame();
     ctx.drawImage(highlightCanvas, 0, 0);
 }
 
