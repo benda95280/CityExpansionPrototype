@@ -194,11 +194,11 @@ function showExpandOptions(x, y, building) {
 
             if (isValidExpansionCell(newX, newY)) {
                 console.log('Valid expansion cell found at', newX, newY);
-                highlightCell(newX, newY, 'rgba(0, 255, 0, 0.5)');
+                highlightCell(newX, newY, 'rgba(0, 255, 0, 0.3)');  // Light green for expandable cells
                 highlightedCells.push({ x: newX, y: newY });
-            } else {
-                console.log('Non-expandable cell found at', newX, newY);
-                highlightCell(newX, newY, 'rgba(128, 128, 128, 0.5)');
+            } else if (!gameState.grid[`${newX},${newY}`]) {
+                console.log('Non-expandable empty cell found at', newX, newY);
+                highlightCell(newX, newY, 'rgba(128, 128, 128, 0.3)');  // Grey for non-expandable empty cells
             }
         }
     }
@@ -213,7 +213,7 @@ function showExpandOptions(x, y, building) {
         console.log('Mouse moved to', eventX, eventY);
 
         highlightedCells.forEach(cell => {
-            const color = (cell.x === eventX && cell.y === eventY) ? 'rgba(255, 255, 0, 0.5)' : 'rgba(0, 255, 0, 0.5)';
+            const color = (cell.x === eventX && cell.y === eventY) ? 'rgba(255, 255, 0, 0.5)' : 'rgba(0, 255, 0, 0.3)';
             highlightCell(cell.x, cell.y, color);
         });
     }
