@@ -180,32 +180,28 @@ function removeMenu(e) {
 
 function showExpandOptions(x, y, building) {
     console.log('showExpandOptions called for building at', x, y);
-    const directions = [
-        { dx: 0, dy: -1, name: 'North' },
-        { dx: 1, dy: 0, name: 'East' },
-        { dx: 0, dy: 1, name: 'South' },
-        { dx: -1, dy: 0, name: 'West' }
-    ];
-
     isExpansionMode = true;
     highlightedCells = [];
-    let lastHoveredCell = null;
 
-    ctx.save();
-    ctx.globalAlpha = 0.5;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    drawGame();
+
     for (let i = -1; i <= 1; i++) {
         for (let j = -1; j <= 1; j++) {
             const newX = x + i;
             const newY = y + j;
+            if (newX === x && newY === y) continue;
+
             if (isValidExpansionCell(newX, newY)) {
+                console.log('Valid expansion cell found at', newX, newY);
                 highlightCell(newX, newY, 'rgba(0, 255, 0, 0.5)');
                 highlightedCells.push({ x: newX, y: newY });
-            } else if (newX !== x || newY !== y) {
+            } else {
+                console.log('Non-expandable cell found at', newX, newY);
                 highlightCell(newX, newY, 'rgba(128, 128, 128, 0.5)');
             }
         }
     }
-    ctx.restore();
 
     canvas.addEventListener('mousemove', handleExpansionMouseMove);
     canvas.addEventListener('click', handleExpansionClick);
@@ -214,22 +210,11 @@ function showExpandOptions(x, y, building) {
         if (!isExpansionMode) return;
 
         const { x: eventX, y: eventY } = getGridCoordinates(e.clientX, e.clientY);
-        if (lastHoveredCell && lastHoveredCell.x === eventX && lastHoveredCell.y === eventY) {
-            return;
-        }
+        console.log('Mouse moved to', eventX, eventY);
 
-        requestAnimationFrame(() => {
-            if (lastHoveredCell) {
-                highlightCell(lastHoveredCell.x, lastHoveredCell.y, 'rgba(0, 255, 0, 0.5)');
-            }
-
-            const hoveredCell = highlightedCells.find(cell => cell.x === eventX && cell.y === eventY);
-            if (hoveredCell) {
-                highlightCell(hoveredCell.x, hoveredCell.y, 'rgba(255, 255, 0, 0.5)');
-                lastHoveredCell = hoveredCell;
-            } else {
-                lastHoveredCell = null;
-            }
+        highlightedCells.forEach(cell => {
+            const color = (cell.x === eventX && cell.y === eventY) ? 'rgba(255, 255, 0, 0.5)' : 'rgba(0, 255, 0, 0.5)';
+            highlightCell(cell.x, cell.y, color);
         });
     }
 
@@ -237,6 +222,8 @@ function showExpandOptions(x, y, building) {
         if (!isExpansionMode) return;
 
         const { x: eventX, y: eventY } = getGridCoordinates(e.clientX, e.clientY);
+        console.log('Clicked on', eventX, eventY);
+
         const clickedCell = highlightedCells.find(cell => cell.x === eventX && cell.y === eventY);
         if (clickedCell) {
             console.log('Valid expansion clicked at', eventX, eventY);
@@ -266,6 +253,8 @@ function highlightCell(x, y, color) {
     ctx.strokeStyle = 'white';
     ctx.lineWidth = 2 * gridScale;
     ctx.strokeRect(gridX, gridY, gridSize * gridScale, gridSize * gridScale);
+
+    console.log(`Highlighted cell at (${x}, ${y}) with color ${color}`);
 }
 
 function showCellPopup(x, y, building) {
