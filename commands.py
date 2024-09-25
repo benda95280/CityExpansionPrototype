@@ -1,5 +1,7 @@
 from datetime import datetime
 from tasks import TaskManager
+import random
+from buildings import handle_place_building
 
 class Commands:
     def __init__(self):
@@ -153,6 +155,15 @@ def calculate_age(birthday):
     today = datetime.now()
     return today.year - birthday.year - ((today.month, today.day) < (birthday.month, birthday.day))
 
+def run_stress_test(game_state, task_manager):
+    building_count = 1000
+    for _ in range(building_count):
+        x = random.randint(-50, 50)
+        y = random.randint(-50, 50)
+        building_type = random.choice(['house', 'apartment', 'skyscraper'])
+        handle_place_building({'x': x, 'y': y, 'building_type': building_type}, game_state, task_manager.socketio)
+    return f"Stress test completed: {building_count} buildings placed."
+
 commands.register_command('debug on', debug_on, options=['[component]'], description='Enable debug mode for a specific component or all components')
 commands.register_command('debug off', debug_off, options=['[component]'], description='Disable debug mode for a specific component or all components')
 commands.register_command('get tick', get_tick, description='Get the current tick count')
@@ -161,6 +172,7 @@ commands.register_command('get buildings', get_buildings, description='Get infor
 commands.register_command('get citizens', get_citizens, description='Get information about all citizens')
 commands.register_command('get time', get_game_time, description='Get the current game date and time')
 commands.register_command('toggle ff', toggle_fast_forward, description='Toggle fast forward mode')
+commands.register_command('run_stress_test', run_stress_test, description='Run a stress test by placing 1000 random buildings')
 
 def handle_console_command(command, game_state, task_manager):
     return commands.execute_command(command, game_state, task_manager)

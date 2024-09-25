@@ -1,41 +1,43 @@
 function drawBuildings() {
+    buildingsCtx.clearRect(0, 0, buildingsCanvas.width, buildingsCanvas.height);
     for (const [coords, building] of Object.entries(gameState.grid)) {
         if (building) {
             const [x, y] = coords.split(',').map(Number);
             drawBuilding(x, y, building);
         }
     }
+    ctx.drawImage(buildingsCanvas, 0, 0);
 }
 
 function drawBuilding(x, y, building) {
     const { gridX, gridY } = getCanvasCoordinates(x, y);
     
-    ctx.fillStyle = getBuildingColor(building.type);
-    ctx.fillRect(gridX, gridY, gridSize * gridScale, gridSize * gridScale);
+    buildingsCtx.fillStyle = getBuildingColor(building.type);
+    buildingsCtx.fillRect(gridX, gridY, gridSize * gridScale, gridSize * gridScale);
     
     if (building.construction_progress < 1) {
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+        buildingsCtx.fillStyle = 'rgba(0, 0, 0, 0.5)';
         const progressHeight = (1 - building.construction_progress) * gridSize * gridScale;
-        ctx.fillRect(gridX, gridY, gridSize * gridScale, progressHeight);
+        buildingsCtx.fillRect(gridX, gridY, gridSize * gridScale, progressHeight);
     }
     
-    ctx.fillStyle = 'white';
-    ctx.font = `${16 * gridScale}px Arial`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(getBuildingEmoji(building.type), gridX + gridSize * gridScale / 2, gridY + gridSize * gridScale / 2);
+    buildingsCtx.fillStyle = 'white';
+    buildingsCtx.font = `${16 * gridScale}px Arial`;
+    buildingsCtx.textAlign = 'center';
+    buildingsCtx.textBaseline = 'middle';
+    buildingsCtx.fillText(getBuildingEmoji(building.type), gridX + gridSize * gridScale / 2, gridY + gridSize * gridScale / 2);
     
-    ctx.font = `${10 * gridScale}px Arial`;
-    ctx.fillText(`${building.level}`, gridX + gridSize * gridScale - 10, gridY + gridSize * gridScale - 10);
+    buildingsCtx.font = `${10 * gridScale}px Arial`;
+    buildingsCtx.fillText(`${building.level}`, gridX + gridSize * gridScale - 10, gridY + gridSize * gridScale - 10);
 
     if (building.expanded_cells) {
         for (const [expX, expY] of building.expanded_cells) {
             const { gridX: expGridX, gridY: expGridY } = getCanvasCoordinates(expX, expY);
-            ctx.fillStyle = getBuildingColor(building.type, true);
-            ctx.fillRect(expGridX, expGridY, gridSize * gridScale, gridSize * gridScale);
-            ctx.strokeStyle = 'white';
-            ctx.lineWidth = 2 * gridScale;
-            ctx.strokeRect(expGridX, expGridY, gridSize * gridScale, gridSize * gridScale);
+            buildingsCtx.fillStyle = getBuildingColor(building.type, true);
+            buildingsCtx.fillRect(expGridX, expGridY, gridSize * gridScale, gridSize * gridScale);
+            buildingsCtx.strokeStyle = 'white';
+            buildingsCtx.lineWidth = 2 * gridScale;
+            buildingsCtx.strokeRect(expGridX, expGridY, gridSize * gridScale, gridSize * gridScale);
         }
     }
 }
@@ -94,10 +96,12 @@ function isAdjacentCell(x1, y1, x2, y2) {
 function initBuildingSocketListeners(socket) {
     socket.on('building_completed', (data) => {
         console.log(`Building completed at (${data.x}, ${data.y})`);
+        isDirty = true;
     });
 
     socket.on('building_expanded', (data) => {
         console.log(`Building expanded from (${data.x}, ${data.y}) to (${data.new_x}, ${data.new_y})`);
+        isDirty = true;
     });
 
     socket.on('expansion_failed', (data) => {

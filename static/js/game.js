@@ -11,17 +11,25 @@ let initialMapPosition = { x: 0, y: 0 };
 let isDirty = true;
 let animationFrameId = null;
 
+// FPS counter variables
 let fpsCounter = 0;
 let lastFpsUpdate = 0;
 let currentFps = 0;
 
+// Off-screen canvas for buildings
+const buildingsCanvas = document.createElement('canvas');
+const buildingsCtx = buildingsCanvas.getContext('2d');
+
 function resizeCanvas() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
+    buildingsCanvas.width = canvas.width;
+    buildingsCanvas.height = canvas.height;
     isDirty = true;
 }
 
 function drawGame(timestamp) {
+    // Update FPS counter
     fpsCounter++;
     if (timestamp - lastFpsUpdate >= 1000) {
         currentFps = fpsCounter;
@@ -65,6 +73,7 @@ function initGame() {
     
     initWebSocket();
     
+    // Add FPS counter to the UI
     const fpsCounter = document.createElement('div');
     fpsCounter.id = 'fps-counter';
     fpsCounter.style.position = 'fixed';
@@ -90,9 +99,7 @@ function handleCanvasClick(event) {
 
 function handleCanvasRightClick(event) {
     event.preventDefault();
-    console.log("Right-click event triggered");
     const { x, y } = getGridCoordinates(event.clientX, event.clientY);
-    console.log(`Grid coordinates: (${x}, ${y})`);
     showBuildingMenu(event.clientX, event.clientY, x, y);
 }
 
@@ -148,22 +155,9 @@ function handleKeyDown(event) {
     isDirty = true;
 }
 
-function stressTest(buildingCount) {
-    for (let i = 0; i < buildingCount; i++) {
-        const x = Math.floor(Math.random() * 100) - 50;
-        const y = Math.floor(Math.random() * 100) - 50;
-        const buildingType = ['house', 'apartment', 'skyscraper'][Math.floor(Math.random() * 3)];
-        placeBuilding(x, y, buildingType);
-    }
-    isDirty = true;
-}
-
-window.runStressTest = function(count) {
-    stressTest(count);
-};
-
 window.addEventListener('load', initGame);
 
+// Clean up function to cancel animation frame when needed
 function cleanUp() {
     if (animationFrameId) {
         cancelAnimationFrame(animationFrameId);

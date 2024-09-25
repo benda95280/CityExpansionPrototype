@@ -9,6 +9,7 @@ from buildings import buildings_data, find_available_building, handle_place_buil
 from citizen import Citizen
 from building import Building
 from notification import Notification, NotificationManager
+import random
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
@@ -19,7 +20,7 @@ with open('config.json', 'r') as f:
 
 game_state = {
     'grid': {},
-    'money': 1000,
+    'money': 9999999,
     'population': 0,
     'total_accommodations': 0,
     'used_accommodations': 0,
