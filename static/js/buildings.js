@@ -18,6 +18,11 @@ function drawBuilding(x, y, building) {
     const { gridX, gridY } = getCanvasCoordinates(x, y);
     const buildingData = gameState.buildings_data[building.type];
     
+    if (!buildingData) {
+        console.error(`Building data not found for type: ${building.type} at (${x}, ${y})`);
+        return;
+    }
+    
     buildingsCtx.fillStyle = `rgba(${buildingData.color},${building.isExpanded ? '0.7' : '1'})`;
     buildingsCtx.fillRect(gridX, gridY, gridSize * gridScale, gridSize * gridScale);
     
