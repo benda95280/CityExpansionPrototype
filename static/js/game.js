@@ -239,7 +239,6 @@ function updateGridScale(delta) {
 
 window.addEventListener('load', initGame);
 
-// Clean up function to cancel animation frame when needed
 function cleanUp() {
     if (animationFrameId) {
         cancelAnimationFrame(animationFrameId);

@@ -87,6 +87,9 @@ function drag(e) {
     
     lastMouseX = e.clientX;
     lastMouseY = e.clientY;
+
+    // Request a redraw of the entire canvas
+    addDirtyRect(0, 0, canvas.width, canvas.height);
 }
 
 function endDrag() {
