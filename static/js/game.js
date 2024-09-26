@@ -54,13 +54,43 @@ function drawGame(timestamp) {
 }
 
 function drawGridInRect(rect) {
-    // Implementation of drawing grid within the given rectangle
-    // ...
+    const startX = Math.floor((rect.x - gridOffsetX) / (gridSize * gridScale)) - 1;
+    const startY = Math.floor((rect.y - gridOffsetY) / (gridSize * gridScale)) - 1;
+    const endX = Math.ceil((rect.x + rect.width - gridOffsetX) / (gridSize * gridScale)) + 1;
+    const endY = Math.ceil((rect.y + rect.height - gridOffsetY) / (gridSize * gridScale)) + 1;
+
+    ctx.strokeStyle = '#ccc';
+    ctx.lineWidth = 1;
+
+    for (let x = startX; x <= endX; x++) {
+        const canvasX = x * gridSize * gridScale + gridOffsetX;
+        if (canvasX >= rect.x && canvasX <= rect.x + rect.width) {
+            ctx.beginPath();
+            ctx.moveTo(canvasX, rect.y);
+            ctx.lineTo(canvasX, rect.y + rect.height);
+            ctx.stroke();
+        }
+    }
+
+    for (let y = startY; y <= endY; y++) {
+        const canvasY = y * gridSize * gridScale + gridOffsetY;
+        if (canvasY >= rect.y && canvasY <= rect.y + rect.height) {
+            ctx.beginPath();
+            ctx.moveTo(rect.x, canvasY);
+            ctx.lineTo(rect.x + rect.width, canvasY);
+            ctx.stroke();
+        }
+    }
 }
 
 function drawBuildingsInRect(rect) {
-    // Implementation of drawing buildings within the given rectangle
-    // ...
+    for (const [coords, building] of Object.entries(gameState.grid)) {
+        const [x, y] = coords.split(',').map(Number);
+        const { gridX, gridY } = getCanvasCoordinates(x, y);
+        if (rectContainsPoint(rect, gridX, gridY)) {
+            drawBuilding(x, y, building);
+        }
+    }
 }
 
 function drawHoveredCellInRect(rect) {
@@ -191,6 +221,19 @@ function handleKeyDown(event) {
     if (moved) {
         addDirtyRect(0, 0, canvas.width, canvas.height);
     }
+}
+
+function updateGridScale(delta) {
+    const oldScale = gridScale;
+    gridScale = Math.max(0.5, Math.min(2, gridScale - delta * 0.1));
+    
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+    
+    gridOffsetX += (centerX - gridOffsetX) * (1 - gridScale / oldScale);
+    gridOffsetY += (centerY - gridOffsetY) * (1 - gridScale / oldScale);
+    
+    addDirtyRect(0, 0, canvas.width, canvas.height);
 }
 
 window.addEventListener('load', initGame);
