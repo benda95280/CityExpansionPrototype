@@ -10,6 +10,7 @@ let hoveredCell = null;
 let initialMapPosition = { x: 0, y: 0 };
 let isDirty = true;
 let animationFrameId = null;
+let dirtyRectangles = [];
 
 // FPS counter variables
 let fpsCounter = 0;
@@ -26,6 +27,7 @@ function resizeCanvas() {
     buildingsCanvas.width = canvas.width;
     buildingsCanvas.height = canvas.height;
     isDirty = true;
+    dirtyRectangles = [{x: 0, y: 0, width: canvas.width, height: canvas.height}];
 }
 
 function drawGame(timestamp) {
@@ -39,13 +41,46 @@ function drawGame(timestamp) {
     }
 
     if (isDirty) {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        drawGrid();
-        drawBuildings();
-        drawHoveredCell();
+        for (let rect of dirtyRectangles) {
+            ctx.clearRect(rect.x, rect.y, rect.width, rect.height);
+            drawGridInRect(rect);
+            drawBuildingsInRect(rect);
+            drawHoveredCellInRect(rect);
+        }
         isDirty = false;
+        dirtyRectangles = [];
     }
     animationFrameId = requestAnimationFrame(drawGame);
+}
+
+function drawGridInRect(rect) {
+    // Implementation of drawing grid within the given rectangle
+    // ...
+}
+
+function drawBuildingsInRect(rect) {
+    // Implementation of drawing buildings within the given rectangle
+    // ...
+}
+
+function drawHoveredCellInRect(rect) {
+    if (hoveredCell) {
+        const { gridX, gridY } = getCanvasCoordinates(hoveredCell.x, hoveredCell.y);
+        if (rectContainsPoint(rect, gridX, gridY)) {
+            ctx.strokeStyle = 'yellow';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(gridX, gridY, gridSize * gridScale, gridSize * gridScale);
+        }
+    }
+}
+
+function rectContainsPoint(rect, x, y) {
+    return x >= rect.x && x < rect.x + rect.width && y >= rect.y && y < rect.y + rect.height;
+}
+
+function addDirtyRect(x, y, width, height) {
+    dirtyRectangles.push({x, y, width, height});
+    isDirty = true;
 }
 
 function initGame() {
@@ -105,22 +140,18 @@ function handleCanvasRightClick(event) {
 
 function handleCanvasMouseMove(event) {
     const { x, y } = getGridCoordinates(event.clientX, event.clientY);
+    if (hoveredCell && (hoveredCell.x !== x || hoveredCell.y !== y)) {
+        const oldCell = getCanvasCoordinates(hoveredCell.x, hoveredCell.y);
+        addDirtyRect(oldCell.gridX - 2, oldCell.gridY - 2, gridSize * gridScale + 4, gridSize * gridScale + 4);
+    }
     hoveredCell = { x, y };
+    const newCell = getCanvasCoordinates(x, y);
+    addDirtyRect(newCell.gridX - 2, newCell.gridY - 2, gridSize * gridScale + 4, gridSize * gridScale + 4);
     
     const edgeThreshold = 3;
     if (Math.abs(x) > Math.abs(hoveredCell.x) - edgeThreshold || 
         Math.abs(y) > Math.abs(hoveredCell.y) - edgeThreshold) {
         generateNewCells(x, y);
-    }
-    isDirty = true;
-}
-
-function drawHoveredCell() {
-    if (hoveredCell) {
-        const { gridX, gridY } = getCanvasCoordinates(hoveredCell.x, hoveredCell.y);
-        ctx.strokeStyle = 'yellow';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(gridX, gridY, gridSize * gridScale, gridSize * gridScale);
     }
 }
 
@@ -133,26 +164,33 @@ function handleCanvasWheel(event) {
 function centerMap() {
     gridOffsetX = initialMapPosition.x;
     gridOffsetY = initialMapPosition.y;
-    isDirty = true;
+    addDirtyRect(0, 0, canvas.width, canvas.height);
 }
 
 function handleKeyDown(event) {
     const moveStep = 10;
+    let moved = false;
     switch (event.key) {
         case 'ArrowUp':
             gridOffsetY += moveStep;
+            moved = true;
             break;
         case 'ArrowDown':
             gridOffsetY -= moveStep;
+            moved = true;
             break;
         case 'ArrowLeft':
             gridOffsetX += moveStep;
+            moved = true;
             break;
         case 'ArrowRight':
             gridOffsetX -= moveStep;
+            moved = true;
             break;
     }
-    isDirty = true;
+    if (moved) {
+        addDirtyRect(0, 0, canvas.width, canvas.height);
+    }
 }
 
 window.addEventListener('load', initGame);
