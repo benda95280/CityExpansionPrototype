@@ -16,8 +16,9 @@ function drawBuilding(x, y, building) {
     }
 
     const { gridX, gridY } = getCanvasCoordinates(x, y);
+    const buildingData = gameState.buildings_data[building.type];
     
-    buildingsCtx.fillStyle = getBuildingColor(building.type);
+    buildingsCtx.fillStyle = `rgba(${buildingData.color},${building.isExpanded ? '0.7' : '1'})`;
     buildingsCtx.fillRect(gridX, gridY, gridSize * gridScale, gridSize * gridScale);
     
     if (building.construction_progress < 1) {
@@ -30,7 +31,7 @@ function drawBuilding(x, y, building) {
     buildingsCtx.font = `${16 * gridScale}px Arial`;
     buildingsCtx.textAlign = 'center';
     buildingsCtx.textBaseline = 'middle';
-    buildingsCtx.fillText(getBuildingEmoji(building.type), gridX + gridSize * gridScale / 2, gridY + gridSize * gridScale / 2);
+    buildingsCtx.fillText(buildingData.emoji, gridX + gridSize * gridScale / 2, gridY + gridSize * gridScale / 2);
     
     buildingsCtx.font = `${10 * gridScale}px Arial`;
     buildingsCtx.fillText(`${building.level}`, gridX + gridSize * gridScale - 10, gridY + gridSize * gridScale - 10);
@@ -38,39 +39,12 @@ function drawBuilding(x, y, building) {
     if (building.expanded_cells) {
         for (const [expX, expY] of building.expanded_cells) {
             const { gridX: expGridX, gridY: expGridY } = getCanvasCoordinates(expX, expY);
-            buildingsCtx.fillStyle = getBuildingColor(building.type, true);
+            buildingsCtx.fillStyle = `rgba(${buildingData.color},0.7)`;
             buildingsCtx.fillRect(expGridX, expGridY, gridSize * gridScale, gridSize * gridScale);
             buildingsCtx.strokeStyle = 'white';
             buildingsCtx.lineWidth = 2 * gridScale;
             buildingsCtx.strokeRect(expGridX, expGridY, gridSize * gridScale, gridSize * gridScale);
         }
-    }
-}
-
-function getBuildingColor(type, isExpanded = false) {
-    const alpha = isExpanded ? '0.7' : '1';
-    switch (type) {
-        case 'house':
-            return `rgba(76, 175, 80, ${alpha})`;
-        case 'apartment':
-            return `rgba(33, 150, 243, ${alpha})`;
-        case 'skyscraper':
-            return `rgba(156, 39, 176, ${alpha})`;
-        default:
-            return `rgba(117, 117, 117, ${alpha})`;
-    }
-}
-
-function getBuildingEmoji(type) {
-    switch (type) {
-        case 'house':
-            return '🏠';
-        case 'apartment':
-            return '🏢';
-        case 'skyscraper':
-            return '🏙️';
-        default:
-            return '🏗️';
     }
 }
 

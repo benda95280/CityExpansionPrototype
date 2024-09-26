@@ -8,7 +8,9 @@
     "construction_time": 30,
     "upgrade_time": 15,
     "expandable": true,
-    "expansion_limit": 3
+    "expansion_limit": 3,
+    "emoji": "🏠",
+    "color": "76,175,80"
   },
   "apartment": {
     "name": "Apartment",
@@ -19,7 +21,9 @@
     "construction_time": 60,
     "upgrade_time": 30,
     "expandable": true,
-    "expansion_limit": 5
+    "expansion_limit": 5,
+    "emoji": "🏢",
+    "color": "33,150,243"
   },
   "skyscraper": {
     "name": "Skyscraper",
@@ -30,6 +34,8 @@
     "construction_time": 120,
     "upgrade_time": 60,
     "expandable": true,
-    "expansion_limit": 10
+    "expansion_limit": 10,
+    "emoji": "🏙️",
+    "color": "156,39,176"
   }
 }
