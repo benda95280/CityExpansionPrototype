@@ -1,12 +1,6 @@
 function drawBuildings() {
-    buildingsCtx.clearRect(0, 0, buildingsCanvas.width, buildingsCanvas.height);
-    for (const [coords, building] of Object.entries(gameState.grid)) {
-        if (building) {
-            const [x, y] = coords.split(',').map(Number);
-            drawBuilding(x, y, building);
-        }
-    }
-    ctx.drawImage(buildingsCanvas, 0, 0);
+    // This function is no longer needed as we're drawing buildings in the viewport
+    // The functionality has been moved to drawBuildingsInViewport() in game.js
 }
 
 function drawBuilding(x, y, building) {
@@ -23,32 +17,37 @@ function drawBuilding(x, y, building) {
         return;
     }
     
+    const canvasX = gridX - viewportX;
+    const canvasY = gridY - viewportY;
+    
     buildingsCtx.fillStyle = `rgba(${buildingData.color},${building.isExpanded ? '0.7' : '1'})`;
-    buildingsCtx.fillRect(gridX, gridY, gridSize * gridScale, gridSize * gridScale);
+    buildingsCtx.fillRect(canvasX, canvasY, gridSize * gridScale, gridSize * gridScale);
     
     if (building.construction_progress < 1) {
         buildingsCtx.fillStyle = 'rgba(0, 0, 0, 0.5)';
         const progressHeight = (1 - building.construction_progress) * gridSize * gridScale;
-        buildingsCtx.fillRect(gridX, gridY, gridSize * gridScale, progressHeight);
+        buildingsCtx.fillRect(canvasX, canvasY, gridSize * gridScale, progressHeight);
     }
     
     buildingsCtx.fillStyle = 'white';
     buildingsCtx.font = `${16 * gridScale}px Arial`;
     buildingsCtx.textAlign = 'center';
     buildingsCtx.textBaseline = 'middle';
-    buildingsCtx.fillText(buildingData.emoji, gridX + gridSize * gridScale / 2, gridY + gridSize * gridScale / 2);
+    buildingsCtx.fillText(buildingData.emoji, canvasX + gridSize * gridScale / 2, canvasY + gridSize * gridScale / 2);
     
     buildingsCtx.font = `${10 * gridScale}px Arial`;
-    buildingsCtx.fillText(`${building.level}`, gridX + gridSize * gridScale - 10, gridY + gridSize * gridScale - 10);
+    buildingsCtx.fillText(`${building.level}`, canvasX + gridSize * gridScale - 10, canvasY + gridSize * gridScale - 10);
 
     if (building.expanded_cells) {
         for (const [expX, expY] of building.expanded_cells) {
             const { gridX: expGridX, gridY: expGridY } = getCanvasCoordinates(expX, expY);
+            const expCanvasX = expGridX - viewportX;
+            const expCanvasY = expGridY - viewportY;
             buildingsCtx.fillStyle = `rgba(${buildingData.color},0.7)`;
-            buildingsCtx.fillRect(expGridX, expGridY, gridSize * gridScale, gridSize * gridScale);
+            buildingsCtx.fillRect(expCanvasX, expCanvasY, gridSize * gridScale, gridSize * gridScale);
             buildingsCtx.strokeStyle = 'white';
             buildingsCtx.lineWidth = 2 * gridScale;
-            buildingsCtx.strokeRect(expGridX, expGridY, gridSize * gridScale, gridSize * gridScale);
+            buildingsCtx.strokeRect(expCanvasX, expCanvasY, gridSize * gridScale, gridSize * gridScale);
         }
     }
 }
@@ -80,12 +79,12 @@ function isAdjacentCell(x1, y1, x2, y2) {
 function initBuildingSocketListeners(socket) {
     socket.on('building_completed', (data) => {
         console.log(`Building completed at (${data.x}, ${data.y})`);
-        isDirty = true;
+        addDirtyRect(0, 0, canvas.width, canvas.height);
     });
 
     socket.on('building_expanded', (data) => {
         console.log(`Building expanded from (${data.x}, ${data.y}) to (${data.new_x}, ${data.new_y})`);
-        isDirty = true;
+        addDirtyRect(0, 0, canvas.width, canvas.height);
     });
 
     socket.on('expansion_failed', (data) => {

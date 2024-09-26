@@ -21,11 +21,19 @@ let currentFps = 0;
 const buildingsCanvas = document.createElement('canvas');
 const buildingsCtx = buildingsCanvas.getContext('2d');
 
+// Viewport variables
+let viewportX = 0;
+let viewportY = 0;
+let viewportWidth = 0;
+let viewportHeight = 0;
+
 function resizeCanvas() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
     buildingsCanvas.width = canvas.width;
     buildingsCanvas.height = canvas.height;
+    viewportWidth = canvas.width;
+    viewportHeight = canvas.height;
     isDirty = true;
     dirtyRectangles = [{x: 0, y: 0, width: canvas.width, height: canvas.height}];
 }
@@ -41,71 +49,67 @@ function drawGame(timestamp) {
     }
 
     if (isDirty) {
-        for (let rect of dirtyRectangles) {
-            ctx.clearRect(rect.x, rect.y, rect.width, rect.height);
-            drawGridInRect(rect);
-            drawBuildingsInRect(rect);
-            drawHoveredCellInRect(rect);
-        }
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        drawGridInViewport();
+        drawBuildingsInViewport();
+        drawHoveredCell();
         isDirty = false;
         dirtyRectangles = [];
     }
     animationFrameId = requestAnimationFrame(drawGame);
 }
 
-function drawGridInRect(rect) {
-    const startX = Math.floor((rect.x - gridOffsetX) / (gridSize * gridScale)) - 1;
-    const startY = Math.floor((rect.y - gridOffsetY) / (gridSize * gridScale)) - 1;
-    const endX = Math.ceil((rect.x + rect.width - gridOffsetX) / (gridSize * gridScale)) + 1;
-    const endY = Math.ceil((rect.y + rect.height - gridOffsetY) / (gridSize * gridScale)) + 1;
+function drawGridInViewport() {
+    const startX = Math.floor((viewportX - gridOffsetX) / (gridSize * gridScale)) - 1;
+    const startY = Math.floor((viewportY - gridOffsetY) / (gridSize * gridScale)) - 1;
+    const endX = Math.ceil((viewportX + viewportWidth - gridOffsetX) / (gridSize * gridScale)) + 1;
+    const endY = Math.ceil((viewportY + viewportHeight - gridOffsetY) / (gridSize * gridScale)) + 1;
 
     ctx.strokeStyle = '#ccc';
     ctx.lineWidth = 1;
 
     for (let x = startX; x <= endX; x++) {
-        const canvasX = x * gridSize * gridScale + gridOffsetX;
-        if (canvasX >= rect.x && canvasX <= rect.x + rect.width) {
-            ctx.beginPath();
-            ctx.moveTo(canvasX, rect.y);
-            ctx.lineTo(canvasX, rect.y + rect.height);
-            ctx.stroke();
-        }
+        const canvasX = x * gridSize * gridScale + gridOffsetX - viewportX;
+        ctx.beginPath();
+        ctx.moveTo(canvasX, 0);
+        ctx.lineTo(canvasX, viewportHeight);
+        ctx.stroke();
     }
 
     for (let y = startY; y <= endY; y++) {
-        const canvasY = y * gridSize * gridScale + gridOffsetY;
-        if (canvasY >= rect.y && canvasY <= rect.y + rect.height) {
-            ctx.beginPath();
-            ctx.moveTo(rect.x, canvasY);
-            ctx.lineTo(rect.x + rect.width, canvasY);
-            ctx.stroke();
-        }
+        const canvasY = y * gridSize * gridScale + gridOffsetY - viewportY;
+        ctx.beginPath();
+        ctx.moveTo(0, canvasY);
+        ctx.lineTo(viewportWidth, canvasY);
+        ctx.stroke();
     }
 }
 
-function drawBuildingsInRect(rect) {
-    for (const [coords, building] of Object.entries(gameState.grid)) {
-        const [x, y] = coords.split(',').map(Number);
-        const { gridX, gridY } = getCanvasCoordinates(x, y);
-        if (rectContainsPoint(rect, gridX, gridY)) {
-            drawBuilding(x, y, building);
+function drawBuildingsInViewport() {
+    buildingsCtx.clearRect(0, 0, buildingsCanvas.width, buildingsCanvas.height);
+    const startX = Math.floor((viewportX - gridOffsetX) / (gridSize * gridScale)) - 1;
+    const startY = Math.floor((viewportY - gridOffsetY) / (gridSize * gridScale)) - 1;
+    const endX = Math.ceil((viewportX + viewportWidth - gridOffsetX) / (gridSize * gridScale)) + 1;
+    const endY = Math.ceil((viewportY + viewportHeight - gridOffsetY) / (gridSize * gridScale)) + 1;
+
+    for (let x = startX; x <= endX; x++) {
+        for (let y = startY; y <= endY; y++) {
+            const building = gameState.grid[`${x},${y}`];
+            if (building) {
+                drawBuilding(x, y, building);
+            }
         }
     }
+    ctx.drawImage(buildingsCanvas, viewportX, viewportY, viewportWidth, viewportHeight, 0, 0, viewportWidth, viewportHeight);
 }
 
-function drawHoveredCellInRect(rect) {
+function drawHoveredCell() {
     if (hoveredCell) {
         const { gridX, gridY } = getCanvasCoordinates(hoveredCell.x, hoveredCell.y);
-        if (rectContainsPoint(rect, gridX, gridY)) {
-            ctx.strokeStyle = 'yellow';
-            ctx.lineWidth = 2;
-            ctx.strokeRect(gridX, gridY, gridSize * gridScale, gridSize * gridScale);
-        }
+        ctx.strokeStyle = 'yellow';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(gridX - viewportX, gridY - viewportY, gridSize * gridScale, gridSize * gridScale);
     }
-}
-
-function rectContainsPoint(rect, x, y) {
-    return x >= rect.x && x < rect.x + rect.width && y >= rect.y && y < rect.y + rect.height;
 }
 
 function addDirtyRect(x, y, width, height) {
@@ -171,12 +175,9 @@ function handleCanvasRightClick(event) {
 function handleCanvasMouseMove(event) {
     const { x, y } = getGridCoordinates(event.clientX, event.clientY);
     if (hoveredCell && (hoveredCell.x !== x || hoveredCell.y !== y)) {
-        const oldCell = getCanvasCoordinates(hoveredCell.x, hoveredCell.y);
-        addDirtyRect(oldCell.gridX - 2, oldCell.gridY - 2, gridSize * gridScale + 4, gridSize * gridScale + 4);
+        addDirtyRect(0, 0, canvas.width, canvas.height);
     }
     hoveredCell = { x, y };
-    const newCell = getCanvasCoordinates(x, y);
-    addDirtyRect(newCell.gridX - 2, newCell.gridY - 2, gridSize * gridScale + 4, gridSize * gridScale + 4);
     
     const edgeThreshold = 3;
     if (Math.abs(x) > Math.abs(hoveredCell.x) - edgeThreshold || 
