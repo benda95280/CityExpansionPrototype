@@ -10,6 +10,11 @@ function drawBuildings() {
 }
 
 function drawBuilding(x, y, building) {
+    if (!building) {
+        console.error(`Attempted to draw null building at (${x}, ${y})`);
+        return;
+    }
+
     const { gridX, gridY } = getCanvasCoordinates(x, y);
     
     buildingsCtx.fillStyle = getBuildingColor(building.type);
