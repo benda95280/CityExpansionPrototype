@@ -1,10 +1,10 @@
+let highlightedCells = [];
 window.isExpansionMode = false;
 let currentCitizenPopup = null;
 let debugConsole;
 let consoleInput;
 let consoleOutput;
 let lastPlacedCitizen = null;
-let highlightedCells = [];
 
 function updateResourcesDisplay() {
     const population = Math.floor(gameState.population) || 0;
