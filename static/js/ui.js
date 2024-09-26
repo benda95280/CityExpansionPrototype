@@ -1,9 +1,9 @@
+window.isExpansionMode = false;
 let currentCitizenPopup = null;
 let debugConsole;
 let consoleInput;
 let consoleOutput;
 let lastPlacedCitizen = null;
-let isExpansionMode = false;
 let highlightedCells = [];
 
 function updateResourcesDisplay() {
@@ -180,7 +180,7 @@ function removeMenu(e) {
 
 function showExpandOptions(x, y, building) {
     console.log('showExpandOptions called for building at', x, y);
-    isExpansionMode = true;
+    window.isExpansionMode = true;
     highlightedCells = [];
 
     ctx.save();
@@ -210,7 +210,7 @@ function showExpandOptions(x, y, building) {
 }
 
 function handleExpansionMouseMove(e) {
-    if (!isExpansionMode) return;
+    if (!window.isExpansionMode) return;
     const { x, y } = getGridCoordinates(e.clientX, e.clientY);
     console.log('Expansion mouse move detected at', x, y);
 
@@ -224,7 +224,7 @@ function handleExpansionMouseMove(e) {
 }
 
 function handleExpansionClick(e) {
-    if (!isExpansionMode) return;
+    if (!window.isExpansionMode) return;
     const { x, y } = getGridCoordinates(e.clientX, e.clientY);
     console.log('Expansion click detected at', x, y);
 
@@ -253,7 +253,7 @@ function highlightCell(x, y, color) {
 
 function removeExpansionOptions() {
     console.log('Removing expansion options');
-    isExpansionMode = false;
+    window.isExpansionMode = false;
     canvas.removeEventListener('mousemove', handleExpansionMouseMove);
     canvas.removeEventListener('click', handleExpansionClick);
     ctx.clearRect(0, 0, canvas.width, canvas.height);

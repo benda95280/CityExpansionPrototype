@@ -28,7 +28,6 @@ let viewportWidth = 0;
 let viewportHeight = 0;
 
 // New variables for expansion mode
-let isExpansionMode = false;
 let highlightedCells = [];
 
 function resizeCanvas() {
@@ -57,7 +56,7 @@ function drawGame(timestamp) {
         drawGridInViewport();
         drawBuildingsInViewport();
         drawHoveredCell();
-        if (isExpansionMode) {
+        if (window.isExpansionMode) {
             drawExpansionHighlights();
         }
         isDirty = false;
