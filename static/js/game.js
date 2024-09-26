@@ -27,6 +27,10 @@ let viewportY = 0;
 let viewportWidth = 0;
 let viewportHeight = 0;
 
+// New variables for expansion mode
+let isExpansionMode = false;
+let highlightedCells = [];
+
 function resizeCanvas() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
@@ -53,6 +57,9 @@ function drawGame(timestamp) {
         drawGridInViewport();
         drawBuildingsInViewport();
         drawHoveredCell();
+        if (isExpansionMode) {
+            drawExpansionHighlights();
+        }
         isDirty = false;
         dirtyRectangles = [];
     }
@@ -110,6 +117,20 @@ function drawHoveredCell() {
         ctx.lineWidth = 2;
         ctx.strokeRect(gridX - viewportX, gridY - viewportY, gridSize * gridScale, gridSize * gridScale);
     }
+}
+
+function drawExpansionHighlights() {
+    ctx.save();
+    ctx.globalAlpha = 0.5;
+    highlightedCells.forEach(cell => {
+        const { gridX, gridY } = getCanvasCoordinates(cell.x, cell.y);
+        ctx.fillStyle = 'rgba(0, 255, 0, 0.5)';
+        ctx.fillRect(gridX - viewportX, gridY - viewportY, gridSize * gridScale, gridSize * gridScale);
+        ctx.strokeStyle = 'white';
+        ctx.lineWidth = 2 * gridScale;
+        ctx.strokeRect(gridX - viewportX, gridY - viewportY, gridSize * gridScale, gridSize * gridScale);
+    });
+    ctx.restore();
 }
 
 function addDirtyRect(x, y, width, height) {
