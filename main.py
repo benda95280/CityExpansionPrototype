@@ -35,6 +35,7 @@ game_state = {
     'buildings_debug': False,
     'notifications_debug': False,
     'fast_forward': False,
+    'socketio': socketio  # Add socketio to game_state
 }
 
 task_manager = TaskManager(game_state)
@@ -181,7 +182,7 @@ def update_population_and_accommodations():
     game_state['used_accommodations'] = used_accommodations
 
 def emit_game_state():
-    serializable_game_state = {key: value for key, value in game_state.items() if key not in ['task_manager', 'notification_manager']}
+    serializable_game_state = {key: value for key, value in game_state.items() if key not in ['task_manager', 'notification_manager', 'socketio']}
     serializable_game_state['tasks'] = game_state['task_manager'].to_dict()
     serializable_game_state['notifications'] = game_state['notification_manager'].to_dict()
     serializable_game_state['pending_citizens'] = [citizen.to_dict() for citizen in game_state['pending_citizens']]

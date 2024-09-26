@@ -157,12 +157,25 @@ def calculate_age(birthday):
 
 def run_stress_test(game_state, task_manager):
     building_count = 1000
-    for _ in range(building_count):
-        x = random.randint(-50, 50)
-        y = random.randint(-50, 50)
-        building_type = random.choice(['house', 'apartment', 'skyscraper'])
-        handle_place_building({'x': x, 'y': y, 'building_type': building_type}, game_state, task_manager.socketio)
-    return f"Stress test completed: {building_count} buildings placed."
+    placed_buildings = 0
+    errors = 0
+
+    try:
+        for _ in range(building_count):
+            x = random.randint(-50, 50)
+            y = random.randint(-50, 50)
+            building_type = random.choice(['house', 'apartment', 'skyscraper'])
+            
+            try:
+                handle_place_building({'x': x, 'y': y, 'building_type': building_type}, game_state, game_state['socketio'])
+                placed_buildings += 1
+            except Exception as e:
+                errors += 1
+                print(f"Error placing building: {str(e)}")
+
+        return f"Stress test completed: {placed_buildings} buildings placed successfully, {errors} errors occurred."
+    except Exception as e:
+        return f"Stress test failed: {str(e)}"
 
 commands.register_command('debug on', debug_on, options=['[component]'], description='Enable debug mode for a specific component or all components')
 commands.register_command('debug off', debug_off, options=['[component]'], description='Disable debug mode for a specific component or all components')
