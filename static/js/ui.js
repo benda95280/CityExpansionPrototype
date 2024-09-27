@@ -6,6 +6,30 @@ let consoleInput;
 let consoleOutput;
 let lastPlacedCitizen = null;
 
+function throttle(func, limit) {
+    let inThrottle;
+    return function() {
+        const args = arguments;
+        const context = this;
+        if (!inThrottle) {
+            func.apply(context, args);
+            inThrottle = true;
+            setTimeout(() => inThrottle = false, limit);
+        }
+    }
+}
+
+let uiUpdateScheduled = false;
+function scheduleUIUpdate() {
+    if (!uiUpdateScheduled) {
+        uiUpdateScheduled = true;
+        requestAnimationFrame(() => {
+            updateUI();
+            uiUpdateScheduled = false;
+        });
+    }
+}
+
 function updateResourcesDisplay() {
     const population = Math.floor(gameState.population) || 0;
     const availableAccommodations = gameState.grid ? Object.values(gameState.grid).reduce((sum, building) => {
@@ -41,32 +65,21 @@ function updateTasksNotifications() {
     const tasksList = document.getElementById('tasks-list');
     const notificationsList = document.getElementById('notifications-list');
 
-    tasksList.innerHTML = '';
-    notificationsList.innerHTML = '';
+    const tasksFragment = document.createDocumentFragment();
+    const notificationsFragment = document.createDocumentFragment();
 
     if (gameState.tasks && gameState.tasks.tasks) {
         gameState.tasks.tasks.forEach(task => {
             if (!task.hidden) {
                 const li = document.createElement('li');
-                const taskName = document.createElement('span');
-                taskName.textContent = task.name;
-                
-                const progressBar = document.createElement('div');
-                progressBar.className = 'task-progress-bar';
-                const progressFill = document.createElement('div');
-                progressFill.className = 'task-progress-fill';
-                progressFill.style.width = `${task.completion_percentage}%`;
-                
-                const progressText = document.createElement('span');
-                progressText.className = 'task-progress-text';
-                progressText.textContent = `${task.completion_percentage}%`;
-                
-                progressBar.appendChild(progressFill);
-                progressBar.appendChild(progressText);
-                
-                li.appendChild(taskName);
-                li.appendChild(progressBar);
-                tasksList.appendChild(li);
+                li.innerHTML = `
+                    <span>${task.name}</span>
+                    <div class="task-progress-bar">
+                        <div class="task-progress-fill" style="width: ${task.completion_percentage}%"></div>
+                        <span class="task-progress-text">${task.completion_percentage}%</span>
+                    </div>
+                `;
+                tasksFragment.appendChild(li);
             }
         });
     }
@@ -75,20 +88,20 @@ function updateTasksNotifications() {
         gameState.notifications.notifications.forEach((notification, index) => {
             const li = document.createElement('li');
             li.className = 'notification-item';
-            
-            const messageSpan = document.createElement('span');
-            messageSpan.textContent = notification.message;
-            li.appendChild(messageSpan);
-            
-            const dismissButton = document.createElement('button');
-            dismissButton.className = 'dismiss-notification';
-            dismissButton.innerHTML = '<i class="fas fa-times"></i>';
-            dismissButton.onclick = () => dismissNotification(index);
-            li.appendChild(dismissButton);
-            
-            notificationsList.appendChild(li);
+            li.innerHTML = `
+                <span>${notification.message}</span>
+                <button class="dismiss-notification" onclick="dismissNotification(${index})">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            notificationsFragment.appendChild(li);
         });
     }
+
+    tasksList.innerHTML = '';
+    tasksList.appendChild(tasksFragment);
+    notificationsList.innerHTML = '';
+    notificationsList.appendChild(notificationsFragment);
 }
 
 function getBuildingEmoji(type) {
@@ -447,3 +460,5 @@ function updateUI() {
     updateTimeDisplay();
     updateTasksNotifications();
 }
+
+const throttledUpdateUI = throttle(scheduleUIUpdate, 100);

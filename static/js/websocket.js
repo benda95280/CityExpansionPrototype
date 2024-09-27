@@ -10,7 +10,7 @@ function initWebSocket() {
     socket.on('game_state', (newState) => {
         //console.log('Received game state update:', newState);
         gameState = newState;
-        updateUI();
+        throttledUpdateUI();
     });
 
     socket.on('new_citizen', (citizen) => {
@@ -29,7 +29,7 @@ function initWebSocket() {
 function updateTickingSpeedDisplay() {
     const tickingSpeedElement = document.getElementById('ticking-speed-value');
     if (tickingSpeedElement && gameState.ticking_speed !== undefined) {
-        tickingSpeedElement.textContent = `${gameState.ticking_speed} ticks/s`;
+        tickingSpeedElement.textContent = `⏱️ ${gameState.ticking_speed} ticks/s`;
     } else {
         console.error('Error updating ticking speed display:', gameState.ticking_speed);
     }
