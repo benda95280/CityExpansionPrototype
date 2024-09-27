@@ -33,8 +33,8 @@ function scheduleUIUpdate() {
 function updateResourcesDisplay() {
     const population = Math.floor(gameState.population) || 0;
     const availableAccommodations = gameState.grid ? Object.values(gameState.grid).reduce((sum, building) => {
-        return building.is_built ? sum + (building.total_accommodations - building.accommodations.flat().length) : sum;
-    }, 0) : 0;
+    return building ? (building.is_built ? sum + (building.total_accommodations - building.accommodations.flat().length) : sum) : sum;
+    showExpandOptions}, 0) : 0;
     const totalAccommodations = gameState.total_accommodations || 0;
     
     document.getElementById('population-value').textContent = `👥 ${population}`;
@@ -192,19 +192,20 @@ function removeMenu(e) {
 }
 
 function showExpandOptions(x, y, building) {
-    console.log('showExpandOptions called for building at', x, y);
     window.isExpansionMode = true;
-    highlightedCells = [];
+    highlightedCells = []; // Clear any previous highlighted cells
 
     for (let i = -1; i <= 1; i++) {
         for (let j = -1; j <= 1; j++) {
             const newX = x + i;
             const newY = y + j;
-            if (newX === x && newY === y) continue;
+            if (newX === x && newY === y) continue; // Skip the building's own cell
 
+            const cellKey = `${newX},${newY}`;
             if (isValidExpansionCell(newX, newY)) {
-                console.log('Valid expansion cell found at', newX, newY);
-                highlightedCells.push({ x: newX, y: newY });
+                highlightedCells.push({ x: newX, y: newY, expandable: true });
+            } else if (!isValidExpansionCell(newX, newY) && gameState.grid[cellKey]) { // Correct condition: not valid AND exists in the grid
+                highlightedCells.push({ x: newX, y: newY, expandable: false});
             }
         }
     }

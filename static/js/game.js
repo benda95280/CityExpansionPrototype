@@ -16,6 +16,7 @@ let dirtyRectangles = [];
 let fpsCounter = 0;
 let lastFpsUpdate = 0;
 let currentFps = 0;
+let fpsUpdateInterval = 500; // Update FPS every 500ms instead of every frame
 
 // Off-screen canvas for buildings
 const buildingsCanvas = document.createElement('canvas');
@@ -44,8 +45,8 @@ function resizeCanvas() {
 function drawGame(timestamp) {
     // Update FPS counter
     fpsCounter++;
-    if (timestamp - lastFpsUpdate >= 1000) {
-        currentFps = fpsCounter;
+    if (timestamp - lastFpsUpdate >= fpsUpdateInterval) {
+        currentFps = Math.round((fpsCounter / (timestamp - lastFpsUpdate)) * 1000);
         fpsCounter = 0;
         lastFpsUpdate = timestamp;
         document.getElementById('fps-counter').textContent = `FPS: ${currentFps}`;
@@ -132,14 +133,25 @@ function drawHoveredCell(rect) {
 function drawExpansionHighlights(rect) {
     ctx.save();
     ctx.globalAlpha = 0.5;
+
+    const startX = Math.floor((Math.max(viewportX, rect.x) - gridOffsetX) / (gridSize * gridScale)) - 1;
+    const startY = Math.floor((Math.max(viewportY, rect.y) - gridOffsetY) / (gridSize * gridScale)) - 1;
+    const endX = Math.ceil((Math.min(viewportX + viewportWidth, rect.x + rect.width) - gridOffsetX) / (gridSize * gridScale)) + 1;
+    const endY = Math.ceil((Math.min(viewportY + viewportHeight, rect.y + rect.height) - gridOffsetY) / (gridSize * gridScale)) + 1;
+
     highlightedCells.forEach(cell => {
-        const { gridX, gridY } = getCanvasCoordinates(cell.x, cell.y);
-        if (gridX >= rect.x && gridX < rect.x + rect.width && gridY >= rect.y && gridY < rect.y + rect.height) {
-            ctx.fillStyle = 'rgba(0, 255, 0, 0.5)';
-            ctx.fillRect(gridX - viewportX, gridY - viewportY, gridSize * gridScale, gridSize * gridScale);
-            ctx.strokeStyle = 'white';
-            ctx.lineWidth = 2 * gridScale;
-            ctx.strokeRect(gridX - viewportX, gridY - viewportY, gridSize * gridScale, gridSize * gridScale);
+        if (cell.x >= startX && cell.x <= endX && cell.y >= startY && cell.y <= endY) {
+            const { gridX, gridY } = getCanvasCoordinates(cell.x, cell.y);
+            if (gridX >= rect.x && gridX < rect.x + rect.width && gridY >= rect.y && gridY < rect.y + rect.height) {
+                ctx.fillStyle = cell.expandable ? 'rgba(0, 255, 0, 0.5)' : 'rgba(100, 100, 100, 0.5)';
+                ctx.fillRect(gridX - viewportX, gridY - viewportY, gridSize * gridScale, gridSize * gridScale);
+
+                if (cell.expandable) {
+                    ctx.strokeStyle = 'white';
+                    ctx.lineWidth = 2 * gridScale;
+                    ctx.strokeRect(gridX - viewportX, gridY - viewportY, gridSize * gridScale, gridSize * gridScale);
+                }
+            }
         }
     });
     ctx.restore();
