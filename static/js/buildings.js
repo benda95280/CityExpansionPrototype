@@ -1,6 +1,6 @@
 function drawBuildings() {
     // This function is no longer needed as we're drawing buildings in the viewport
-    // The functionality has been moved to drawBuildingsInViewport() in game.js
+    // The functionahiglity has been moved to drawBuildingsInViewport() in game.js
 }
 
 function drawBuilding(x, y, building) {

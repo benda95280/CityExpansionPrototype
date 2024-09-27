@@ -27,9 +27,6 @@ let viewportY = 0;
 let viewportWidth = 0;
 let viewportHeight = 0;
 
-// Variables for expansion mode
-let highlightedCells = [];
-
 function resizeCanvas() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;

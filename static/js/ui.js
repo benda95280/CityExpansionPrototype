@@ -1,4 +1,4 @@
-let highlightedCells = [];
+window.highlightedCells = [];
 window.isExpansionMode = false;
 let currentCitizenPopup = null;
 let debugConsole;
