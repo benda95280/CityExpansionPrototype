@@ -27,12 +27,6 @@ let viewportY = 0;
 let viewportWidth = 0;
 let viewportHeight = 0;
 
-// Object pool for grid lines
-const gridLinePool = [];
-
-// Memoization cache
-const memoCache = new Map();
-
 function resizeCanvas() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
@@ -78,22 +72,20 @@ function drawGridInViewport() {
     ctx.lineWidth = 1;
 
     for (let x = startX; x <= endX; x++) {
-        const canvasX = Math.round(x * gridSize * gridScale + gridOffsetX - viewportX);
-        drawGridLine(canvasX, 0, canvasX, viewportHeight);
+        const canvasX = x * gridSize * gridScale + gridOffsetX - viewportX;
+        ctx.beginPath();
+        ctx.moveTo(canvasX, 0);
+        ctx.lineTo(canvasX, viewportHeight);
+        ctx.stroke();
     }
 
     for (let y = startY; y <= endY; y++) {
-        const canvasY = Math.round(y * gridSize * gridScale + gridOffsetY - viewportY);
-        drawGridLine(0, canvasY, viewportWidth, canvasY);
+        const canvasY = y * gridSize * gridScale + gridOffsetY - viewportY;
+        ctx.beginPath();
+        ctx.moveTo(0, canvasY);
+        ctx.lineTo(viewportWidth, canvasY);
+        ctx.stroke();
     }
-}
-
-function drawGridLine(x1, y1, x2, y2) {
-    let line = gridLinePool.pop() || new Path2D();
-    line.moveTo(x1, y1);
-    line.lineTo(x2, y2);
-    ctx.stroke(line);
-    gridLinePool.push(line);
 }
 
 function drawBuildingsInViewport() {
@@ -260,14 +252,6 @@ function updateGridScale(delta) {
     gridOffsetY += (centerY - gridOffsetY) * (1 - gridScale / oldScale);
     
     addDirtyRect(0, 0, canvas.width, canvas.height);
-}
-
-// Memoized function for expensive calculations
-function memoizedCalculation(key, calculation) {
-    if (!memoCache.has(key)) {
-        memoCache.set(key, calculation());
-    }
-    return memoCache.get(key);
 }
 
 window.addEventListener('load', initGame);
