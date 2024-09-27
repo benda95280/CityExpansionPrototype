@@ -196,9 +196,6 @@ function showExpandOptions(x, y, building) {
     window.isExpansionMode = true;
     highlightedCells = [];
 
-    ctx.save();
-    ctx.globalAlpha = 0.5;
-
     for (let i = -1; i <= 1; i++) {
         for (let j = -1; j <= 1; j++) {
             const newX = x + i;
@@ -207,16 +204,12 @@ function showExpandOptions(x, y, building) {
 
             if (isValidExpansionCell(newX, newY)) {
                 console.log('Valid expansion cell found at', newX, newY);
-                highlightCell(newX, newY, 'rgba(0, 255, 0, 0.5)');
                 highlightedCells.push({ x: newX, y: newY });
-            } else {
-                console.log('Non-expandable cell found at', newX, newY);
-                highlightCell(newX, newY, 'rgba(128, 128, 128, 0.5)');
             }
         }
     }
 
-    ctx.restore();
+    addDirtyRect(0, 0, canvas.width, canvas.height);
 
     canvas.addEventListener('mousemove', handleExpansionMouseMove);
     canvas.addEventListener('click', handleExpansionClick);
@@ -227,13 +220,7 @@ function handleExpansionMouseMove(e) {
     const { x, y } = getGridCoordinates(e.clientX, e.clientY);
     console.log('Expansion mouse move detected at', x, y);
 
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    drawGame();
-
-    highlightedCells.forEach(cell => {
-        const color = (cell.x === x && cell.y === y) ? 'rgba(255, 255, 0, 0.5)' : 'rgba(0, 255, 0, 0.5)';
-        highlightCell(cell.x, cell.y, color);
-    });
+    addDirtyRect(0, 0, canvas.width, canvas.height);
 }
 
 function handleExpansionClick(e) {
@@ -252,25 +239,12 @@ function isValidExpansionCell(x, y) {
     return !gameState.grid[`${x},${y}`];
 }
 
-function highlightCell(x, y, color) {
-    const { gridX, gridY } = getCanvasCoordinates(x, y);
-    ctx.fillStyle = color;
-    ctx.fillRect(gridX, gridY, gridSize * gridScale, gridSize * gridScale);
-    
-    ctx.strokeStyle = 'white';
-    ctx.lineWidth = 2 * gridScale;
-    ctx.strokeRect(gridX, gridY, gridSize * gridScale, gridSize * gridScale);
-
-    console.log(`Highlighted cell at (${x}, ${y}) with color ${color}`);
-}
-
 function removeExpansionOptions() {
     console.log('Removing expansion options');
     window.isExpansionMode = false;
     canvas.removeEventListener('mousemove', handleExpansionMouseMove);
     canvas.removeEventListener('click', handleExpansionClick);
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    drawGame();
+    addDirtyRect(0, 0, canvas.width, canvas.height);
 }
 
 function showCellPopup(x, y, building) {
@@ -417,7 +391,7 @@ function moveViewToAccommodation(citizen) {
 function centerMapOnBuilding(x, y) {
     gridOffsetX = canvas.width / 2 - x * gridSize * gridScale;
     gridOffsetY = canvas.height / 2 - y * gridSize * gridScale;
-    drawGame();
+    addDirtyRect(0, 0, canvas.width, canvas.height);
 }
 
 function initDebugConsole() {
@@ -459,6 +433,7 @@ function updateUI() {
     updateResourcesDisplay();
     updateTimeDisplay();
     updateTasksNotifications();
+    addDirtyRect(0, 0, canvas.width, canvas.height);
 }
 
 const throttledUpdateUI = throttle(scheduleUIUpdate, 100);

@@ -27,6 +27,9 @@ let viewportY = 0;
 let viewportWidth = 0;
 let viewportHeight = 0;
 
+// Variables for expansion mode
+let highlightedCells = [];
+
 function resizeCanvas() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
@@ -49,24 +52,33 @@ function drawGame(timestamp) {
     }
 
     if (isDirty) {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        drawGridInViewport();
-        drawBuildingsInViewport();
-        drawHoveredCell();
-        if (window.isExpansionMode) {
-            drawExpansionHighlights();
-        }
+        ctx.save();
+        dirtyRectangles.forEach(rect => {
+            ctx.beginPath();
+            ctx.rect(rect.x, rect.y, rect.width, rect.height);
+            ctx.clip();
+
+            ctx.clearRect(rect.x, rect.y, rect.width, rect.height);
+            drawGridInViewport(rect);
+            drawBuildingsInViewport(rect);
+            drawHoveredCell(rect);
+            if (window.isExpansionMode) {
+                drawExpansionHighlights(rect);
+            }
+        });
+        ctx.restore();
+
         isDirty = false;
         dirtyRectangles = [];
     }
     animationFrameId = requestAnimationFrame(drawGame);
 }
 
-function drawGridInViewport() {
-    const startX = Math.floor((viewportX - gridOffsetX) / (gridSize * gridScale)) - 1;
-    const startY = Math.floor((viewportY - gridOffsetY) / (gridSize * gridScale)) - 1;
-    const endX = Math.ceil((viewportX + viewportWidth - gridOffsetX) / (gridSize * gridScale)) + 1;
-    const endY = Math.ceil((viewportY + viewportHeight - gridOffsetY) / (gridSize * gridScale)) + 1;
+function drawGridInViewport(rect) {
+    const startX = Math.floor((Math.max(viewportX, rect.x) - gridOffsetX) / (gridSize * gridScale)) - 1;
+    const startY = Math.floor((Math.max(viewportY, rect.y) - gridOffsetY) / (gridSize * gridScale)) - 1;
+    const endX = Math.ceil((Math.min(viewportX + viewportWidth, rect.x + rect.width) - gridOffsetX) / (gridSize * gridScale)) + 1;
+    const endY = Math.ceil((Math.min(viewportY + viewportHeight, rect.y + rect.height) - gridOffsetY) / (gridSize * gridScale)) + 1;
 
     ctx.strokeStyle = '#ccc';
     ctx.lineWidth = 1;
@@ -74,26 +86,26 @@ function drawGridInViewport() {
     for (let x = startX; x <= endX; x++) {
         const canvasX = x * gridSize * gridScale + gridOffsetX - viewportX;
         ctx.beginPath();
-        ctx.moveTo(canvasX, 0);
-        ctx.lineTo(canvasX, viewportHeight);
+        ctx.moveTo(canvasX, rect.y);
+        ctx.lineTo(canvasX, rect.y + rect.height);
         ctx.stroke();
     }
 
     for (let y = startY; y <= endY; y++) {
         const canvasY = y * gridSize * gridScale + gridOffsetY - viewportY;
         ctx.beginPath();
-        ctx.moveTo(0, canvasY);
-        ctx.lineTo(viewportWidth, canvasY);
+        ctx.moveTo(rect.x, canvasY);
+        ctx.lineTo(rect.x + rect.width, canvasY);
         ctx.stroke();
     }
 }
 
-function drawBuildingsInViewport() {
-    buildingsCtx.clearRect(0, 0, buildingsCanvas.width, buildingsCanvas.height);
-    const startX = Math.floor((viewportX - gridOffsetX) / (gridSize * gridScale)) - 1;
-    const startY = Math.floor((viewportY - gridOffsetY) / (gridSize * gridScale)) - 1;
-    const endX = Math.ceil((viewportX + viewportWidth - gridOffsetX) / (gridSize * gridScale)) + 1;
-    const endY = Math.ceil((viewportY + viewportHeight - gridOffsetY) / (gridSize * gridScale)) + 1;
+function drawBuildingsInViewport(rect) {
+    buildingsCtx.clearRect(rect.x, rect.y, rect.width, rect.height);
+    const startX = Math.floor((Math.max(viewportX, rect.x) - gridOffsetX) / (gridSize * gridScale)) - 1;
+    const startY = Math.floor((Math.max(viewportY, rect.y) - gridOffsetY) / (gridSize * gridScale)) - 1;
+    const endX = Math.ceil((Math.min(viewportX + viewportWidth, rect.x + rect.width) - gridOffsetX) / (gridSize * gridScale)) + 1;
+    const endY = Math.ceil((Math.min(viewportY + viewportHeight, rect.y + rect.height) - gridOffsetY) / (gridSize * gridScale)) + 1;
 
     for (let x = startX; x <= endX; x++) {
         for (let y = startY; y <= endY; y++) {
@@ -103,28 +115,32 @@ function drawBuildingsInViewport() {
             }
         }
     }
-    ctx.drawImage(buildingsCanvas, viewportX, viewportY, viewportWidth, viewportHeight, 0, 0, viewportWidth, viewportHeight);
+    ctx.drawImage(buildingsCanvas, rect.x, rect.y, rect.width, rect.height, rect.x, rect.y, rect.width, rect.height);
 }
 
-function drawHoveredCell() {
+function drawHoveredCell(rect) {
     if (hoveredCell) {
         const { gridX, gridY } = getCanvasCoordinates(hoveredCell.x, hoveredCell.y);
-        ctx.strokeStyle = 'yellow';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(gridX - viewportX, gridY - viewportY, gridSize * gridScale, gridSize * gridScale);
+        if (gridX >= rect.x && gridX < rect.x + rect.width && gridY >= rect.y && gridY < rect.y + rect.height) {
+            ctx.strokeStyle = 'yellow';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(gridX - viewportX, gridY - viewportY, gridSize * gridScale, gridSize * gridScale);
+        }
     }
 }
 
-function drawExpansionHighlights() {
+function drawExpansionHighlights(rect) {
     ctx.save();
     ctx.globalAlpha = 0.5;
     highlightedCells.forEach(cell => {
         const { gridX, gridY } = getCanvasCoordinates(cell.x, cell.y);
-        ctx.fillStyle = 'rgba(0, 255, 0, 0.5)';
-        ctx.fillRect(gridX - viewportX, gridY - viewportY, gridSize * gridScale, gridSize * gridScale);
-        ctx.strokeStyle = 'white';
-        ctx.lineWidth = 2 * gridScale;
-        ctx.strokeRect(gridX - viewportX, gridY - viewportY, gridSize * gridScale, gridSize * gridScale);
+        if (gridX >= rect.x && gridX < rect.x + rect.width && gridY >= rect.y && gridY < rect.y + rect.height) {
+            ctx.fillStyle = 'rgba(0, 255, 0, 0.5)';
+            ctx.fillRect(gridX - viewportX, gridY - viewportY, gridSize * gridScale, gridSize * gridScale);
+            ctx.strokeStyle = 'white';
+            ctx.lineWidth = 2 * gridScale;
+            ctx.strokeRect(gridX - viewportX, gridY - viewportY, gridSize * gridScale, gridSize * gridScale);
+        }
     });
     ctx.restore();
 }
@@ -192,9 +208,16 @@ function handleCanvasRightClick(event) {
 function handleCanvasMouseMove(event) {
     const { x, y } = getGridCoordinates(event.clientX, event.clientY);
     if (hoveredCell && (hoveredCell.x !== x || hoveredCell.y !== y)) {
-        addDirtyRect(0, 0, canvas.width, canvas.height);
+        addDirtyRect(hoveredCell.x * gridSize * gridScale + gridOffsetX - viewportX,
+                     hoveredCell.y * gridSize * gridScale + gridOffsetY - viewportY,
+                     gridSize * gridScale,
+                     gridSize * gridScale);
     }
     hoveredCell = { x, y };
+    addDirtyRect(x * gridSize * gridScale + gridOffsetX - viewportX,
+                 y * gridSize * gridScale + gridOffsetY - viewportY,
+                 gridSize * gridScale,
+                 gridSize * gridScale);
     
     const edgeThreshold = 3;
     if (Math.abs(x) > Math.abs(hoveredCell.x) - edgeThreshold || 
