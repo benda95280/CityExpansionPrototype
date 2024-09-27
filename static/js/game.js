@@ -17,7 +17,7 @@ let dirtyRectPool = [];
 let fpsCounter = 0;
 let lastFpsUpdate = 0;
 let currentFps = 0;
-let fpsUpdateInterval = 500; // Update FPS every 500ms instead of every frame
+let fpsUpdateInterval = 500; // Update FPS every 500ms
 
 // Off-screen canvas for buildings
 const buildingsCanvas = document.createElement('canvas');
@@ -31,6 +31,10 @@ let viewportHeight = 0;
 
 // Variables for expansion mode
 let highlightedCells = [];
+
+// Spatial partitioning
+const PARTITION_SIZE = 10;
+const buildingPartitions = {};
 
 function resizeCanvas() {
     canvas.width = window.innerWidth;
@@ -55,19 +59,20 @@ function drawGame(timestamp) {
 
     if (isDirty) {
         ctx.save();
+        ctx.beginPath();
         dirtyRectangles.forEach(rect => {
-            ctx.beginPath();
             ctx.rect(rect.x, rect.y, rect.width, rect.height);
-            ctx.clip();
-
-            ctx.clearRect(rect.x, rect.y, rect.width, rect.height);
-            drawGridInViewport(rect);
-            drawBuildingsInViewport(rect);
-            drawHoveredCell(rect);
-            if (window.isExpansionMode) {
-                drawExpansionHighlights(rect);
-            }
         });
+        ctx.clip();
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        drawGridInViewport();
+        drawBuildingsInViewport();
+        drawHoveredCell();
+        if (window.isExpansionMode) {
+            drawExpansionHighlights();
+        }
+
         ctx.restore();
 
         isDirty = false;
@@ -76,82 +81,86 @@ function drawGame(timestamp) {
     animationFrameId = requestAnimationFrame(drawGame);
 }
 
-function drawGridInViewport(rect) {
-    const startX = Math.floor((Math.max(viewportX, rect.x) - gridOffsetX) / (gridSize * gridScale)) - 1;
-    const startY = Math.floor((Math.max(viewportY, rect.y) - gridOffsetY) / (gridSize * gridScale)) - 1;
-    const endX = Math.ceil((Math.min(viewportX + viewportWidth, rect.x + rect.width) - gridOffsetX) / (gridSize * gridScale)) + 1;
-    const endY = Math.ceil((Math.min(viewportY + viewportHeight, rect.y + rect.height) - gridOffsetY) / (gridSize * gridScale)) + 1;
+function drawGridInViewport() {
+    const startX = Math.max(Math.floor((viewportX - gridOffsetX) / (gridSize * gridScale)) - 1, 0);
+    const startY = Math.max(Math.floor((viewportY - gridOffsetY) / (gridSize * gridScale)) - 1, 0);
+    const endX = Math.min(Math.ceil((viewportX + viewportWidth - gridOffsetX) / (gridSize * gridScale)) + 1, Math.ceil(canvas.width / (gridSize * gridScale)));
+    const endY = Math.min(Math.ceil((viewportY + viewportHeight - gridOffsetY) / (gridSize * gridScale)) + 1, Math.ceil(canvas.height / (gridSize * gridScale)));
 
     ctx.strokeStyle = '#ccc';
     ctx.lineWidth = 1;
+    ctx.beginPath();
 
     for (let x = startX; x <= endX; x++) {
         const canvasX = x * gridSize * gridScale + gridOffsetX - viewportX;
-        ctx.beginPath();
-        ctx.moveTo(canvasX, rect.y);
-        ctx.lineTo(canvasX, rect.y + rect.height);
-        ctx.stroke();
+        ctx.moveTo(canvasX, 0);
+        ctx.lineTo(canvasX, canvas.height);
     }
 
     for (let y = startY; y <= endY; y++) {
         const canvasY = y * gridSize * gridScale + gridOffsetY - viewportY;
-        ctx.beginPath();
-        ctx.moveTo(rect.x, canvasY);
-        ctx.lineTo(rect.x + rect.width, canvasY);
-        ctx.stroke();
+        ctx.moveTo(0, canvasY);
+        ctx.lineTo(canvas.width, canvasY);
     }
+
+    ctx.stroke();
 }
 
-function drawBuildingsInViewport(rect) {
-    buildingsCtx.clearRect(rect.x, rect.y, rect.width, rect.height);
-    const startX = Math.floor((Math.max(viewportX, rect.x) - gridOffsetX) / (gridSize * gridScale)) - 1;
-    const startY = Math.floor((Math.max(viewportY, rect.y) - gridOffsetY) / (gridSize * gridScale)) - 1;
-    const endX = Math.ceil((Math.min(viewportX + viewportWidth, rect.x + rect.width) - gridOffsetX) / (gridSize * gridScale)) + 1;
-    const endY = Math.ceil((Math.min(viewportY + viewportHeight, rect.y + rect.height) - gridOffsetY) / (gridSize * gridScale)) + 1;
+function drawBuildingsInViewport() {
+    buildingsCtx.clearRect(0, 0, buildingsCanvas.width, buildingsCanvas.height);
+    const startX = Math.floor((viewportX - gridOffsetX) / (gridSize * gridScale)) - 1;
+    const startY = Math.floor((viewportY - gridOffsetY) / (gridSize * gridScale)) - 1;
+    const endX = Math.ceil((viewportX + viewportWidth - gridOffsetX) / (gridSize * gridScale)) + 1;
+    const endY = Math.ceil((viewportY + viewportHeight - gridOffsetY) / (gridSize * gridScale)) + 1;
 
-    for (let x = startX; x <= endX; x++) {
-        for (let y = startY; y <= endY; y++) {
-            const building = gameState.grid[`${x},${y}`];
-            if (building) {
-                drawBuilding(x, y, building);
+    const partitionStartX = Math.floor(startX / PARTITION_SIZE);
+    const partitionStartY = Math.floor(startY / PARTITION_SIZE);
+    const partitionEndX = Math.ceil(endX / PARTITION_SIZE);
+    const partitionEndY = Math.ceil(endY / PARTITION_SIZE);
+
+    for (let px = partitionStartX; px <= partitionEndX; px++) {
+        for (let py = partitionStartY; py <= partitionEndY; py++) {
+            const partition = buildingPartitions[`${px},${py}`];
+            if (partition) {
+                for (const [x, y, building] of partition) {
+                    if (x >= startX && x <= endX && y >= startY && y <= endY) {
+                        drawBuilding(x, y, building);
+                    }
+                }
             }
         }
     }
-    ctx.drawImage(buildingsCanvas, rect.x, rect.y, rect.width, rect.height, rect.x, rect.y, rect.width, rect.height);
+    ctx.drawImage(buildingsCanvas, 0, 0);
 }
 
-function drawHoveredCell(rect) {
+function drawHoveredCell() {
     if (hoveredCell) {
         const { gridX, gridY } = getCanvasCoordinates(hoveredCell.x, hoveredCell.y);
-        if (gridX >= rect.x && gridX < rect.x + rect.width && gridY >= rect.y && gridY < rect.y + rect.height) {
-            ctx.strokeStyle = 'yellow';
-            ctx.lineWidth = 2;
-            ctx.strokeRect(gridX - viewportX, gridY - viewportY, gridSize * gridScale, gridSize * gridScale);
-        }
+        ctx.strokeStyle = 'yellow';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(gridX - viewportX, gridY - viewportY, gridSize * gridScale, gridSize * gridScale);
     }
 }
 
-function drawExpansionHighlights(rect) {
+function drawExpansionHighlights() {
     ctx.save();
     ctx.globalAlpha = 0.5;
 
-    const startX = Math.floor((Math.max(viewportX, rect.x) - gridOffsetX) / (gridSize * gridScale)) - 1;
-    const startY = Math.floor((Math.max(viewportY, rect.y) - gridOffsetY) / (gridSize * gridScale)) - 1;
-    const endX = Math.ceil((Math.min(viewportX + viewportWidth, rect.x + rect.width) - gridOffsetX) / (gridSize * gridScale)) + 1;
-    const endY = Math.ceil((Math.min(viewportY + viewportHeight, rect.y + rect.height) - gridOffsetY) / (gridSize * gridScale)) + 1;
+    const startX = Math.max(Math.floor((viewportX - gridOffsetX) / (gridSize * gridScale)) - 1, 0);
+    const startY = Math.max(Math.floor((viewportY - gridOffsetY) / (gridSize * gridScale)) - 1, 0);
+    const endX = Math.min(Math.ceil((viewportX + viewportWidth - gridOffsetX) / (gridSize * gridScale)) + 1, Math.ceil(canvas.width / (gridSize * gridScale)));
+    const endY = Math.min(Math.ceil((viewportY + viewportHeight - gridOffsetY) / (gridSize * gridScale)) + 1, Math.ceil(canvas.height / (gridSize * gridScale)));
 
     highlightedCells.forEach(cell => {
         if (cell.x >= startX && cell.x <= endX && cell.y >= startY && cell.y <= endY) {
             const { gridX, gridY } = getCanvasCoordinates(cell.x, cell.y);
-            if (gridX >= rect.x && gridX < rect.x + rect.width && gridY >= rect.y && gridY < rect.y + rect.height) {
-                ctx.fillStyle = cell.expandable ? 'rgba(0, 255, 0, 0.5)' : 'rgba(100, 100, 100, 0.5)';
-                ctx.fillRect(gridX - viewportX, gridY - viewportY, gridSize * gridScale, gridSize * gridScale);
+            ctx.fillStyle = cell.expandable ? 'rgba(0, 255, 0, 0.5)' : 'rgba(100, 100, 100, 0.5)';
+            ctx.fillRect(gridX - viewportX, gridY - viewportY, gridSize * gridScale, gridSize * gridScale);
 
-                if (cell.expandable) {
-                    ctx.strokeStyle = 'white';
-                    ctx.lineWidth = 2 * gridScale;
-                    ctx.strokeRect(gridX - viewportX, gridY - viewportY, gridSize * gridScale, gridSize * gridScale);
-                }
+            if (cell.expandable) {
+                ctx.strokeStyle = 'white';
+                ctx.lineWidth = 2 * gridScale;
+                ctx.strokeRect(gridX - viewportX, gridY - viewportY, gridSize * gridScale, gridSize * gridScale);
             }
         }
     });
@@ -159,16 +168,11 @@ function drawExpansionHighlights(rect) {
 }
 
 function addDirtyRect(x, y, width, height) {
-    let rect;
-    if (dirtyRectPool.length > 0) {
-        rect = dirtyRectPool.pop();
-        rect.x = x;
-        rect.y = y;
-        rect.width = width;
-        rect.height = height;
-    } else {
-        rect = {x, y, width, height};
-    }
+    let rect = dirtyRectPool.pop() || {};
+    rect.x = x;
+    rect.y = y;
+    rect.width = width;
+    rect.height = height;
     dirtyRectangles.push(rect);
     isDirty = true;
 }
@@ -305,6 +309,20 @@ function updateGridScale(delta) {
     addDirtyRect(0, 0, canvas.width, canvas.height);
 }
 
+function updateBuildingPartitions() {
+    buildingPartitions = {};
+    for (const [coords, building] of Object.entries(gameState.grid)) {
+        const [x, y] = coords.split(',').map(Number);
+        const px = Math.floor(x / PARTITION_SIZE);
+        const py = Math.floor(y / PARTITION_SIZE);
+        const partitionKey = `${px},${py}`;
+        if (!buildingPartitions[partitionKey]) {
+            buildingPartitions[partitionKey] = [];
+        }
+        buildingPartitions[partitionKey].push([x, y, building]);
+    }
+}
+
 window.addEventListener('load', initGame);
 
 function cleanUp() {
@@ -312,3 +330,10 @@ function cleanUp() {
         cancelAnimationFrame(animationFrameId);
     }
 }
+
+// Call updateBuildingPartitions when the game state changes
+socket.on('game_state', (newState) => {
+    gameState = newState;
+    updateBuildingPartitions();
+    throttledUpdateUI();
+});
