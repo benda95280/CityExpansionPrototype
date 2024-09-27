@@ -11,6 +11,7 @@ let initialMapPosition = { x: 0, y: 0 };
 let isDirty = true;
 let animationFrameId = null;
 let dirtyRectangles = [];
+let dirtyRectPool = [];
 
 // FPS counter variables
 let fpsCounter = 0;
@@ -39,7 +40,7 @@ function resizeCanvas() {
     viewportWidth = canvas.width;
     viewportHeight = canvas.height;
     isDirty = true;
-    dirtyRectangles = [{x: 0, y: 0, width: canvas.width, height: canvas.height}];
+    addDirtyRect(0, 0, canvas.width, canvas.height);
 }
 
 function drawGame(timestamp) {
@@ -70,7 +71,7 @@ function drawGame(timestamp) {
         ctx.restore();
 
         isDirty = false;
-        dirtyRectangles = [];
+        recycleDirtyRects();
     }
     animationFrameId = requestAnimationFrame(drawGame);
 }
@@ -158,8 +159,23 @@ function drawExpansionHighlights(rect) {
 }
 
 function addDirtyRect(x, y, width, height) {
-    dirtyRectangles.push({x, y, width, height});
+    let rect;
+    if (dirtyRectPool.length > 0) {
+        rect = dirtyRectPool.pop();
+        rect.x = x;
+        rect.y = y;
+        rect.width = width;
+        rect.height = height;
+    } else {
+        rect = {x, y, width, height};
+    }
+    dirtyRectangles.push(rect);
     isDirty = true;
+}
+
+function recycleDirtyRects() {
+    dirtyRectPool.push(...dirtyRectangles);
+    dirtyRectangles.length = 0;
 }
 
 function initGame() {
