@@ -64,7 +64,6 @@ function drawGame(timestamp) {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         drawGridInViewport();
         drawBuildingsInViewport();
-        drawHoveredCell();
         if (window.isExpansionMode) {
             drawExpansionHighlights();
         }
@@ -74,9 +73,11 @@ function drawGame(timestamp) {
         isDirty = false;
         hoverStateChanged = false;
         recycleDirtyRects();
-    } else {
-        drawHoveredCell();
     }
+    
+    // Always draw the hovered cell
+    drawHoveredCell();
+    
     animationFrameId = requestAnimationFrame(drawGame);
 }
 
@@ -250,9 +251,27 @@ function handleCanvasMouseMove(event) {
     const newHoveredCell = { x, y };
 
     if (!hoveredCell || hoveredCell.x !== newHoveredCell.x || hoveredCell.y !== newHoveredCell.y) {
+        // Clear the previous hover effect
+        if (hoveredCell) {
+            addDirtyRect(
+                hoveredCell.x * gridSize * gridScale + gridOffsetX - viewportX,
+                hoveredCell.y * gridSize * gridScale + gridOffsetY - viewportY,
+                gridSize * gridScale,
+                gridSize * gridScale
+            );
+        }
+        
         hoveredCell = newHoveredCell;
         hoverStateChanged = true;
         isDirty = true;
+        
+        // Add dirty rect for the new hovered cell
+        addDirtyRect(
+            x * gridSize * gridScale + gridOffsetX - viewportX,
+            y * gridSize * gridScale + gridOffsetY - viewportY,
+            gridSize * gridScale,
+            gridSize * gridScale
+        );
     }
     
     const edgeThreshold = 3;
