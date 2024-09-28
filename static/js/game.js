@@ -13,28 +13,23 @@ let animationFrameId = null;
 let dirtyRectangles = [];
 let dirtyRectPool = [];
 
-// FPS counter variables
 let fpsCounter = 0;
 let lastFpsUpdate = 0;
 let currentFps = 0;
-let fpsUpdateInterval = 500; // Update FPS every 500ms
+let fpsUpdateInterval = 500;
 
-// Off-screen canvas for buildings
 const buildingsCanvas = document.createElement('canvas');
 const buildingsCtx = buildingsCanvas.getContext('2d');
 
-// Viewport variables
 let viewportX = 0;
 let viewportY = 0;
 let viewportWidth = 0;
 let viewportHeight = 0;
 
-// Variables for expansion mode
 let highlightedCells = [];
 
-// Spatial partitioning
 const PARTITION_SIZE = 10;
-let buildingPartitions = {}; // Changed from const to let
+let buildingPartitions = {};
 
 function resizeCanvas() {
     canvas.width = window.innerWidth;
@@ -48,7 +43,6 @@ function resizeCanvas() {
 }
 
 function drawGame(timestamp) {
-    // Update FPS counter
     fpsCounter++;
     if (timestamp - lastFpsUpdate >= fpsUpdateInterval) {
         currentFps = Math.round((fpsCounter / (timestamp - lastFpsUpdate)) * 1000);
@@ -82,10 +76,10 @@ function drawGame(timestamp) {
 }
 
 function drawGridInViewport() {
-    const startX = Math.max(Math.floor((viewportX - gridOffsetX) / (gridSize * gridScale)) - 1, 0);
-    const startY = Math.max(Math.floor((viewportY - gridOffsetY) / (gridSize * gridScale)) - 1, 0);
-    const endX = Math.min(Math.ceil((viewportX + viewportWidth - gridOffsetX) / (gridSize * gridScale)) + 1, Math.ceil(canvas.width / (gridSize * gridScale)));
-    const endY = Math.min(Math.ceil((viewportY + viewportHeight - gridOffsetY) / (gridSize * gridScale)) + 1, Math.ceil(canvas.height / (gridSize * gridScale)));
+    const startX = Math.floor((viewportX - gridOffsetX) / (gridSize * gridScale)) - 1;
+    const startY = Math.floor((viewportY - gridOffsetY) / (gridSize * gridScale)) - 1;
+    const endX = Math.ceil((viewportX + viewportWidth - gridOffsetX) / (gridSize * gridScale)) + 1;
+    const endY = Math.ceil((viewportY + viewportHeight - gridOffsetY) / (gridSize * gridScale)) + 1;
 
     ctx.strokeStyle = '#ccc';
     ctx.lineWidth = 1;
@@ -143,7 +137,12 @@ function drawHoveredCell() {
         const { gridX, gridY } = getCanvasCoordinates(hoveredCell.x, hoveredCell.y);
         ctx.strokeStyle = 'yellow';
         ctx.lineWidth = 2;
-        ctx.strokeRect(gridX - viewportX, gridY - viewportY, gridSize * gridScale, gridSize * gridScale);
+        ctx.strokeRect(
+            gridX - viewportX,
+            gridY - viewportY,
+            gridSize * gridScale,
+            gridSize * gridScale
+        );
     }
 }
 
@@ -212,7 +211,6 @@ function initGame() {
     
     initWebSocket();
     
-    // Add FPS counter to the UI
     const fpsCounter = document.createElement('div');
     fpsCounter.id = 'fps-counter';
     fpsCounter.style.position = 'fixed';
@@ -244,17 +242,25 @@ function handleCanvasRightClick(event) {
 
 function handleCanvasMouseMove(event) {
     const { x, y } = getGridCoordinates(event.clientX, event.clientY);
-    if (hoveredCell && (hoveredCell.x !== x || hoveredCell.y !== y)) {
-        addDirtyRect(hoveredCell.x * gridSize * gridScale + gridOffsetX - viewportX,
-                     hoveredCell.y * gridSize * gridScale + gridOffsetY - viewportY,
-                     gridSize * gridScale,
-                     gridSize * gridScale);
+    const newHoveredCell = { x, y };
+
+    if (!hoveredCell || hoveredCell.x !== newHoveredCell.x || hoveredCell.y !== newHoveredCell.y) {
+        if (hoveredCell) {
+            addDirtyRect(
+                hoveredCell.x * gridSize * gridScale + gridOffsetX - viewportX,
+                hoveredCell.y * gridSize * gridScale + gridOffsetY - viewportY,
+                gridSize * gridScale,
+                gridSize * gridScale
+            );
+        }
+        hoveredCell = newHoveredCell;
+        addDirtyRect(
+            x * gridSize * gridScale + gridOffsetX - viewportX,
+            y * gridSize * gridScale + gridOffsetY - viewportY,
+            gridSize * gridScale,
+            gridSize * gridScale
+        );
     }
-    hoveredCell = { x, y };
-    addDirtyRect(x * gridSize * gridScale + gridOffsetX - viewportX,
-                 y * gridSize * gridScale + gridOffsetY - viewportY,
-                 gridSize * gridScale,
-                 gridSize * gridScale);
     
     const edgeThreshold = 3;
     if (Math.abs(x) > Math.abs(hoveredCell.x) - edgeThreshold || 
@@ -315,7 +321,7 @@ function updateGridScale(delta) {
 }
 
 function updateBuildingPartitions() {
-    buildingPartitions = {}; // Use let instead of reassigning to const
+    buildingPartitions = {};
     for (const [coords, building] of Object.entries(gameState.grid)) {
         const [x, y] = coords.split(',').map(Number);
         const px = Math.floor(x / PARTITION_SIZE);
