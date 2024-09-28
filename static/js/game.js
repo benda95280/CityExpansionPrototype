@@ -111,35 +111,56 @@ function drawGridInViewport() {
 }
 
 function drawBuildingsInViewport() {
-    if (buildingsCanvas.width === 0 || buildingsCanvas.height === 0) {
-        console.error('Buildings canvas has zero width or height');
-        return;
-    }
-
     buildingsCtx.clearRect(0, 0, buildingsCanvas.width, buildingsCanvas.height);
     const startX = Math.floor((viewportX - gridOffsetX) / (gridSize * gridScale)) - 1;
     const startY = Math.floor((viewportY - gridOffsetY) / (gridSize * gridScale)) - 1;
     const endX = Math.ceil((viewportX + viewportWidth - gridOffsetX) / (gridSize * gridScale)) + 1;
     const endY = Math.ceil((viewportY + viewportHeight - gridOffsetY) / (gridSize * gridScale)) + 1;
 
-    const partitionStartX = Math.floor(startX / PARTITION_SIZE);
-    const partitionStartY = Math.floor(startY / PARTITION_SIZE);
-    const partitionEndX = Math.ceil(endX / PARTITION_SIZE);
-    const partitionEndY = Math.ceil(endY / PARTITION_SIZE);
-
-    for (let px = partitionStartX; px <= partitionEndX; px++) {
-        for (let py = partitionStartY; py <= partitionEndY; py++) {
-            const partition = buildingPartitions[`${px},${py}`];
-            if (partition) {
-                for (const [x, y, building] of partition) {
-                    if (x >= startX && x <= endX && y >= startY && y <= endY) {
-                        drawBuilding(x, y, building);
-                    }
-                }
+    for (let x = startX; x <= endX; x++) {
+        for (let y = startY; y <= endY; y++) {
+            const building = gameState.grid[`${x},${y}`];
+            if (building) {
+                drawBuilding(x, y, building);
             }
         }
     }
+
     ctx.drawImage(buildingsCanvas, 0, 0);
+}
+
+function drawBuilding(x, y, building) {
+    const { gridX, gridY } = getCanvasCoordinates(x, y);
+    const buildingData = gameState.buildings_data[building.type];
+    
+    buildingsCtx.fillStyle = `rgb(${buildingData.color})`;
+    buildingsCtx.fillRect(
+        gridX - viewportX,
+        gridY - viewportY,
+        gridSize * gridScale,
+        gridSize * gridScale
+    );
+    
+    if (building.construction_progress < 1) {
+        buildingsCtx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+        const progressHeight = (1 - building.construction_progress) * gridSize * gridScale;
+        buildingsCtx.fillRect(
+            gridX - viewportX,
+            gridY - viewportY,
+            gridSize * gridScale,
+            progressHeight
+        );
+    }
+    
+    buildingsCtx.fillStyle = 'white';
+    buildingsCtx.font = `${16 * gridScale}px Arial`;
+    buildingsCtx.textAlign = 'center';
+    buildingsCtx.textBaseline = 'middle';
+    buildingsCtx.fillText(
+        buildingData.emoji,
+        gridX - viewportX + gridSize * gridScale / 2,
+        gridY - viewportY + gridSize * gridScale / 2
+    );
 }
 
 function drawHoveredCell() {
@@ -232,9 +253,10 @@ function initGame() {
     fpsCounter.style.borderRadius = '5px';
     document.body.appendChild(fpsCounter);
 
+    buildingsCanvas.width = canvas.width;
+    buildingsCanvas.height = canvas.height;
+
     drawGame();
-    
-    initDebugConsole();
 }
 
 function handleCanvasClick(event) {
@@ -251,45 +273,35 @@ function handleCanvasRightClick(event) {
 }
 
 function handleCanvasMouseMove(event) {
-    const newHoverRect = getHoverDirtyRect(hoveredCell);
-    const lineWidth = 2;
-    const expandedRect = {
-      x: newHoverRect.x - lineWidth,
-      y: newHoverRect.y - lineWidth,
-      width: newHoverRect.width + 2 * lineWidth,
-      height: newHoverRect.height + 2 * lineWidth,
-    };
-    
-    addDirtyRect(expandedRect.x, expandedRect.y, expandedRect.width, expandedRect.height);
-
     const { x, y } = getGridCoordinates(event.clientX, event.clientY);
     const newHoveredCell = { x, y };
 
     if (!hoveredCell || hoveredCell.x !== newHoveredCell.x || hoveredCell.y !== newHoveredCell.y) {
-        hoverDirtyRect = getHoverDirtyRect(hoveredCell);
-
+        if (hoveredCell) {
+            const { gridX: oldGridX, gridY: oldGridY } = getCanvasCoordinates(hoveredCell.x, hoveredCell.y);
+            addDirtyRect(
+                oldGridX - viewportX,
+                oldGridY - viewportY,
+                gridSize * gridScale,
+                gridSize * gridScale
+            );
+        }
+        
         hoveredCell = newHoveredCell;
-
-        const newHoverRect = getHoverDirtyRect(hoveredCell);
-        addDirtyRect(newHoverRect.x, newHoverRect.y, newHoverRect.width, newHoverRect.height);
+        const { gridX, gridY } = getCanvasCoordinates(x, y);
+        addDirtyRect(
+            gridX - viewportX,
+            gridY - viewportY,
+            gridSize * gridScale,
+            gridSize * gridScale
+        );
     }
-
+    
     const edgeThreshold = 3;
     if (Math.abs(x) > Math.abs(hoveredCell.x) - edgeThreshold || 
         Math.abs(y) > Math.abs(hoveredCell.y) - edgeThreshold) {
         generateNewCells(x, y);
     }
-}
-
-function getHoverDirtyRect(cell) {
-    if (!cell) return { x: 0, y: 0, width: 0, height: 0 };
-    const { gridX, gridY } = getCanvasCoordinates(cell.x, cell.y);
-    return {
-        x: gridX - viewportX,
-        y: gridY - viewportY,
-        width: gridSize * gridScale,
-        height: gridSize * gridScale
-    };
 }
 
 function handleCanvasWheel(event) {

@@ -69,11 +69,11 @@ function expandBuilding(x, y, newX, newY) {
 }
 
 function isValidExpansionCell(x, y) {
-    return !gameState.grid[`${x},${y}`];
+    return x >= 0 && y >= 0 && !gameState.grid[`${x},${y}`];  // Add boundary check
 }
 
 function isAdjacentCell(x1, y1, x2, y2) {
-    return Math.abs(x1 - x2) + Math.abs(y1 - y2) === 1;
+    return (Math.abs(x1 - x2) === 1 && y1 === y2) || (x1 === x2 && Math.abs(y1 - y2) === 1); // Clearer adjacency
 }
 
 function initBuildingSocketListeners(socket) {
