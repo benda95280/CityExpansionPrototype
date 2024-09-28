@@ -31,6 +31,8 @@ let highlightedCells = [];
 const PARTITION_SIZE = 10;
 let buildingPartitions = {};
 
+let hoverStateChanged = false;
+
 function resizeCanvas() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
@@ -51,7 +53,7 @@ function drawGame(timestamp) {
         document.getElementById('fps-counter').textContent = `FPS: ${currentFps}`;
     }
 
-    if (isDirty) {
+    if (isDirty || hoverStateChanged) {
         ctx.save();
         ctx.beginPath();
         dirtyRectangles.forEach(rect => {
@@ -70,7 +72,10 @@ function drawGame(timestamp) {
         ctx.restore();
 
         isDirty = false;
+        hoverStateChanged = false;
         recycleDirtyRects();
+    } else {
+        drawHoveredCell();
     }
     animationFrameId = requestAnimationFrame(drawGame);
 }
@@ -245,21 +250,9 @@ function handleCanvasMouseMove(event) {
     const newHoveredCell = { x, y };
 
     if (!hoveredCell || hoveredCell.x !== newHoveredCell.x || hoveredCell.y !== newHoveredCell.y) {
-        if (hoveredCell) {
-            addDirtyRect(
-                hoveredCell.x * gridSize * gridScale + gridOffsetX - viewportX,
-                hoveredCell.y * gridSize * gridScale + gridOffsetY - viewportY,
-                gridSize * gridScale,
-                gridSize * gridScale
-            );
-        }
         hoveredCell = newHoveredCell;
-        addDirtyRect(
-            x * gridSize * gridScale + gridOffsetX - viewportX,
-            y * gridSize * gridScale + gridOffsetY - viewportY,
-            gridSize * gridScale,
-            gridSize * gridScale
-        );
+        hoverStateChanged = true;
+        isDirty = true;
     }
     
     const edgeThreshold = 3;
