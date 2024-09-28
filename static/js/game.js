@@ -107,6 +107,11 @@ function drawGridInViewport() {
 }
 
 function drawBuildingsInViewport() {
+    if (buildingsCanvas.width === 0 || buildingsCanvas.height === 0) {
+        console.error('Buildings canvas has zero width or height');
+        return;
+    }
+
     buildingsCtx.clearRect(0, 0, buildingsCanvas.width, buildingsCanvas.height);
     const startX = Math.floor((viewportX - gridOffsetX) / (gridSize * gridScale)) - 1;
     const startY = Math.floor((viewportY - gridOffsetY) / (gridSize * gridScale)) - 1;
@@ -331,9 +336,16 @@ function cleanUp() {
     }
 }
 
-// Call updateBuildingPartitions when the game state changes
-socket.on('game_state', (newState) => {
-    gameState = newState;
-    updateBuildingPartitions();
-    throttledUpdateUI();
-});
+function initWebSocket() {
+    socket = io();
+    
+    socket.on('connect', () => {
+        console.log('Connected to server');
+    });
+    
+    socket.on('game_state', (newState) => {
+        gameState = newState;
+        updateBuildingPartitions();
+        throttledUpdateUI();
+    });
+}
