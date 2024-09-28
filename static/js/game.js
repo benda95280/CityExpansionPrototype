@@ -12,6 +12,7 @@ let isDirty = true;
 let animationFrameId = null;
 let dirtyRectangles = [];
 let dirtyRectPool = [];
+let hoverDirtyRect = null;
 
 let fpsCounter = 0;
 let lastFpsUpdate = 0;
@@ -52,16 +53,21 @@ function drawGame(timestamp) {
         lastFpsUpdate = timestamp;
         document.getElementById('fps-counter').textContent = `FPS: ${currentFps}`;
     }
-
-    if (isDirty || hoverStateChanged) {
+    
+    if (isDirty || dirtyRectangles.length > 0) {
         ctx.save();
+
         ctx.beginPath();
         dirtyRectangles.forEach(rect => {
             ctx.rect(rect.x, rect.y, rect.width, rect.height);
         });
+        if (hoverDirtyRect) {
+            ctx.rect(hoverDirtyRect.x, hoverDirtyRect.y, hoverDirtyRect.width, hoverDirtyRect.height);
+        }
         ctx.clip();
 
         ctx.clearRect(0, 0, canvas.width, canvas.height);
+
         drawGridInViewport();
         drawBuildingsInViewport();
         if (window.isExpansionMode) {
@@ -71,13 +77,11 @@ function drawGame(timestamp) {
         ctx.restore();
 
         isDirty = false;
-        hoverStateChanged = false;
         recycleDirtyRects();
     }
-    
-    // Always draw the hovered cell
+
     drawHoveredCell();
-    
+
     animationFrameId = requestAnimationFrame(drawGame);
 }
 
@@ -247,38 +251,45 @@ function handleCanvasRightClick(event) {
 }
 
 function handleCanvasMouseMove(event) {
+    const newHoverRect = getHoverDirtyRect(hoveredCell);
+    const lineWidth = 2;
+    const expandedRect = {
+      x: newHoverRect.x - lineWidth,
+      y: newHoverRect.y - lineWidth,
+      width: newHoverRect.width + 2 * lineWidth,
+      height: newHoverRect.height + 2 * lineWidth,
+    };
+    
+    addDirtyRect(expandedRect.x, expandedRect.y, expandedRect.width, expandedRect.height);
+
     const { x, y } = getGridCoordinates(event.clientX, event.clientY);
     const newHoveredCell = { x, y };
 
     if (!hoveredCell || hoveredCell.x !== newHoveredCell.x || hoveredCell.y !== newHoveredCell.y) {
-        // Clear the previous hover effect
-        if (hoveredCell) {
-            addDirtyRect(
-                hoveredCell.x * gridSize * gridScale + gridOffsetX - viewportX,
-                hoveredCell.y * gridSize * gridScale + gridOffsetY - viewportY,
-                gridSize * gridScale,
-                gridSize * gridScale
-            );
-        }
-        
+        hoverDirtyRect = getHoverDirtyRect(hoveredCell);
+
         hoveredCell = newHoveredCell;
-        hoverStateChanged = true;
-        isDirty = true;
-        
-        // Add dirty rect for the new hovered cell
-        addDirtyRect(
-            x * gridSize * gridScale + gridOffsetX - viewportX,
-            y * gridSize * gridScale + gridOffsetY - viewportY,
-            gridSize * gridScale,
-            gridSize * gridScale
-        );
+
+        const newHoverRect = getHoverDirtyRect(hoveredCell);
+        addDirtyRect(newHoverRect.x, newHoverRect.y, newHoverRect.width, newHoverRect.height);
     }
-    
+
     const edgeThreshold = 3;
     if (Math.abs(x) > Math.abs(hoveredCell.x) - edgeThreshold || 
         Math.abs(y) > Math.abs(hoveredCell.y) - edgeThreshold) {
         generateNewCells(x, y);
     }
+}
+
+function getHoverDirtyRect(cell) {
+    if (!cell) return { x: 0, y: 0, width: 0, height: 0 };
+    const { gridX, gridY } = getCanvasCoordinates(cell.x, cell.y);
+    return {
+        x: gridX - viewportX,
+        y: gridY - viewportY,
+        width: gridSize * gridScale,
+        height: gridSize * gridScale
+    };
 }
 
 function handleCanvasWheel(event) {
@@ -344,6 +355,90 @@ function updateBuildingPartitions() {
         }
         buildingPartitions[partitionKey].push([x, y, building]);
     }
+}
+
+function showBuildingMenu(x, y, gridX, gridY) {
+    const existingMenu = document.querySelector('.context-menu');
+    if (existingMenu) {
+        document.body.removeChild(existingMenu);
+    }
+
+    const menu = document.createElement('div');
+    menu.classList.add('context-menu');
+    menu.style.left = `${x}px`;
+    menu.style.top = `${y}px`;
+
+    const existingBuilding = gameState.grid[`${gridX},${gridY}`];
+
+    if (window.isExpansionMode) {
+        if (isValidExpansionCell(gridX, gridY)) {
+            const expandOption = document.createElement('div');
+            expandOption.textContent = '🔄 Expand to this cell';
+            expandOption.addEventListener('click', () => {
+                expandBuilding(gridX, gridY);
+                document.body.removeChild(menu);
+            });
+            menu.appendChild(expandOption);
+        } else {
+            const cancelOption = document.createElement('div');
+            cancelOption.textContent = '❌ Cancel expansion';
+            cancelOption.addEventListener('click', () => {
+                removeExpansionOptions();
+                document.body.removeChild(menu);
+            });
+            menu.appendChild(cancelOption);
+        }
+    } else if (existingBuilding) {
+        const buildingData = existingBuilding && gameState.buildings_data[existingBuilding.type];
+        if (!buildingData) {
+            console.error('Building data not found for type:', existingBuilding.type);
+            return;
+        }
+        
+        const upgradeOption = document.createElement('div');
+        upgradeOption.textContent = `🔧 Upgrade ${buildingData.name} ($${buildingData.upgrade_cost * existingBuilding.level})`;
+        upgradeOption.addEventListener('click', () => {
+            upgradeBuilding(gridX, gridY);
+            document.body.removeChild(menu);
+        });
+        menu.appendChild(upgradeOption);
+
+        if (existingBuilding.is_built && buildingData.expandable) {
+            const currentExpansions = existingBuilding.expanded_cells ? existingBuilding.expanded_cells.length : 0;
+            if (currentExpansions < buildingData.expansion_limit) {
+                const expandOption = document.createElement('div');
+                expandOption.textContent = `🔄 Expand (${currentExpansions}/${buildingData.expansion_limit})`;
+                expandOption.addEventListener('click', () => {
+                    console.log('Expand option clicked for building at', gridX, gridY);
+                    showExpandOptions(gridX, gridY, existingBuilding);
+                    document.body.removeChild(menu);
+                });
+                menu.appendChild(expandOption);
+            }
+        }
+
+        const infoOption = document.createElement('div');
+        infoOption.textContent = '📊 Show Info';
+        infoOption.addEventListener('click', () => {
+            showCellPopup(gridX, gridY, existingBuilding);
+            document.body.removeChild(menu);
+        });
+        menu.appendChild(infoOption);
+    } else {
+        for (const [type, data] of Object.entries(gameState.buildings_data)) {
+            const option = document.createElement('div');
+            option.textContent = `${getBuildingEmoji(type)} ${data.name} ($${data.price})`;
+            option.addEventListener('click', () => {
+                placeBuilding(gridX, gridY, type);
+                document.body.removeChild(menu);
+            });
+            menu.appendChild(option);
+        }
+    }
+
+    document.body.appendChild(menu);
+
+    document.addEventListener('click', removeMenu);
 }
 
 window.addEventListener('load', initGame);
