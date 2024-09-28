@@ -35,7 +35,7 @@ game_state = {
     'buildings_debug': False,
     'notifications_debug': False,
     'fast_forward': False,
-    'socketio': socketio  # Add socketio to game_state
+    'socketio': socketio
 }
 
 task_manager = TaskManager(game_state)
@@ -190,6 +190,10 @@ def emit_game_state():
     serializable_game_state['start_time'] = game_state['start_time'].isoformat() if isinstance(game_state['start_time'], datetime) else game_state['start_time']
     serializable_game_state['buildings_data'] = buildings_data
     serializable_game_state['grid'] = {coords: building.to_dict() for coords, building in game_state['grid'].items()}
+
+    # Add last_execution_tick for tasks
+    for task in serializable_game_state['tasks']['tasks']:
+        task['last_execution_tick'] = game_state['tick'] - (task['next_execution_tick'] - task['min_interval'])
 
     if game_state['debug_mode']:
         print("Debug: Tasks being sent to frontend:")

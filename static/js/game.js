@@ -34,6 +34,9 @@ let buildingPartitions = {};
 
 let hoverStateChanged = false;
 
+let lastUpdateTime = Date.now();
+const updateInterval = 1000; // 1 second
+
 function resizeCanvas() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
@@ -43,6 +46,34 @@ function resizeCanvas() {
     viewportHeight = canvas.height;
     isDirty = true;
     addDirtyRect(0, 0, canvas.width, canvas.height);
+}
+
+function updateClientSidePredictions() {
+    const now = Date.now();
+    const deltaTime = (now - lastUpdateTime) / 1000; // Convert to seconds
+
+    // Update task progress
+    if (gameState.tasks && gameState.tasks.tasks) {
+        gameState.tasks.tasks.forEach(task => {
+            if (!task.hidden && task.next_execution_tick) {
+                const progressPerSecond = 100 / (task.next_execution_tick - task.last_execution_tick);
+                task.completion_percentage = Math.min(100, task.completion_percentage + progressPerSecond * deltaTime);
+            }
+        });
+    }
+
+    // Update building construction progress
+    if (gameState.grid) {
+        Object.values(gameState.grid).forEach(building => {
+            if (building.construction_progress < 1) {
+                const constructionTime = (new Date(building.construction_end) - new Date(building.construction_start)) / 1000; // in seconds
+                const progressPerSecond = 1 / constructionTime;
+                building.construction_progress = Math.min(1, building.construction_progress + progressPerSecond * deltaTime);
+            }
+        });
+    }
+
+    lastUpdateTime = now;
 }
 
 function drawGame(timestamp) {
@@ -81,6 +112,8 @@ function drawGame(timestamp) {
     }
 
     drawHoveredCell();
+
+    updateClientSidePredictions();
 
     animationFrameId = requestAnimationFrame(drawGame);
 }
@@ -160,7 +193,6 @@ function drawExpansionHighlights() {
     ctx.save();
     ctx.globalAlpha = 0.5;
 
-    // Correct viewport calculations:
     const startX = Math.floor((viewportX - gridOffsetX) / (gridSize * gridScale)) - 1;
     const startY = Math.floor((viewportY - gridOffsetY) / (gridSize * gridScale)) - 1;
     const endX = Math.ceil((viewportX + viewportWidth - gridOffsetX) / (gridSize * gridScale)) + 1;
