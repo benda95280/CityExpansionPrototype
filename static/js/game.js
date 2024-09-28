@@ -34,7 +34,7 @@ let highlightedCells = [];
 
 // Spatial partitioning
 const PARTITION_SIZE = 10;
-const buildingPartitions = {};
+let buildingPartitions = {}; // Changed from const to let
 
 function resizeCanvas() {
     canvas.width = window.innerWidth;
@@ -315,7 +315,7 @@ function updateGridScale(delta) {
 }
 
 function updateBuildingPartitions() {
-    buildingPartitions = {};
+    buildingPartitions = {}; // Use let instead of reassigning to const
     for (const [coords, building] of Object.entries(gameState.grid)) {
         const [x, y] = coords.split(',').map(Number);
         const px = Math.floor(x / PARTITION_SIZE);
