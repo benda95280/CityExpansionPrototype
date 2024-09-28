@@ -160,10 +160,11 @@ function drawExpansionHighlights() {
     ctx.save();
     ctx.globalAlpha = 0.5;
 
-    const startX = Math.max(Math.floor((viewportX - gridOffsetX) / (gridSize * gridScale)) - 1, 0);
-    const startY = Math.max(Math.floor((viewportY - gridOffsetY) / (gridSize * gridScale)) - 1, 0);
-    const endX = Math.min(Math.ceil((viewportX + viewportWidth - gridOffsetX) / (gridSize * gridScale)) + 1, Math.ceil(canvas.width / (gridSize * gridScale)));
-    const endY = Math.min(Math.ceil((viewportY + viewportHeight - gridOffsetY) / (gridSize * gridScale)) + 1, Math.ceil(canvas.height / (gridSize * gridScale)));
+    // Correct viewport calculations:
+    const startX = Math.floor((viewportX - gridOffsetX) / (gridSize * gridScale)) - 1;
+    const startY = Math.floor((viewportY - gridOffsetY) / (gridSize * gridScale)) - 1;
+    const endX = Math.ceil((viewportX + viewportWidth - gridOffsetX) / (gridSize * gridScale)) + 1;
+    const endY = Math.ceil((viewportY + viewportHeight - gridOffsetY) / (gridSize * gridScale)) + 1;
 
     highlightedCells.forEach(cell => {
         if (cell.x >= startX && cell.x <= endX && cell.y >= startY && cell.y <= endY) {

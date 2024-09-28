@@ -192,11 +192,18 @@ function removeMenu(e) {
 }
 
 function showExpandOptions(x, y, building) {
+    window.originalX = x;
+    window.originalY = y;
+    console.log("Original X:", window.originalX);  // Check the value
+    console.log("Original Y:", window.originalY);  // Check the value
+
     window.isExpansionMode = true;
     highlightedCells = []; // Clear any previous highlighted cells
 
     for (let i = -1; i <= 1; i++) {
         for (let j = -1; j <= 1; j++) {
+            if (Math.abs(i) + Math.abs(j) !== 1) continue; // Skip diagonals
+            
             const newX = x + i;
             const newY = y + j;
             if (newX === x && newY === y) continue; // Skip the building's own cell
@@ -204,9 +211,10 @@ function showExpandOptions(x, y, building) {
             const cellKey = `${newX},${newY}`;
             if (isValidExpansionCell(newX, newY)) {
                 highlightedCells.push({ x: newX, y: newY, expandable: true });
-            } else if (!isValidExpansionCell(newX, newY) && gameState.grid[cellKey]) { // Correct condition: not valid AND exists in the grid
-                highlightedCells.push({ x: newX, y: newY, expandable: false});
+            } else if (!isValidExpansionCell(newX, newY)) { // Only check if NOT valid
+                highlightedCells.push({ x: newX, y: newY, expandable: false });
             }
+
         }
     }
 
@@ -227,13 +235,26 @@ function handleExpansionMouseMove(e) {
 function handleExpansionClick(e) {
     if (!window.isExpansionMode) return;
     const { x, y } = getGridCoordinates(e.clientX, e.clientY);
-    console.log('Expansion click detected at', x, y);
 
-    if (isValidExpansionCell(x, y)) {
-        console.log('Valid expansion clicked at', x, y);
-        expandBuilding(x, y);
+    console.log("Clicked X:", x);  // Check the clicked cell's x
+    console.log("Clicked Y:", y);  // Check the clicked cell's y
+    console.log("Original X (in click handler):", window.originalX); // Check if it's still the correct value
+    console.log("Original Y (in click handler):", window.originalY); // Check if it's still the correct value
+
+
+    if (isValidExpansionCell(x, y) && isAdjacentCell(window.originalX, window.originalY, x, y)) {
+        console.log("Expanding building from", window.originalX, window.originalY, "to", x, y); // Debug log
+        expandBuilding(window.originalX, window.originalY, x, y);
+    } else {
+        console.log("Expansion failed.  isValidExpansionCell:", isValidExpansionCell(x, y), "isAdjacentCell:", isAdjacentCell(window.originalX, window.originalY, x, y));
     }
     removeExpansionOptions();
+}
+
+function isAdjacentCell(x1, y1, x2, y2) {
+    const dx = Math.abs(x1 - x2);
+    const dy = Math.abs(y1 - y2);
+    return (dx === 1 && dy === 0) || (dx === 0 && dy === 1);  // Orthogonal neighbors only
 }
 
 function isValidExpansionCell(x, y) {
@@ -243,6 +264,7 @@ function isValidExpansionCell(x, y) {
 function removeExpansionOptions() {
     console.log('Removing expansion options');
     window.isExpansionMode = false;
+    highlightedCells = []; // Clear highlighted cells here
     canvas.removeEventListener('mousemove', handleExpansionMouseMove);
     canvas.removeEventListener('click', handleExpansionClick);
     addDirtyRect(0, 0, canvas.width, canvas.height);
