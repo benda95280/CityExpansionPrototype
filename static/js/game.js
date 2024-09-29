@@ -65,7 +65,7 @@ function updateClientSidePredictions() {
     // Update building construction progress
     if (gameState.grid) {
         Object.values(gameState.grid).forEach(building => {
-            if (building.construction_progress < 1) {
+            if (building && typeof building.construction_progress !== 'undefined' && building.construction_progress < 1) {
                 const constructionTime = (new Date(building.construction_end) - new Date(building.construction_start)) / 1000; // in seconds
                 const progressPerSecond = 1 / constructionTime;
                 building.construction_progress = Math.min(1, building.construction_progress + progressPerSecond * deltaTime);
@@ -113,7 +113,11 @@ function drawGame(timestamp) {
 
     drawHoveredCell();
 
+    // Call updateClientSidePredictions more frequently
     updateClientSidePredictions();
+
+    // Update UI more frequently
+    throttledUpdateUI();
 
     animationFrameId = requestAnimationFrame(drawGame);
 }
